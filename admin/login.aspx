@@ -1,4 +1,4 @@
-﻿<%@ Page Language="C#" AutoEventWireup="true" CodeFile="login.aspx.cs" Inherits="admin_Default2" %>
+<%@ Page Language="C#" AutoEventWireup="true" CodeFile="login.aspx.cs" Inherits="admin_Default2" %>
 
 <!DOCTYPE html>
 
@@ -48,11 +48,11 @@
     <%--css nguồn--%>
     <link href="/Metro-UI-CSS-master/css/metro-all.min.css" rel="stylesheet" />
     <%--dành riêng cho trang login--%>
-    <link href="/css/login.css" rel="stylesheet" />
+    <link href="/css/login.css?v=1.7" rel="stylesheet" />
     <%--viết thêm dựa vào metro--%>
     <link href="/css/bcorn-with-metro.css" rel="stylesheet" />
     <%--sửa lại css metro theo ý mình--%>
-    <link href="/css/fix-metro.css" rel="stylesheet" />
+    <link href="/css/fix-metro.css?v=1.7" rel="stylesheet" />
     <!-- jquery nên để trước các js khác -->
     <%--<script src="/js/jquery-3.7.1.min.js"></script>--%>
 </head>
@@ -64,7 +64,7 @@
 
             <div class="fg-white text-center" style="padding-top: 50px">
                 <div class="text-bold" style="font-size: 17px">
-                    LOGIN TO THAIANAUDIO.VN
+                    LOGIN TO QUANGANHMT.COM
                 </div>
                 <%--<div>
                     Bạn chưa có tài khoản? 
@@ -75,7 +75,7 @@
             <div style="margin: 0 auto; max-width: 360px; z-index: 0;" class="pl-4 pr-4 pl-0-md pr-0-md">
                 <div>
                     <div class="text-center" style="padding-top: 30px; padding-bottom: 40px;">
-                        <img src="/uploads/images/avt.png" width="100" />
+                        <img src="/uploads/images/logo.png" width="160" />
                     </div>
 
                     <div>

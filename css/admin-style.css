@@ -1,4 +1,4 @@
-﻿/*you are here*/
+/*you are here*/
 .breadcrumbs .breadcrumb-item, .breadcrumbs .page-item {
     margin: -20px 4px -11px 8px !important;
 }
@@ -13,15 +13,15 @@
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #3d7eff !important; /*edit*/
+    background: rgb(222, 38, 62) !important; /*edit*/
 }
 
     ::-webkit-scrollbar-thumb:hover {
-        background: #3d7eff !important; /*edit*/
+        background: rgb(222, 38, 62) !important; /*edit*/
     }
 
 .navview .navview-menu li.active::before { /*edit*/
-    background-color: #3d7eff !important;
+    background-color: rgb(222, 38, 62) !important;
 }
 
 body {
@@ -29,7 +29,7 @@ body {
 }
 /*navview*/
 .bg-navview-left-bc {
-    background-color: #3d7eff !important /*edit*/
+    background-color: rgb(222, 38, 62) !important /*edit*/
 }
 
 .bg-navview-foot-bc {
@@ -41,11 +41,11 @@ body {
 }
 
 .bg-navview-left-bc-hover:hover {
-    background-color: #0036a3 !important /*edit*/
+    background-color: rgb(176, 22, 43) !important /*edit*/
 }
 
 .bg-nmenutop-bc {
-    background-color: #0036a3 !important; /*edit*/
+    background-color: rgb(176, 22, 43) !important; /*edit*/
     z-index: 5 !important;
 }
 
@@ -174,7 +174,7 @@ body {
         top: -1px;
         z-index: 1 !important;
         font-weight: 600;
-        background-color: #0036a3;
+        background-color: rgb(176, 22, 43);
         color: white !important;
     }
 
@@ -184,7 +184,7 @@ body {
             position: sticky;
             left: 0;
             z-index: 2 !important;
-            background-color: #0036a3;
+            background-color: rgb(176, 22, 43);
             color: white;
         }
 
@@ -212,3 +212,18 @@ body {
             background-color: #cff4ff;*/ /* Thay đổi màu nền khi rê chuột vào ô (cell) */
 /*}*/
 /*END TABLE FIX*/
+
+.navview-pane .bd-darkCobalt {
+    border-color: rgb(176, 22, 43) !important;
+}
+
+.button.primary {
+    background-color: rgb(176, 22, 43) !important;
+    border-color: rgb(176, 22, 43) !important;
+    color: #ffffff !important;
+}
+
+.button.primary:hover {
+    background-color: rgb(138, 11, 29) !important;
+    border-color: rgb(138, 11, 29) !important;
+}

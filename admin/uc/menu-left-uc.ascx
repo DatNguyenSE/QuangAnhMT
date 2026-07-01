@@ -1,10 +1,10 @@
-﻿<%@ Control Language="C#" AutoEventWireup="true" CodeFile="menu-left-uc.ascx.cs" Inherits="admin_uc_menu_left_uc" %>
+<%@ Control Language="C#" AutoEventWireup="true" CodeFile="menu-left-uc.ascx.cs" Inherits="admin_uc_menu_left_uc" %>
 <div class="navview-pane" style="z-index: 6">
     <div class="d-flex flex-align-center bg-navview-left-bc">
         <span class="pull-button m-0 bg-navview-left-bc-hover">
             <span class="mif-menu fg-white"></span>
         </span>
-        <div class="app-title h4 text-light m-0 fg-white pl-2" style="line-height: 52px">ThaiAnAudio</div>
+        <div class="app-title h4 text-light m-0 fg-white pl-2" style="line-height: 52px">QuangAnhAudio</div>
     </div>
 
     <%-- <div class="suggest-box">

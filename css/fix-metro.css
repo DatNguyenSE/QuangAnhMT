@@ -1,4 +1,4 @@
-﻿
+
 .clr-float {
     clear: both !important;
 }
@@ -17,7 +17,7 @@ a, .button.link { /*liên kết k gạch chân*/
 }
 
 .navview .navview-menu li.active::before { /*style active menu left admin*/
-    background-color: #3d7eff !important;
+    background-color: rgb(222, 38, 62) !important;
 }
 
 .navview .navview-menu .icon {

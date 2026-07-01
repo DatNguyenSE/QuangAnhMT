@@ -1,4 +1,4 @@
-﻿.body-login-home {
+.body-login-home {
     margin-top: 50px;
     background-color: #c90230;
     overflow: hidden
@@ -87,9 +87,20 @@
     border: 2px solid #fff;
 }
 
-.body-login-bcorn {background-color: #3d7eff; /*màu nhạt*/overflow: hidden}
-.bg-login-bcorn {background: linear-gradient(#0036a3,#3d7eff); /*đậm nhạt*/}
-.bg-top-bcorn {background-color: #0036a3}/*đậm*/
+.body-login-bcorn {background-color: rgb(222, 38, 62); /*màu nhạt*/overflow: hidden}
+.bg-login-bcorn {background: linear-gradient(rgb(176, 22, 43), rgb(222, 38, 62)); /*đậm nhạt*/}
+.bg-top-bcorn {background-color: rgb(176, 22, 43)}/*đậm*/
+
+.button.primary {
+    background-color: rgb(176, 22, 43) !important;
+    border-color: rgb(176, 22, 43) !important;
+    color: #ffffff !important;
+}
+
+.button.primary:hover {
+    background-color: rgb(138, 11, 29) !important;
+    border-color: rgb(138, 11, 29) !important;
+}
 
 @media (max-width: 575px) { /*sm*/
     }
