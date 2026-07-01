@@ -1,0 +1,16 @@
+﻿publish: 
+0. đóng VS
+1. Xóa --> D:\Publish\thaianaudio.vn
+aspnet_compiler -v / -p "D:\New folder (2)\thaianaudio.vn" -u -f "D:\Publish\thaianaudio.vn"
+2. Mở Developer Command Prompt for VS 2022 --> As admin....
+3. chạy aspnet_compiler -v / -p "D:\New folder (2)\ngukimhoadu.com" -u -f "D:\Publish\ngukimhoadu.com"
+4. Chạy xong kiểm tra: D:\Publish\thaianaudio.vn có bin + PrecompiledApp.config
+OK
+
+
+
+
+    public dbDataContext() : base(global::System.Configuration.ConfigurationManager.ConnectionStrings["bco86512_quanganh_dbConnectionString"].ToString(), mappingSource)
+    {
+        OnCreated();
+    }
