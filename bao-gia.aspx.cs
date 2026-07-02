@@ -1,4 +1,4 @@
-﻿using QRCoder;
+using QRCoder;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -158,6 +158,8 @@ public partial class bao_gia : System.Web.UI.Page
 
     <!-- Open Graph Meta Tags -->
     <meta property='og:title' content='BÁO GIÁ {tenkhSafe}' />
+    <meta property='og:image' content='https://thaianaudio.vn/uploads/images/BAO-GIA-BG.png' />
+    <meta property='og:description' content='Bảng báo giá chi tiết từ THÁI AN AUDIO' />
 ";
                             literal_meta.Text = metaTags;
 

@@ -7195,11 +7195,7 @@ public partial class taikhoan_tb : INotifyPropertyChanging, INotifyPropertyChang
 	
 	private System.Nullable<long> _PhuCap_AnUong;
 	
-	private System.Nullable<long> _PhuCap_NhaTro;
-	
 	private System.Nullable<long> _PhuCap_TrachNhiem;
-	
-	private System.Nullable<long> _PhuCap_BHYT;
 	
 	private System.Nullable<int> _phantram_doanhso_banhang;
 	
@@ -7212,6 +7208,8 @@ public partial class taikhoan_tb : INotifyPropertyChanging, INotifyPropertyChang
 	private string _tenchu_tknganhang;
 	
 	private bool _loai_nhanvien;
+	
+	private System.Nullable<decimal> _PhuCap_DienThoai;
 	
     #region Extensibility Method Definitions
     partial void OnLoaded();
@@ -7275,12 +7273,8 @@ public partial class taikhoan_tb : INotifyPropertyChanging, INotifyPropertyChang
     partial void OnPhuCap_XangxeChanged();
     partial void OnPhuCap_AnUongChanging(System.Nullable<long> value);
     partial void OnPhuCap_AnUongChanged();
-    partial void OnPhuCap_NhaTroChanging(System.Nullable<long> value);
-    partial void OnPhuCap_NhaTroChanged();
     partial void OnPhuCap_TrachNhiemChanging(System.Nullable<long> value);
     partial void OnPhuCap_TrachNhiemChanged();
-    partial void OnPhuCap_BHYTChanging(System.Nullable<long> value);
-    partial void OnPhuCap_BHYTChanged();
     partial void Onphantram_doanhso_banhangChanging(System.Nullable<int> value);
     partial void Onphantram_doanhso_banhangChanged();
     partial void Onso_cccdChanging(string value);
@@ -7293,6 +7287,8 @@ public partial class taikhoan_tb : INotifyPropertyChanging, INotifyPropertyChang
     partial void Ontenchu_tknganhangChanged();
     partial void Onloai_nhanvienChanging(bool value);
     partial void Onloai_nhanvienChanged();
+    partial void OnPhuCap_DienThoaiChanging(System.Nullable<decimal> value);
+    partial void OnPhuCap_DienThoaiChanged();
     #endregion
 	
 	public taikhoan_tb()
@@ -7880,26 +7876,6 @@ public partial class taikhoan_tb : INotifyPropertyChanging, INotifyPropertyChang
 		}
 	}
 	
-	[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_PhuCap_NhaTro", DbType="BigInt")]
-	public System.Nullable<long> PhuCap_NhaTro
-	{
-		get
-		{
-			return this._PhuCap_NhaTro;
-		}
-		set
-		{
-			if ((this._PhuCap_NhaTro != value))
-			{
-				this.OnPhuCap_NhaTroChanging(value);
-				this.SendPropertyChanging();
-				this._PhuCap_NhaTro = value;
-				this.SendPropertyChanged("PhuCap_NhaTro");
-				this.OnPhuCap_NhaTroChanged();
-			}
-		}
-	}
-	
 	[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_PhuCap_TrachNhiem", DbType="BigInt")]
 	public System.Nullable<long> PhuCap_TrachNhiem
 	{
@@ -7916,26 +7892,6 @@ public partial class taikhoan_tb : INotifyPropertyChanging, INotifyPropertyChang
 				this._PhuCap_TrachNhiem = value;
 				this.SendPropertyChanged("PhuCap_TrachNhiem");
 				this.OnPhuCap_TrachNhiemChanged();
-			}
-		}
-	}
-	
-	[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_PhuCap_BHYT", DbType="BigInt")]
-	public System.Nullable<long> PhuCap_BHYT
-	{
-		get
-		{
-			return this._PhuCap_BHYT;
-		}
-		set
-		{
-			if ((this._PhuCap_BHYT != value))
-			{
-				this.OnPhuCap_BHYTChanging(value);
-				this.SendPropertyChanging();
-				this._PhuCap_BHYT = value;
-				this.SendPropertyChanged("PhuCap_BHYT");
-				this.OnPhuCap_BHYTChanged();
 			}
 		}
 	}
@@ -8056,6 +8012,26 @@ public partial class taikhoan_tb : INotifyPropertyChanging, INotifyPropertyChang
 				this._loai_nhanvien = value;
 				this.SendPropertyChanged("loai_nhanvien");
 				this.Onloai_nhanvienChanged();
+			}
+		}
+	}
+	
+	[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_PhuCap_DienThoai", DbType="Decimal(18,0)")]
+	public System.Nullable<decimal> PhuCap_DienThoai
+	{
+		get
+		{
+			return this._PhuCap_DienThoai;
+		}
+		set
+		{
+			if ((this._PhuCap_DienThoai != value))
+			{
+				this.OnPhuCap_DienThoaiChanging(value);
+				this.SendPropertyChanging();
+				this._PhuCap_DienThoai = value;
+				this.SendPropertyChanged("PhuCap_DienThoai");
+				this.OnPhuCap_DienThoaiChanged();
 			}
 		}
 	}

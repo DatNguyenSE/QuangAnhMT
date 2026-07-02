@@ -1,4 +1,4 @@
-﻿<%@ Page Language="C#" AutoEventWireup="true" CodeFile="bao-gia.aspx.cs" Inherits="bao_gia" %>
+<%@ Page Language="C#" AutoEventWireup="true" CodeFile="bao-gia.aspx.cs" Inherits="bao_gia" %>
 
 <!DOCTYPE html>
 
@@ -11,23 +11,21 @@
     <%--<meta name="robots" content="index, follow" />
     <meta name="revisit-after" content="1 days" />--%>
 
-    <link rel='icon' href='/uploads/images/avt.png' sizes='16x16' type='image/x-icon' />
-    <link rel='icon' href='/uploads/images/avt.png' sizes='32x32' type='image/x-icon' />
-    <link rel='icon' href='/uploads/images/avt.png' sizes='48x48' type='image/x-icon' />
+    <link rel='icon' href='/uploads/images/logo.png' sizes='16x16' type='image/png' />
+    <link rel='icon' href='/uploads/images/logo.png' sizes='32x32' type='image/png' />
+    <link rel='icon' href='/uploads/images/logo.png' sizes='48x48' type='image/png' />
 
     <!-- Apple Touch Icon -->
-    <link rel='apple-touch-icon' href='/uploads/images/avt.png' sizes='180x180' />
-    <link rel='apple-touch-icon' href='/uploads/images/avt.png' sizes='167x167' />
-    <link rel='apple-touch-icon' href='/uploads/images/avt.png' sizes='152x152' />
-    <link rel='apple-touch-icon' href='/uploads/images/avt.png' sizes='120x120' />
+    <link rel='apple-touch-icon' href='/uploads/images/logo.png' sizes='180x180' />
+    <link rel='apple-touch-icon' href='/uploads/images/logo.png' sizes='167x167' />
+    <link rel='apple-touch-icon' href='/uploads/images/logo.png' sizes='152x152' />
+    <link rel='apple-touch-icon' href='/uploads/images/logo.png' sizes='120x120' />
 
     <!-- Android Icons -->
-    <link rel='icon' href='/uploads/images/avt.png' sizes='192x192' />
-    <link rel='icon' href='/uploads/images/avt.png' sizes='144x144' />
+    <link rel='icon' href='/uploads/images/logo.png' sizes='192x192' />
+    <link rel='icon' href='/uploads/images/logo.png' sizes='512x512' />
 
-    <title>Báo gi</title>
 
-    <meta property='og:image' content='/uploads/images/BAO-GIA-BG.png' />
 
     <%--Favicon & icon Mobile & meta--%>
     <asp:Literal ID="literal_fav_icon" runat="server"></asp:Literal>

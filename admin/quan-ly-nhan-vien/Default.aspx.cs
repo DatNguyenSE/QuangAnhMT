@@ -226,11 +226,10 @@ public partial class admin_Default : System.Web.UI.Page
                                     ob1.loai_nhanvien,
                                     ob1.LuongCoBan,
                                     ob1.PhuCap_AnUong,
-                                    ob1.PhuCap_BHYT,
-                                    ob1.PhuCap_NhaTro,
+                                    ob1.PhuCap_DienThoai,
                                     ob1.PhuCap_TrachNhiem,
                                     ob1.PhuCap_Xangxe,
-                                    TongThuNhapThang = ob1.LuongCoBan + ob1.PhuCap_AnUong + ob1.PhuCap_NhaTro + ob1.PhuCap_TrachNhiem + ob1.PhuCap_Xangxe + (ob1.PhuCap_BHYT / 12),
+                                    TongThuNhapThang = (ob1.LuongCoBan ?? 0) + (ob1.PhuCap_AnUong ?? 0) + (ob1.PhuCap_DienThoai ?? 0) + (ob1.PhuCap_TrachNhiem ?? 0) + (ob1.PhuCap_Xangxe ?? 0),
                                     ob1.sdt_nguoithan,
                                     ob1.ten_nguoithan,
                                     ob1.phantram_doanhso_banhang
@@ -264,10 +263,10 @@ public partial class admin_Default : System.Web.UI.Page
                 //sắp xếp
                 list_all = list_all.OrderByDescending(p => p.ngayvaolam);
                 int _Tong_Record = list_all.Count();
-                ViewState["tongLCB"] = list_all.Sum(p => p.LuongCoBan.Value).ToString("#,##0");
-                Int64 _tong_phucap = list_all.Sum(p => (p.PhuCap_Xangxe ?? 0) + (p.PhuCap_AnUong ?? 0) + (p.PhuCap_BHYT ?? 0) + (p.PhuCap_TrachNhiem ?? 0) + (p.PhuCap_NhaTro ?? 0));
+                ViewState["tongLCB"] = (list_all.Sum(p => (long?)p.LuongCoBan) ?? 0).ToString("#,##0");
+                decimal _tong_phucap = list_all.Sum(p => (decimal?)((p.PhuCap_Xangxe ?? 0) + (p.PhuCap_AnUong ?? 0) + (p.PhuCap_DienThoai ?? 0) + (p.PhuCap_TrachNhiem ?? 0))) ?? 0;
                 ViewState["tongPhuCap"] = _tong_phucap.ToString("#,##0");
-                ViewState["tongThuNhap"] = list_all.Sum(p => p.TongThuNhapThang.Value).ToString("#,##0");
+                ViewState["tongThuNhap"] = (list_all.Sum(p => (decimal?)p.TongThuNhapThang) ?? 0).ToString("#,##0");
                 #endregion
 
                 #region phân trang OK, k sửa
@@ -447,7 +446,7 @@ public partial class admin_Default : System.Web.UI.Page
             ViewState["add_edit"] = null;
             Button2.Visible = false; Button1.Visible = false; Button3.Visible = false;
             Label2.Text = ""; Label3.Text = ""; Label4.Text = "";
-            txt_luongcoban.Text = ""; txt_phucap_xangxe.Text = ""; txt_phucap_anuong.Text = ""; txt_phucap_nhatro.Text = ""; txt_phucap_trachniem.Text = ""; txt_phucap_bhyt.Text = "";
+            txt_luongcoban.Text = ""; txt_phucap_xangxe.Text = ""; txt_phucap_anuong.Text = ""; txt_phucap_dienthoai.Text = ""; txt_phucap_trachniem.Text = "";
             txt_sdt_nguoithan.Text = "";
             txt_tennguoithan.Text = "";
             txt_phantram_doanhso.Text = "";
@@ -577,12 +576,10 @@ public partial class admin_Default : System.Web.UI.Page
                         txt_phucap_xangxe.Text = q.PhuCap_Xangxe.Value.ToString("#,##0");
                     if (q.PhuCap_AnUong != null)
                         txt_phucap_anuong.Text = q.PhuCap_AnUong.Value.ToString("#,##0");
-                    if (q.PhuCap_NhaTro != null)
-                        txt_phucap_nhatro.Text = q.PhuCap_NhaTro.Value.ToString("#,##0");
+                    if (q.PhuCap_DienThoai != null)
+                        txt_phucap_dienthoai.Text = q.PhuCap_DienThoai.Value.ToString("#,##0");
                     if (q.PhuCap_TrachNhiem != null)
                         txt_phucap_trachniem.Text = q.PhuCap_TrachNhiem.Value.ToString("#,##0");
-                    if (q.PhuCap_BHYT != null)
-                        txt_phucap_bhyt.Text = q.PhuCap_BHYT.Value.ToString("#,##0");
                     if (q.phantram_doanhso_banhang != null)
                         txt_phantram_doanhso.Text = q.phantram_doanhso_banhang.Value.ToString("#,##0");
 
@@ -691,9 +688,8 @@ public partial class admin_Default : System.Web.UI.Page
             Int64 _luongcoban = Number_cl.Check_Int64(txt_luongcoban.Text.Trim());
             Int64 _phucap_xangxe = Number_cl.Check_Int64(txt_phucap_xangxe.Text.Trim());
             Int64 _phucap_anuong = Number_cl.Check_Int64(txt_phucap_anuong.Text.Trim());
-            Int64 _phucap_nhatro = Number_cl.Check_Int64(txt_phucap_nhatro.Text.Trim());
+            decimal _phucap_dienthoai = (decimal)Number_cl.Check_Int64(txt_phucap_dienthoai.Text.Trim());
             Int64 _phucap_trachnhiem = Number_cl.Check_Int64(txt_phucap_trachniem.Text.Trim());
-            Int64 _phucap_bhyt = Number_cl.Check_Int64(txt_phucap_bhyt.Text.Trim());
             int _phantram_thuong_doanhso = Number_cl.Check_Int(txt_phantram_doanhso.Text.Trim());
 
 
@@ -804,9 +800,8 @@ public partial class admin_Default : System.Web.UI.Page
                     _ob.loai_nhanvien = _loai_nhanvien;
                     _ob.LuongCoBan = _luongcoban;
                     _ob.PhuCap_AnUong = _phucap_anuong;
-                    _ob.PhuCap_BHYT = _phucap_bhyt;
+                    _ob.PhuCap_DienThoai = _phucap_dienthoai;
                     _ob.PhuCap_TrachNhiem = _phucap_trachnhiem;
-                    _ob.PhuCap_NhaTro = _phucap_nhatro;
                     _ob.PhuCap_Xangxe = _phucap_xangxe;
                     _ob.sdt_nguoithan = _sdt_nguoithan;
                     _ob.ten_nguoithan = _ten_nguoithan;
@@ -851,9 +846,8 @@ public partial class admin_Default : System.Web.UI.Page
                         _ob.loai_nhanvien = _loai_nhanvien;
                         _ob.LuongCoBan = _luongcoban;
                         _ob.PhuCap_AnUong = _phucap_anuong;
-                        _ob.PhuCap_BHYT = _phucap_bhyt;
+                        _ob.PhuCap_DienThoai = _phucap_dienthoai;
                         _ob.PhuCap_TrachNhiem = _phucap_trachnhiem;
-                        _ob.PhuCap_NhaTro = _phucap_nhatro;
                         _ob.PhuCap_Xangxe = _phucap_xangxe;
                         _ob.sdt_nguoithan = _sdt_nguoithan;
                         _ob.ten_nguoithan = _ten_nguoithan;

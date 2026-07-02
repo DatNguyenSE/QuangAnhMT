@@ -336,27 +336,21 @@
                                             </div>
                                         </div>
                                         <div class="mt-3">
-                                            <label class="fw-600">Phụ cấp ăn uống</label>
+                                            <label class="fw-600">Phụ cấp ăn trưa</label>
                                             <div>
                                                 <asp:TextBox ID="txt_phucap_anuong" runat="server" data-role="input" MaxLength="14" oninput="format_sotien_new(this)"></asp:TextBox>
                                             </div>
                                         </div>
                                         <div class="mt-3">
-                                            <label class="fw-600">Phụ cấp nhà trọ</label>
+                                            <label class="fw-600">Phụ cấp điện thoại</label>
                                             <div>
-                                                <asp:TextBox ID="txt_phucap_nhatro" runat="server" data-role="input" MaxLength="14" oninput="format_sotien_new(this)"></asp:TextBox>
+                                                <asp:TextBox ID="txt_phucap_dienthoai" runat="server" data-role="input" MaxLength="14" oninput="format_sotien_new(this)"></asp:TextBox>
                                             </div>
                                         </div>
                                         <div class="mt-3">
                                             <label class="fw-600">Phụ cấp trách nhiệm</label>
                                             <div>
                                                 <asp:TextBox ID="txt_phucap_trachniem" runat="server" data-role="input" MaxLength="14" oninput="format_sotien_new(this)"></asp:TextBox>
-                                            </div>
-                                        </div>
-                                        <div class="mt-3">
-                                            <label class="fw-600">Phụ cấp BHYT</label>
-                                            <div>
-                                                <asp:TextBox ID="txt_phucap_bhyt" runat="server" data-role="input" MaxLength="14" oninput="format_sotien_new(this)"></asp:TextBox>
                                             </div>
                                         </div>
                                         <div class="mt-3">
@@ -652,7 +646,7 @@
                                             <th class="text-center" style="width: 150px; min-width: 150px;">Phụ cấp</th>
                                             <th class="text-center" style="width: 120px; min-width: 120px;">TN tháng</th>
                                         </asp:PlaceHolder>
-                                        <th class="text-center" style="width: 100px; min-width: 100px;">Người thân</th>
+                                        <th class="text-center" style="width: 100px; min-width: 100px; display:none;">Người thân</th>
                                         <th class="text-center" style="width: 1px; min-width: 1px;"></th>
                                     </tr>
                                 </thead>
@@ -692,7 +686,7 @@
                                                     </div>
                                                     <div class="mt-1">
                                                         <asp:PlaceHolder ID="PlaceHolder_ChinhThuc" runat="server" Visible='<%#Convert.ToBoolean(Eval("loai_nhanvien")) == true %>'>
-                                                            <div class="button mini primary rounded outline">Chính thức</div>
+                                                            <div class="button mini success rounded outline">Chính thức</div>
                                                         </asp:PlaceHolder>
                                                         <asp:PlaceHolder ID="PlaceHolder_HocViec" runat="server" Visible='<%#Convert.ToBoolean(Eval("loai_nhanvien")) == false %>'>
                                                             <div class="button mini warning rounded outline">Học việc</div>
@@ -729,17 +723,14 @@
                                                         <div style="float: left; width"><small>Xăng xe</small></div>
                                                         <div style="float: right"><small><%# Eval("PhuCap_Xangxe", "{0:#,##0}") %></small></div>
                                                         <div style="clear: both"></div>
-                                                        <div style="float: left; width"><small>Ăn uống</small></div>
+                                                        <div style="float: left; width"><small>Ăn trưa</small></div>
                                                         <div style="float: right"><small><%# Eval("PhuCap_AnUong", "{0:#,##0}") %></small></div>
-                                                        <div style="clear: both"></div>
-                                                        <div style="float: left; width"><small>Nhà trọ</small></div>
-                                                        <div style="float: right"><small><%# Eval("PhuCap_NhaTro", "{0:#,##0}") %></small></div>
                                                         <div style="clear: both"></div>
                                                         <div style="float: left; width"><small>Trách nhiệm</small></div>
                                                         <div style="float: right"><small><%# Eval("PhuCap_TrachNhiem", "{0:#,##0}") %></small></div>
                                                         <div style="clear: both"></div>
-                                                        <div style="float: left; width"><small>BHYT (năm)</small></div>
-                                                        <div style="float: right"><small><%# Eval("PhuCap_BHYT", "{0:#,##0}") %></small></div>
+                                                        <div style="float: left; width"><small>Điện thoại</small></div>
+                                                        <div style="float: right"><small><%# Eval("PhuCap_DienThoai", "{0:#,##0}") %></small></div>
                                                         <div style="clear: both"></div>
 
                                                     </td>
@@ -749,7 +740,7 @@
                                                         <div><small>+ công tác phí</small></div>
                                                     </td>
                                                 </asp:PlaceHolder>
-                                                <td class="text-center">
+                                                <td class="text-center" style="display:none;">
                                                     <%#Eval("ten_nguoithan") %>
                                                     <div><a title="Gọi" href="tel:<%#Eval("sdt_nguoithan") %>"><%#Eval("sdt_nguoithan") %></a></div>
                                                 </td>
@@ -816,7 +807,7 @@
                                             <td class="text-right text-bold"><%=ViewState["tongLCB"] %></td>
                                             <td class="text-right text-bold"><%=ViewState["tongPhuCap"] %></td>
                                             <td class="text-right text-bold"><%=ViewState["tongThuNhap"] %></td>
-                                            <td></td>
+                                            <td style="display:none;"></td>
                                             <td></td>
                                         </tr>
                                     </asp:PlaceHolder>

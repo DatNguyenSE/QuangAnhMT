@@ -19,19 +19,19 @@
     <meta name="revisit-after" content="1 days" />
     <meta property="og:type" content="website" />
 
-    <link rel='icon' href='/uploads/images/avt.png' sizes='16x16' type='image/x-icon'>
-    <link rel='icon' href='/uploads/images/avt.png' sizes='32x32' type='image/x-icon'>
-    <link rel='icon' href='/uploads/images/avt.png' sizes='48x48' type='image/x-icon'>
+    <link rel='icon' href='/uploads/images/logo.png' sizes='16x16' type='image/png'>
+    <link rel='icon' href='/uploads/images/logo.png' sizes='32x32' type='image/png'>
+    <link rel='icon' href='/uploads/images/logo.png' sizes='48x48' type='image/png'>
 
     <!-- Apple Touch Icon -->
-    <link rel='apple-touch-icon' href='/uploads/images/avt.png' sizes='180x180'>
-    <link rel='apple-touch-icon' href='/uploads/images/avt.png' sizes='167x167'>
-    <link rel='apple-touch-icon' href='/uploads/images/avt.png' sizes='152x152'>
-    <link rel='apple-touch-icon' href='/uploads/images/avt.png' sizes='120x120'>
+    <link rel='apple-touch-icon' href='/uploads/images/logo.png' sizes='180x180'>
+    <link rel='apple-touch-icon' href='/uploads/images/logo.png' sizes='167x167'>
+    <link rel='apple-touch-icon' href='/uploads/images/logo.png' sizes='152x152'>
+    <link rel='apple-touch-icon' href='/uploads/images/logo.png' sizes='120x120'>
 
     <!-- Android Icons -->
-    <link rel='icon' href='/uploads/images/avt.png' sizes='192x192'>
-    <link rel='icon' href='/uploads/images/avt.png' sizes='144x144'>
+    <link rel='icon' href='/uploads/images/logo.png' sizes='192x192'>
+    <link rel='icon' href='/uploads/images/logo.png' sizes='512x512'>
 
     <meta property='og:title' content='PHẦN MỀM QUẢN LÝ THÁI AN AUDIO' />
     <meta property='og:image' content='/uploads/images/home-open.jpg' />
