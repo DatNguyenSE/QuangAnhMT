@@ -1,4 +1,4 @@
-﻿<%@ Page Title="Quản lý nhân viên" Language="C#" MasterPageFile="~/admin/MasterPageAdmin.master" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="admin_Default" %>
+<%@ Page Title="Quản lý nhân viên" Language="C#" MasterPageFile="~/admin/MasterPageAdmin.master" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="admin_Default" %>
 
 <%@ Register Assembly="CKEditor.NET" Namespace="CKEditor.NET" TagPrefix="CKEditor" %>
 <%@ Register Namespace="CKFinder" Assembly="CKFinder" TagPrefix="CKFinder" %>
@@ -215,7 +215,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="mt-3">
+                                    <div class="mt-3" style="display:none;">
                                         <label class="fw-600 fg-red">CCCD mặt trước</label>
                                         <input type="file" id="fileInput1" onchange="uploadFile1()" data-role="file" data-button-title="<span class='mif-file-upload'></span>" />
                                         <div id="message1" runat="server"></div>
@@ -231,7 +231,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="mt-3">
+                                    <div class="mt-3" style="display:none;">
                                         <label class="fw-600 fg-red">CCCD mặt sau</label>
                                         <input type="file" id="fileInput2" onchange="uploadFile2()" data-role="file" data-button-title="<span class='mif-file-upload'></span>" />
                                         <div id="message2" runat="server"></div>
@@ -244,6 +244,13 @@
                                         </div>
                                         <div style='position: absolute; bottom: 0px; left: 100px'>
                                             <asp:Button ID="Button3" runat="server" Text="Xóa ảnh cũ" CssClass="alert small" Visible="false" OnClick="Button3_Click" />
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3">
+                                        <label class="fw-600 fg-red">Số CCCD</label>
+                                        <div>
+                                            <asp:TextBox ID="txt_so_cccd" runat="server" data-role="input"></asp:TextBox>
                                         </div>
                                     </div>
 
@@ -263,6 +270,27 @@
                                         <label class="fw-600 fg-red">Điện thoại</label>
                                         <div>
                                             <asp:TextBox ID="txt_dienthoai" runat="server" data-role="input"></asp:TextBox>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3">
+                                        <label class="fw-600">Tên ngân hàng</label>
+                                        <div>
+                                            <asp:TextBox ID="txt_tennganhang" runat="server" data-role="input"></asp:TextBox>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3">
+                                        <label class="fw-600">Số TK ngân hàng</label>
+                                        <div>
+                                            <asp:TextBox ID="txt_so_tknganhang" runat="server" data-role="input"></asp:TextBox>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3">
+                                        <label class="fw-600">Tên chủ TK ngân hàng</label>
+                                        <div>
+                                            <asp:TextBox ID="txt_tenchu_tknganhang" runat="server" data-role="input"></asp:TextBox>
                                         </div>
                                     </div>
                                     <div class="mt-3">
@@ -607,7 +635,9 @@
                                         <%-- <th class="text-center" style="width: 60px; min-width: 60px;">Ngày sinh</th>--%>
                                         <%--<th class="text-center" style="width: 60px; min-width: 60px;">Điện thoại</th>--%>
                                         <th class="text-center" style="width: 60px; min-width: 60px;">Vào làm</th>
-                                        <th class="text-center" style="width: 100px; min-width: 100px;">CCCD</th>
+                                        <th class="text-center" style="width: 100px; min-width: 100px; display:none;">CCCD</th>
+                                        <th class="text-center" style="width: 100px; min-width: 100px;">Số CCCD</th>
+                                        <th class="text-center" style="width: 150px; min-width: 150px;">Thông tin Ngân hàng</th>
 
                                         <asp:PlaceHolder ID="PlaceHolder2" runat="server" Visible="false">
                                             <th class="text-center" style="width: 60px; min-width: 60px;">Lương CB</th>
@@ -656,7 +686,7 @@
                                                 <%--<td class="text-center"><%#Eval("ngaysinh","{0:dd/MM/yyyy}") %></td>--%>
                                                 <%--<td class="text-center"><a title="Gọi" href="tel:<%#Eval("dienthoai") %>"><%#Eval("dienthoai") %></a></td>--%>
                                                 <td class="text-center"><%#Eval("ngayvaolam","{0:dd/MM/yyyy}") %></td>
-                                                <td class="text-center">
+                                                <td class="text-center" style="display:none;">
                                                     <div data-role="lightbox" class="c-pointer">
                                                         <div class="row">
                                                             <div class="cell-6">
@@ -667,6 +697,12 @@
                                                             </div>
                                                         </div>
                                                     </div>
+                                                </td>
+                                                <td class="text-center"><%#Eval("so_cccd") %></td>
+                                                <td class="text-left" style="line-height: 1.5;">
+                                                    <small>Ngân hàng: <b><%#Eval("tennganhang") %></b></small><br />
+                                                    <small>Số TK: <b><%#Eval("so_tknganhang") %></b></small><br />
+                                                    <small>Chủ TK: <b><%#Eval("tenchu_tknganhang") %></b></small>
                                                 </td>
 
                                                 <asp:PlaceHolder ID="lblLuongCoBan" runat="server" Visible="false">
@@ -760,7 +796,7 @@
                                     <asp:PlaceHolder ID="PlaceHolder3" runat="server" Visible="false">
                                         <tr>
                                             <td class=" bg-white"></td>
-                                            <td colspan="5" class="text-right text-bold bg-white">TỔNG</td>
+                                            <td colspan="6" class="text-right text-bold bg-white">TỔNG</td>
                                             <td class="text-right text-bold"><%=ViewState["tongLCB"] %></td>
                                             <td class="text-right text-bold"><%=ViewState["tongPhuCap"] %></td>
                                             <td class="text-right text-bold"><%=ViewState["tongThuNhap"] %></td>

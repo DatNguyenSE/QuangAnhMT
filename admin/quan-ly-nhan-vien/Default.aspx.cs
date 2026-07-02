@@ -1,4 +1,4 @@
-﻿using OfficeOpenXml;
+using OfficeOpenXml;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -219,6 +219,10 @@ public partial class admin_Default : System.Web.UI.Page
                                     ob1.ngayvaolam,
                                     ob1.cccd_mattruoc,
                                     ob1.cccd_matsau,
+                                    ob1.so_cccd,
+                                    ob1.tennganhang,
+                                    ob1.so_tknganhang,
+                                    ob1.tenchu_tknganhang,
                                     ob1.LuongCoBan,
                                     ob1.PhuCap_AnUong,
                                     ob1.PhuCap_BHYT,
@@ -434,6 +438,7 @@ public partial class admin_Default : System.Web.UI.Page
             txt_taikhoan.Text = ""; txt_taikhoan.ReadOnly = false;
             txt_matkhau.Text = "";
             txt_link_fileupload.Text = ""; txt_link_fileupload1.Text = ""; txt_link_fileupload2.Text = "";
+            txt_so_cccd.Text = ""; txt_tennganhang.Text = ""; txt_so_tknganhang.Text = ""; txt_tenchu_tknganhang.Text = "";
             txt_hoten.Text = "";
             txt_ngaysinh.Text = "";
             txt_dienthoai.Text = "";
@@ -556,6 +561,10 @@ public partial class admin_Default : System.Web.UI.Page
                     txt_link_fileupload.Text = q.anhdaidien;
                     txt_link_fileupload1.Text = q.cccd_mattruoc;
                     txt_link_fileupload2.Text = q.cccd_matsau;
+                    txt_so_cccd.Text = q.so_cccd;
+                    txt_tennganhang.Text = q.tennganhang;
+                    txt_so_tknganhang.Text = q.so_tknganhang;
+                    txt_tenchu_tknganhang.Text = q.tenchu_tknganhang;
                     PlaceHolder1.Visible = false;
                     if (q.LuongCoBan != null)
                         txt_luongcoban.Text = q.LuongCoBan.Value.ToString("#,##0");
@@ -665,6 +674,10 @@ public partial class admin_Default : System.Web.UI.Page
             string _anhdaiien = txt_link_fileupload.Text;
             string _cccd_mattruoc = txt_link_fileupload1.Text;
             string _cccd_matsau = txt_link_fileupload2.Text;
+            string _so_cccd = txt_so_cccd.Text.Trim();
+            string _tennganhang = txt_tennganhang.Text.Trim();
+            string _so_tknganhang = txt_so_tknganhang.Text.Trim();
+            string _tenchu_tknganhang = txt_tenchu_tknganhang.Text.Trim();
             string _fullname = str_cl.VietHoa_ChuCai_DauTien(str_cl.Remove_Blank(txt_hoten.Text.Trim().ToLower()));
             string _ngaysinh = txt_ngaysinh.Text;
             string _sdt = txt_dienthoai.Text.Trim().Replace(" ", "");
@@ -720,16 +733,16 @@ public partial class admin_Default : System.Web.UI.Page
                     ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng chọn ngày vào làm.", "false", "false", "OK", "alert", ""), true);
                     return;
                 }
-                if (_cccd_mattruoc == "")
-                {
-                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng chọn ảnh CCCD mặt trước.", "false", "false", "OK", "alert", ""), true);
-                    return;
-                }
-                if (_cccd_matsau == "")
-                {
-                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng chọn ảnh CCCD mặt sau.", "false", "false", "OK", "alert", ""), true);
-                    return;
-                }
+                //if (_cccd_mattruoc == "")
+                //{
+                //    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng chọn ảnh CCCD mặt trước.", "false", "false", "OK", "alert", ""), true);
+                //    return;
+                //}
+                //if (_cccd_matsau == "")
+                //{
+                //    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng chọn ảnh CCCD mặt sau.", "false", "false", "OK", "alert", ""), true);
+                //    return;
+                //}
                 if (_phantram_thuong_doanhso < 0 || _phantram_thuong_doanhso > 100)
                 {
                     ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Phần trăm thưởng doanh số không hợp lệ.", "false", "false", "OK", "alert", ""), true);
@@ -773,8 +786,12 @@ public partial class admin_Default : System.Web.UI.Page
                     _ob.block = false;
                     _ob.nguoitao = ViewState["taikhoan"].ToString();
                     _ob.trangthai_lamviec = "Đang làm việc";
-                    _ob.cccd_mattruoc = _cccd_mattruoc;
-                    _ob.cccd_matsau = _cccd_matsau;
+                    _ob.cccd_mattruoc = null;
+                    _ob.cccd_matsau = null;
+                    _ob.so_cccd = _so_cccd;
+                    _ob.tennganhang = _tennganhang;
+                    _ob.so_tknganhang = _so_tknganhang;
+                    _ob.tenchu_tknganhang = _tenchu_tknganhang;
                     _ob.LuongCoBan = _luongcoban;
                     _ob.PhuCap_AnUong = _phucap_anuong;
                     _ob.PhuCap_BHYT = _phucap_bhyt;
@@ -815,8 +832,12 @@ public partial class admin_Default : System.Web.UI.Page
                             _ob.anhdaidien = _anhdaiien;
                         else
                             _ob.anhdaidien = "/uploads/images/macdinh.jpg";
-                        _ob.cccd_mattruoc = _cccd_mattruoc;
-                        _ob.cccd_matsau = _cccd_matsau;
+                        _ob.cccd_mattruoc = null;
+                        _ob.cccd_matsau = null;
+                        _ob.so_cccd = _so_cccd;
+                        _ob.tennganhang = _tennganhang;
+                        _ob.so_tknganhang = _so_tknganhang;
+                        _ob.tenchu_tknganhang = _tenchu_tknganhang;
                         _ob.LuongCoBan = _luongcoban;
                         _ob.PhuCap_AnUong = _phucap_anuong;
                         _ob.PhuCap_BHYT = _phucap_bhyt;
