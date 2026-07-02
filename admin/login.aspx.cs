@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -135,7 +135,7 @@ public partial class admin_Default2 : System.Web.UI.Page
             using (dbDataContext db = new dbDataContext())
             {
                 string _user = txt_user.Text.Trim().ToLower();
-                string _pass = txt_pass.Text;
+                string _pass = txt_pass.Text.ToLower();
                 if (_user == "")
                     ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Vui lòng nhập tài khoản.", "5000", "warning"), true);
                 else

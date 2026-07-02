@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -113,8 +113,8 @@ public partial class admin_data_khach_hang_Default : System.Web.UI.Page
                                 ob1.ngay_capnhat,
                                 taikhoan_NV_ChamSoc = ob1.nhanvien_chamsoc,
                                 HoTenNhanVien = ob2 == null ? "" : ob2.hoten,
-                                SoLanBaoGia = db.BaoGia_tbs.Count(bg => bg.sdt_khachhang == ob1.sdt) // Đếm số lần báo giá
-                              
+                                SoLanBaoGia = db.BaoGia_tbs.Count(bg => bg.sdt_khachhang == ob1.sdt), // Đếm số lần báo giá
+                                SoLanDaBan = db.BaoGia_tbs.Count(bg => bg.sdt_khachhang == ob1.sdt && bg.trangthai == "Đã ký HĐ")
                             }).AsQueryable();
 
             if (check_login_cl.CheckQuyen(db, ViewState["taikhoan"].ToString(), "21"))
@@ -468,10 +468,69 @@ public partial class admin_data_khach_hang_Default : System.Web.UI.Page
         }
 
     }
-
-
     #endregion
 
- 
+    #region Thêm khách hàng
+    protected void but_show_form_add_Click(object sender, EventArgs e)
+    {
+        txt_sdt.Text = "";
+        txt_tenkh.Text = "";
+        txt_diachi.Text = "";
+        txt_nhanvien_chamsoc.Text = ViewState["taikhoan"] != null ? ViewState["taikhoan"].ToString() : "";
+        pn_add.Visible = true;
+        up_add.Update();
+    }
 
+    protected void but_close_form_add_Click(object sender, EventArgs e)
+    {
+        pn_add.Visible = false;
+        up_add.Update();
+    }
+
+    protected void but_add_edit_Click(object sender, EventArgs e)
+    {
+        string _sdt = txt_sdt.Text.Trim();
+        string _ten = txt_tenkh.Text.Trim();
+        string _diachi = txt_diachi.Text.Trim();
+        string _nhanvien = txt_nhanvien_chamsoc.Text.Trim();
+
+        if (string.IsNullOrEmpty(_sdt))
+        {
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng nhập số điện thoại.", "false", "false", "OK", "alert", ""), true);
+            return;
+        }
+
+        using (dbDataContext db = new dbDataContext())
+        {
+            var check = db.Data_KhachHang_tbs.FirstOrDefault(p => p.sdt == _sdt);
+            if (check != null)
+            {
+                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Số điện thoại đã tồn tại trong hệ thống.", "false", "false", "OK", "alert", ""), true);
+                return;
+            }
+
+            Data_KhachHang_tb ob = new Data_KhachHang_tb();
+            ob.sdt = _sdt;
+            ob.ten = _ten;
+            ob.diachi = _diachi;
+            ob.ngay_capnhat = DateTime.Now;
+            ob.nhanvien_chamsoc = _nhanvien;
+            
+            db.Data_KhachHang_tbs.InsertOnSubmit(ob);
+            db.SubmitChanges();
+        }
+
+        // Không đóng modal (pn_add.Visible = false) theo yêu cầu
+        up_add.Update();
+        show_main();
+        up_main.Update(); // Cập nhật lại grid dữ liệu bên ngoài
+        
+        // Reset lại form để tiện nhập tiếp
+        txt_sdt.Text = "";
+        txt_tenkh.Text = "";
+        txt_diachi.Text = "";
+
+        ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Thêm khách hàng thành công.", "1000", "success"), true);
+    }
+    #endregion
 }

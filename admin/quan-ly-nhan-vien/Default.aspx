@@ -724,7 +724,7 @@
                                                         <div style="float: right"><small><%# Eval("PhuCap_Xangxe", "{0:#,##0}") %></small></div>
                                                         <div style="clear: both"></div>
                                                         <div style="float: left; width"><small>Ăn trưa</small></div>
-                                                        <div style="float: right"><small><%# Eval("PhuCap_AnUong", "{0:#,##0}") %></small></div>
+                                                        <div style="float: right"><small><%# (((Int64?)Eval("PhuCap_AnUong") ?? 0) * 26).ToString("#,##0") %></small></div>
                                                         <div style="clear: both"></div>
                                                         <div style="float: left; width"><small>Trách nhiệm</small></div>
                                                         <div style="float: right"><small><%# Eval("PhuCap_TrachNhiem", "{0:#,##0}") %></small></div>
@@ -737,7 +737,6 @@
                                                     <td class="text-right">
                                                         <b><%# Eval("TongThuNhapThang", "{0:#,##0}") %></b>
                                                         <div><small>+ <%# Eval("phantram_doanhso_banhang") %>% DS bán hàng</small></div>
-                                                        <div><small>+ công tác phí</small></div>
                                                     </td>
                                                 </asp:PlaceHolder>
                                                 <td class="text-center" style="display:none;">
@@ -750,8 +749,8 @@
                                                             <span class="mif mif-more-horiz"></span>
                                                         </button>
                                                         <ul class="d-menu place-right" data-role="dropdown">
-                                                            <%--<li><a href="#">Chỉnh sửa</a></li>
-                                                            <li><a href="#">Đổi mật khẩu</a></li>--%>
+                                                            <li><asp:LinkButton ID="but_show_chinhsua_dropdown" OnClick="but_show_chinhsua_Click" CommandArgument='<%#Eval("taikhoan") %>' runat="server">Chỉnh sửa</asp:LinkButton></li>
+                                                            <%--<li><a href="#">Đổi mật khẩu</a></li>--%>
                                                             <li>
                                                                 <asp:LinkButton ID="but_show_form_phanquyen" OnClick="but_show_form_phanquyen_Click" CommandArgument='<%#Eval("taikhoan") %>' runat="server">Phân quyền</asp:LinkButton></li>
                                                             <li>

@@ -140,15 +140,15 @@
     <form id="form1" runat="server">
         <div style="/*height: 148mm; */ width: 210mm!important; font-family: Arial!important; overflow: auto; margin: 0 auto; overflow: hidden" class="bg-white">
             <div style="border-left: 1px solid #000; border-right: 1px solid #000;">
-                <div id="head" class="p-2 fg-yellow" style="background: linear-gradient(#0036a3,#3d7eff)">
+                <div id="head" class="p-2 fg-yellow" style="background: linear-gradient(to right, #c62828, #1565c0)">
                     <div style="float: left; width: 90px">
-                        <img src="/uploads/images/avt.png" width="90" />
+                        <img src="/uploads/images/logo.png" width="90" />
                     </div>
                     <div style="float: right; width: calc(100% - 100px)">
                         <div class="text-bold mt-2 " style="font-size: 18px">CÔNG TY TNHH THƯƠNG MẠI DỊCH VỤ ĐẦU TƯ HHM AUDIO</div>
                         <div><small>Mã số thuế: 3703072451</small></div>
-                        <div><small><span class="mif-location"></span>Số 77, Đường số 8, Khu dân cư Hiệp Thành 3, Khu phố 7, Hiệp Thành, Thủ Dầu Một, Bình Dương, Việt Nam</small></div>
-                        <div><small><span class="mif-phone"></span>0978 308 345 (Mr. Thái An) <span class="mif-earth pl-5"></span>www.hhmaudio.com</small></div>
+                        <div><small><span class="mif-location"></span>525/9/55, Quang Trung, Gò Vấp, Hồ Chí Minh 70000</small></div>
+                        <div><small><span class="mif-phone"></span>0988 186 314 <span class="mif-earth pl-5"></span>www.quanganhMT.com</small></div>
                     </div>
                     <div class="clr-bc"></div>
                 </div>
@@ -319,7 +319,8 @@
 
                     %>
                     <div class="text-bold">CÔNG TY TNHH THƯƠNG MẠI DỊCH VỤ ĐẦU TƯ HHM AUDIO</div>
-                    <div><small><b>Địa chỉ:</b> Số 77, Đường số 8, Khu dân cư Hiệp Thành 3,Khu phố 7, Phường Hiệp Thành, Thành phố Thủ Dầu Một, Tỉnh Bình Dương, Việt Nam</small></div>
+                    <div><small><b>Địa chỉ:</b> 525/9/55, Quang Trung, Gò Vấp, Hồ Chí Minh 70000</small></div>
+                    <div><small><b>Điện thoại:</b> 0988 186 314 | <b>Website:</b> www.quanganhMT.com</small></div>
                     <div class="info-ck" style="display: flex; align-items: center; gap: 20px;">
                         <div style="flex: 1;">
                             <div class="mt-3 text-bold">STK: 0421000502463 | Vietcombank | Thái Đình An</div>
@@ -339,7 +340,8 @@
                         else
                         {  %>
                     <div class="text-bold">CÔNG TY TNHH THƯƠNG MẠI DỊCH VỤ ĐẦU TƯ HHM AUDIO</div>
-                    <div><small><b>Địa chỉ:</b> Số 77, Đường số 8, Khu dân cư Hiệp Thành 3,Khu phố 7, Phường Hiệp Thành, Thành phố Thủ Dầu Một, Tỉnh Bình Dương, Việt Nam</small></div>
+                    <div><small><b>Địa chỉ:</b> 525/9/55, Quang Trung, Gò Vấp, Hồ Chí Minh 70000</small></div>
+                    <div><small><b>Điện thoại:</b> 0988 186 314 | <b>Website:</b> www.quanganhMT.com</small></div>
                     <div class="info-ck" style="display: flex; align-items: center; gap: 20px;">
                         <div style="flex: 1;">
                             <div class="mt-3 text-bold">STK CÔNG TY: 1030308345 | Vietcombank</div>
@@ -359,7 +361,7 @@
                     <div>
                         <img src="/uploads/images/CON-DAU-HHM-AUDIO.PNG" width="120" />
                     </div>
-                    THÁI ĐÌNH AN
+                    LIỄU CÔNG THẮNG
                 </div>
             </div>
 

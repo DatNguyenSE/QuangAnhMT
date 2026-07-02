@@ -1,4 +1,4 @@
-﻿<%@ Page Title="Data khách hàng" Language="C#" MasterPageFile="~/admin/MasterPageAdmin.master" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="admin_data_khach_hang_Default" %>
+<%@ Page Title="Data khách hàng" Language="C#" MasterPageFile="~/admin/MasterPageAdmin.master" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="admin_data_khach_hang_Default" %>
 
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="Server">
 </asp:Content>
@@ -92,9 +92,9 @@
                 <div id="menutop-tool-bc" style="position: fixed; top: 52px; width: 100%; z-index: 4">
                     <ul class="h-menu bg-white">
 
-                        <%--<li data-role="hint" data-hint-position="top" data-hint-text="Thêm sản phẩm">
+                        <li data-role="hint" data-hint-position="top" data-hint-text="Thêm khách hàng">
                          <asp:LinkButton ID="but_show_form_add" OnClick="but_show_form_add_Click" runat="server"><span class="mif-plus"></span></asp:LinkButton>
-                     </li>--%>
+                     </li>
                         <%--<li data-role="hint" data-hint-position="top" data-hint-text="Lưu">
                          <asp:LinkButton ID="but_save" OnClick="but_save_Click" runat="server"><span class="mif-floppy-disk"></span></asp:LinkButton>
                      </li>--%>
@@ -210,7 +210,7 @@
                                                     <asp:Button ID="Button1" runat="server" Text='<%#Eval("SoLanBaoGia","{0:#,##0}") %>' CssClass="text-bold mini info rounded"  />
                                                 </td>
                                                 <td>
-                                                    <asp:Button ID="Button2" runat="server" Text='0' CssClass="text-bold mini success rounded"  />
+                                                    <asp:Button ID="Button2" runat="server" Text='<%#Eval("SoLanDaBan","{0:#,##0}") %>' CssClass="text-bold mini success rounded"  />
                                                 </td>
                                             </tr>
                                         </ItemTemplate>
@@ -234,6 +234,66 @@
             </div>
         </ProgressTemplate>
     </asp:UpdateProgress>
+    <asp:UpdatePanel ID="up_add" runat="server" UpdateMode="Conditional">
+        <ContentTemplate>
+            <asp:Panel ID="pn_add" runat="server" Visible="false" DefaultButton="but_add_edit">
+                <div style="position: fixed; width: 100%; height: 52px; background-color: none; top: 0; left: 0; z-index: 1041!important;">
+                    <div style='top: 0; left: 0px; margin: 0 auto; max-width: 1100px; opacity: 1;'>
+                        <div style='position: absolute; right: 18px; top: 14px; z-index: 1040!important'>
+                            <a href='#' class='fg-white d-inline' id="close_add" runat="server" onserverclick="but_close_form_add_Click" title='Đóng'>
+                                <span class='mif mif-cross mif-2x fg-red fg-lightRed-hover'></span>
+                            </a>
+                        </div>
+                        <div class="bg-white pl-4 pl-8-md pr-8-md pr-4" style="height: 52px;">
+                            <div class="pt-4 text-upper text-bold">
+                                THÊM KHÁCH HÀNG
+                            </div>
+                            <hr />
+                        </div>
+                    </div>
+                </div>
+                <div style="position: fixed; width: 100%; height: 100%; top: 0; left: 0; overflow: auto; z-index: 1040!important; background-image: url('/uploads/images/bg1.png');">
+                    <div style='top: 0; left: 0; margin: 0 auto; max-width: 1106px; opacity: 1;'>
+                        <div class="bg-white border bd-transparent pl-4 pl-8-md pr-8-md pr-4" style="padding-top: 52px">
+                            <div class="row">
+                                <div class="cell-lg-12">
+                                    <div class="mt-3">
+                                        <label class="fw-600 fg-red">Số điện thoại</label>
+                                        <div>
+                                            <asp:TextBox ID="txt_sdt" runat="server" data-role="input" MaxLength="15"></asp:TextBox>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3">
+                                        <label class="fw-600">Tên khách hàng</label>
+                                        <div>
+                                            <asp:TextBox ID="txt_tenkh" runat="server" data-role="input"></asp:TextBox>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3">
+                                        <label class="fw-600">Địa chỉ</label>
+                                        <div>
+                                            <asp:TextBox ID="txt_diachi" runat="server" data-role="input"></asp:TextBox>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3">
+                                        <label class="fw-600">Nhân viên chăm sóc</label>
+                                        <div>
+                                            <asp:TextBox ID="txt_nhanvien_chamsoc" runat="server" data-role="input"></asp:TextBox>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-6 mb-20 text-right">
+                                        <asp:Button ID="but_add_edit" runat="server" CssClass="success" Text="THÊM MỚI" OnClick="but_add_edit_Click" />
+                                    </div>
+                                    <div class="mb-20"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </asp:Panel>
+        </ContentTemplate>
+    </asp:UpdatePanel>
 </asp:Content>
 <asp:Content ID="Content3" ContentPlaceHolderID="foot" runat="Server">
 </asp:Content>

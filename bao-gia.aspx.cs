@@ -205,7 +205,7 @@ public partial class bao_gia : System.Web.UI.Page
                             // Ví dụ nếu bạn có Label thông báo:
                             // lblError.Text = "Số tiền không hợp lệ. Vui lòng kiểm tra lại.";
                             System.Diagnostics.Debug.WriteLine("FormatException khi parse donhang_saugiamgia: " + ex.Message);
-                            throw; // hoặc bỏ 'throw' nếu bạn đã xử lý UI và muốn dừng ở đây
+                            //throw; // hoặc bỏ 'throw' nếu bạn đã xử lý UI và muốn dừng ở đây
                         }
                         catch (Exception ex)
                         {

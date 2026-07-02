@@ -1,4 +1,4 @@
-﻿<%@ Page Title="Quản lý kho" Language="C#" MasterPageFile="~/admin/MasterPageAdmin.master" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="admin_quan_ly_kho_Default" %>
+<%@ Page Title="Quản lý kho" Language="C#" MasterPageFile="~/admin/MasterPageAdmin.master" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="admin_quan_ly_kho_Default" %>
 <%@ Register Assembly="CKEditor.NET" Namespace="CKEditor.NET" TagPrefix="CKEditor" %>
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="Server">
 </asp:Content>
@@ -103,6 +103,10 @@
                             <div class="row">
                                 <div class="cell-lg-6 pr-4-lg">
                                     <div class="mt-3">
+                                        <label class="fg-red fw-600">Số seri</label>
+                                        <asp:TextBox ID="txt_so_seri" runat="server" data-role="input" onfocus="this.blur()" style="background-color: #f8f9fa; pointer-events: none;"></asp:TextBox>
+                                    </div>
+                                    <div class="mt-3">
                                         <label class="fg-red fw-600">Tên sản phẩm</label>
                                         <asp:TextBox ID="txt_name" runat="server" data-role="input" MaxLength="100"></asp:TextBox>
                                     </div>
@@ -147,7 +151,7 @@
                                         </div>
                                     </div>
                                     <div class="mt-3">
-                                        <label class="fg-red fw-600">Model</label>
+                                        <label class="fw-600">Model</label>
                                         <asp:TextBox ID="txt_model" runat="server" data-role="input" MaxLength="100"></asp:TextBox>
                                     </div>
 
@@ -465,6 +469,7 @@
                                         </th>
                                         <th style="width: 50px; min-width: 50px;">Ảnh</th>
                                         <th style="width: 160px; min-width: 160px;">Sản phẩm</th>
+                                        <th style="width: 120px; min-width: 120px;">Số seri</th>
                                         <th style="width: 1px; min-width: 1px;">VAT</th>
                                         <th style="width: 1px; min-width: 1px;">ĐVT</th>
                                         
@@ -521,6 +526,7 @@
                                                         </asp:PlaceHolder>
                                                     </div>
                                                 </td>
+                                                <td><%#Eval("so_seri") %></td>
                                                 <td>
                                                     <asp:PlaceHolder ID="PlaceHolder2" runat="server" Visible='<%#Eval("cohoadon").ToString()=="True" %>'>
                                                         <span class="mif mif-checkmark fg-green"></span>
@@ -558,7 +564,11 @@
                                                             <%--<li><a href="#">Chỉnh sửa</a></li>
              <li><a href="#">Đổi mật khẩu</a></li>--%>
                                                             <li>
-                                                                <asp:LinkButton ID="but_show_form_nhaphang" OnClick="but_show_form_nhaphang_Click" CommandArgument='<%#Eval("id") %>' runat="server">Nhập hàng</asp:LinkButton></li>
+                                                                <asp:LinkButton ID="but_show_form_nhaphang" OnClick="but_show_form_nhaphang_Click" CommandArgument='<%#Eval("id") %>' runat="server">Nhập hàng</asp:LinkButton>
+                                                            </li>
+                                                            <li>
+                                                                <a href="javascript:void(0)" onclick="showQRCode('<%#Eval("so_seri") %>')">Mã QR</a>
+                                                            </li>
                                                             <%-- <li class="divider"></li>
              <li><a href="#">Sao chép thông tin đăng nhập</a></li>
              <li class="divider"></li>
@@ -574,7 +584,7 @@
                                     </asp:Repeater>
                                     <tr>
                                         <td class=" bg-white"></td>
-                                        <td colspan="3" class="text-bold text-right">TỔNG TÀI SẢN</td>
+                                        <td colspan="4" class="text-bold text-right">TỔNG TÀI SẢN</td>
                                         <td class="text-center text-bold"><%=ViewState["tong_ton"] %></td>
                                         <td class="text-right text-bold"><%=ViewState["tong_giale"] %></td>
                                         <td class="text-right text-bold">
@@ -587,7 +597,7 @@
                                     <asp:PlaceHolder ID="PlaceHolder3" runat="server" Visible="false">
                                         <tr>
                                             <td class=" bg-white"></td>
-                                            <td colspan="3" class="text-bold text-right">LÃI GỘP (NẾU BÁN HẾT)</td>
+                                            <td colspan="4" class="text-bold text-right">LÃI GỘP (NẾU BÁN HẾT)</td>
                                             <td colspan="3" class="text-right text-bold"><%=ViewState["tong_laigop"] %></td>
                                             <td colspan="7"></td>
                                         </tr>
@@ -691,4 +701,32 @@
         }
     </script>
 
+    <!-- Modal QR Code -->
+    <div id="qrModal" style="display:none; position: fixed; width: 100%; height: 100%; top: 0; left: 0; z-index: 1050; background: rgba(0,0,0,0.5);">
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; padding: 20px; border-radius: 8px; text-align: center; min-width: 300px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);">
+            <h3 class="mt-0 mb-3 text-upper text-bold fg-red">Mã QR Sản Phẩm</h3>
+            <img id="qrImage" src="" alt="QR Code" style="width: 200px; height: 200px; display: block; margin: 0 auto; border: 1px solid #ddd; padding: 5px;" />
+            <div class="mt-3 text-bold" id="qrSeriLabel"></div>
+            <div class="mt-4">
+                <button type="button" class="button alert" onclick="document.getElementById('qrModal').style.display='none'">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showQRCode(seri) {
+            if (!seri) {
+                alert('Sản phẩm này chưa có số seri!');
+                return;
+            }
+            var domain = window.location.origin;
+            var qrUrl = domain + '/admin/quan-ly-kho/qr_sanpham.aspx?so_seri=' + seri;
+            // Dùng api tạo qr
+            var qrSrc = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(qrUrl);
+            
+            document.getElementById('qrImage').src = qrSrc;
+            document.getElementById('qrSeriLabel').innerText = 'Seri: ' + seri;
+            document.getElementById('qrModal').style.display = 'block';
+        }
+    </script>
 </asp:Content>

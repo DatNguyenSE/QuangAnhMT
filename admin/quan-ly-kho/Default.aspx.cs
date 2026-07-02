@@ -1,4 +1,4 @@
-﻿using OfficeOpenXml;
+using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -179,6 +179,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                                     Nhom = ob3 == null ? "" : ob3.ten,
                                     DVT = ob4 == null ? "" : ob4.ten,
                                     ob1.anh,
+                                    ob1.so_seri,
                                     ob1.model,
                                     ob1.thongso_kythuat,
                                     ob1.gianhap,
@@ -381,7 +382,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
         try
         {
             Label1.Text = null;
-            txt_name.Text = ""; txt_model.Text = ""; txt_thongso.Text = ""; txt_ghichu.Text = "";
+            txt_so_seri.Text = ""; txt_name.Text = ""; txt_model.Text = ""; txt_thongso.Text = ""; txt_ghichu.Text = "";
             txt_giaban.Text = "0";
             txt_gianhap.Text = "0";
             Label2.Text = ""; Button2.Visible = false; txt_link_fileupload.Text = "";
@@ -447,6 +448,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             //hiện form add_edit trong updatePanel_add
             pn_add.Visible = !pn_add.Visible;
             up_add.Update();
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), "generate_seri", "setTimeout(function(){ document.getElementById('" + txt_so_seri.ClientID + "').value = 'SN-' + Date.now(); }, 100);", true);
         }
         catch (Exception _ex)
         {
@@ -561,6 +563,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                 else
                     DropDownList3.SelectedIndex = 0;
 
+                txt_so_seri.Text = q.so_seri;
                 txt_name.Text = q.ten;
                 txt_link_fileupload.Text = q.anh;
                 txt_model.Text = q.model;
@@ -633,6 +636,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             #region Chuẩn bị dữ liệu
             //đảm bảo luôn có thư mục chứa ảnh
             if (!Directory.Exists(Server.MapPath("~/uploads/img-handler/"))) Directory.CreateDirectory(Server.MapPath("~/uploads/img-handler/"));
+            string _so_seri = txt_so_seri.Text.Trim();
             string _tensp = txt_name.Text.Trim();
             string _anh = txt_link_fileupload.Text;
             bool _cohoadon = true;
@@ -683,11 +687,6 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                     ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng chọn đơn vị tính.", "false", "false", "OK", "alert", ""), true);
                     return;
                 }
-                if (_model == "")
-                {
-                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng nhập Model sản phẩm.", "false", "false", "OK", "alert", ""), true);
-                    return;
-                }
 
                 #endregion
 
@@ -702,6 +701,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                     #region thêm mới
                     KhoSanPham_tb _ob = new KhoSanPham_tb();
                     _ob.sanpham_tuychon = false;//đánh dấu đây kp là sản phẩm có sẵn, sp này khi báo giá thì cứ thêm vào rồi báo, bán đc hàng thì tự nhập xuất và thêm vào kho --> đổi thành true khi bán đc hàng
+                    _ob.so_seri = _so_seri;
                     _ob.ten = _tensp;
                     _ob.id_nhom = _id_nhom;
                     _ob.id_hang = _id_hang;
@@ -721,10 +721,12 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                     db.SubmitChanges();
                     #endregion
                     #region cập nhật dữ liệu và update hiển thị
-                    txt_name.Text = ""; txt_model.Text = ""; txt_thongso.Text = ""; txt_giaban.Text = "0"; txt_gianhap.Text = "0"; txt_ghichu.Text = ""; txt_link_fileupload.Text = "";
+                    txt_so_seri.Text = ""; txt_name.Text = ""; txt_model.Text = ""; txt_thongso.Text = ""; txt_giaban.Text = "0"; txt_gianhap.Text = "0"; txt_ghichu.Text = ""; txt_link_fileupload.Text = "";
+                    DropDownList1.SelectedIndex = 0; DropDownList2.SelectedIndex = 0; DropDownList3.SelectedIndex = 0;
                     show_main();
                     up_main.Update();
                     ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Xử lý thành công.", "1000", "warning"), true);
+                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), "generate_seri", "setTimeout(function(){ document.getElementById('" + txt_so_seri.ClientID + "').value = 'SN-' + Date.now(); }, 100);", true);
                     #endregion
                 }
                 else//edit
@@ -742,6 +744,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
 
                         #region kiểm tra ngoại lệ. sau đó cập nhật
                         KhoSanPham_tb _ob = q_edit;
+                        _ob.so_seri = _so_seri;
                         _ob.ten = _tensp;
                         _ob.id_nhom = _id_nhom;
                         _ob.id_hang = _id_hang;

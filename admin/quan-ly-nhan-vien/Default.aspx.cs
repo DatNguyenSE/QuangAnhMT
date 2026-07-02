@@ -229,7 +229,7 @@ public partial class admin_Default : System.Web.UI.Page
                                     ob1.PhuCap_DienThoai,
                                     ob1.PhuCap_TrachNhiem,
                                     ob1.PhuCap_Xangxe,
-                                    TongThuNhapThang = (ob1.LuongCoBan ?? 0) + (ob1.PhuCap_AnUong ?? 0) + (ob1.PhuCap_DienThoai ?? 0) + (ob1.PhuCap_TrachNhiem ?? 0) + (ob1.PhuCap_Xangxe ?? 0),
+                                    TongThuNhapThang = (ob1.LuongCoBan ?? 0) + ((ob1.PhuCap_AnUong ?? 0) * 26) + (ob1.PhuCap_DienThoai ?? 0) + (ob1.PhuCap_TrachNhiem ?? 0) + (ob1.PhuCap_Xangxe ?? 0),
                                     ob1.sdt_nguoithan,
                                     ob1.ten_nguoithan,
                                     ob1.phantram_doanhso_banhang
@@ -540,7 +540,7 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("4", "4");
+            //check_login_cl.check_login_admin("4", "4");
             ViewState["add_edit"] = "edit";
             Label1.Text = "CHỈNH SỬA NHÂN VIÊN";
             but_add_edit.Text = "CẬP NHẬT";
@@ -555,11 +555,12 @@ public partial class admin_Default : System.Web.UI.Page
                     ViewState["id_edit"] = _id;
 
                     txt_taikhoan.Text = q.taikhoan;
-                    txt_taikhoan.ReadOnly = true;
+                    txt_taikhoan.ReadOnly = false;
+                    txt_matkhau.Attributes["value"] = q.matkhau;
                     txt_hoten.Text = q.hoten;
                     txt_dienthoai.Text = q.dienthoai;
-                    txt_ngaysinh.Text = q.ngaysinh.Value.ToString("dd/MM/yyyy");
-                    txt_ngayvaolam.Text = q.ngayvaolam.Value.ToString("dd/MM/yyyy");
+                    txt_ngaysinh.Text = q.ngaysinh.HasValue ? q.ngaysinh.Value.ToString("dd/MM/yyyy") : "";
+                    txt_ngayvaolam.Text = q.ngayvaolam.HasValue ? q.ngayvaolam.Value.ToString("dd/MM/yyyy") : "";
                     txt_link_fileupload.Text = q.anhdaidien;
                     txt_link_fileupload1.Text = q.cccd_mattruoc;
                     txt_link_fileupload2.Text = q.cccd_matsau;
@@ -569,7 +570,7 @@ public partial class admin_Default : System.Web.UI.Page
                     txt_tenchu_tknganhang.Text = q.tenchu_tknganhang;
                     rb_ChinhThuc.Checked = q.loai_nhanvien;
                     rb_HocViec.Checked = !q.loai_nhanvien;
-                    PlaceHolder1.Visible = false;
+                    PlaceHolder1.Visible = true;
                     if (q.LuongCoBan != null)
                         txt_luongcoban.Text = q.LuongCoBan.Value.ToString("#,##0");
                     if (q.PhuCap_Xangxe != null)
@@ -587,7 +588,7 @@ public partial class admin_Default : System.Web.UI.Page
                     txt_sdt_nguoithan.Text = q.sdt_nguoithan;
                     txt_tennguoithan.Text = q.ten_nguoithan;
 
-                    if (q.anhdaidien != "")
+                    if (!string.IsNullOrEmpty(q.anhdaidien))
                     {
                         Button2.Visible = true;
                         Label2.Text = "<div><small>Ảnh cũ</small></div><img src='" + q.anhdaidien + "' style='max-width: 100px' />";
@@ -597,7 +598,7 @@ public partial class admin_Default : System.Web.UI.Page
                         Button2.Visible = false;
                         Label2.Text = "";
                     }
-                    if (q.cccd_mattruoc != "")
+                    if (!string.IsNullOrEmpty(q.cccd_mattruoc))
                     {
                         Button1.Visible = true;
                         Label3.Text = "<div><small>Ảnh cũ</small></div><img src='" + q.cccd_mattruoc + "' style='max-width: 100px' />";
@@ -607,7 +608,7 @@ public partial class admin_Default : System.Web.UI.Page
                         Button1.Visible = false;
                         Label3.Text = "";
                     }
-                    if (q.cccd_matsau != "")
+                    if (!string.IsNullOrEmpty(q.cccd_matsau))
                     {
                         Button3.Visible = true;
                         Label4.Text = "<div><small>Ảnh cũ</small></div><img src='" + q.cccd_matsau + "' style='max-width: 100px' />";
@@ -672,7 +673,7 @@ public partial class admin_Default : System.Web.UI.Page
             if (!Directory.Exists(Server.MapPath("~/uploads/img-handler/"))) Directory.CreateDirectory(Server.MapPath("~/uploads/img-handler/"));
             //xử lý dữ liệu đầu vào
             string _user = txt_taikhoan.Text.Trim().ToLower();
-            string _pass = txt_matkhau.Text.Trim();
+            string _pass = txt_matkhau.Text.Trim().ToLower();
             string _anhdaiien = txt_link_fileupload.Text;
             string _cccd_mattruoc = txt_link_fileupload1.Text;
             string _cccd_matsau = txt_link_fileupload2.Text;
@@ -852,7 +853,20 @@ public partial class admin_Default : System.Web.UI.Page
                         _ob.sdt_nguoithan = _sdt_nguoithan;
                         _ob.ten_nguoithan = _ten_nguoithan;
                         _ob.phantram_doanhso_banhang = _phantram_thuong_doanhso;
+                        _ob.matkhau = _pass;
                         db.SubmitChanges();
+                        
+                        if (_user != ViewState["id_edit"].ToString())
+                        {
+                            if (taikhoan_cl.exist_taikhoan(_user))
+                            {
+                                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Tên tài khoản mới đã tồn tại, các thông tin khác đã được lưu.", "5000", "warning"), true);
+                            }
+                            else
+                            {
+                                db.ExecuteCommand("UPDATE taikhoan_tb SET taikhoan={0} WHERE taikhoan={1}", _user, ViewState["id_edit"].ToString());
+                            }
+                        }
                         #region cập nhật dữ liệu và update hiển thị
 
                         show_main();

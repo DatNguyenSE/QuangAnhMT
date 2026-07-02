@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -66,8 +66,8 @@ public partial class admin_Default : System.Web.UI.Page
                         var q_tk = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == ViewState["taikhoan"].ToString());
                         if (q_tk != null)
                         {
-                            _LCB_hientai = q_tk.LuongCoBan.Value;
-                            _LuongNgay = _LCB_hientai / 30;
+                            _LCB_hientai = q_tk.LuongCoBan ?? 0;
+                            _LuongNgay = _LCB_hientai / 26;
                         }
                         _ob.LCB_hientai = _LCB_hientai;
                         _ob.LuongNgay_ChamCong = _LuongNgay;

@@ -121,7 +121,7 @@ public partial class admin_quan_ly_nhan_vien_bang_cham_cong : System.Web.UI.Page
         htmlTable.Append("<td class='text-center bg-cobalt fg-white' style='width:1px;min-width:1px'>Doanh<br/>số</td>");
         htmlTable.Append("<td class='text-center bg-cobalt fg-white' style='width:1px;min-width:1px'>Thưởng<br/>D.số</td>");
         htmlTable.Append("<td class='text-center bg-cobalt fg-white' style='width:1px;min-width:1px'>Tổng<br/>cộng</td>");
-        htmlTable.Append("<td class='text-center bg-orange fg-white' style='width:1px;min-width:1px'>Phạt</td>");
+        //htmlTable.Append("<td class='text-center bg-orange fg-white' style='width:1px;min-width:1px'>Phạt</td>");
         htmlTable.Append("<td class='text-center bg-red fg-white' style='width:1px;min-width:1px'>Thực<br/>nhận</td>");
 
         // Kết thúc hàng đầu tiên
@@ -217,11 +217,11 @@ public partial class admin_quan_ly_nhan_vien_bang_cham_cong : System.Web.UI.Page
             //htmlTable.Append("<td class='text-right '>" + q_nv.PhuCap_TrachNhiem.Value.ToString("#,##0") + "</td>");
 
             #region tính các phụ cấp theo ngày đi làm, làm mới tính
-            // Tính hệ số theo số ngày công / 30
-            decimal heSoNgayCong = tongNgayCong / 30m;
+            // Tính hệ số theo số ngày công / 26
+            decimal heSoNgayCong = tongNgayCong / 26m;
             // Tính phụ cấp quy đổi theo tỷ lệ (làm tròn .5 lên)
             long pcXangXe = (long)Math.Round(q_nv.PhuCap_Xangxe.Value * heSoNgayCong, MidpointRounding.AwayFromZero);
-            long pcAnUong = (long)Math.Round(q_nv.PhuCap_AnUong.Value * heSoNgayCong, MidpointRounding.AwayFromZero);
+            long pcAnUong = (long)Math.Round(q_nv.PhuCap_AnUong.Value * (decimal)tongNgayCong, MidpointRounding.AwayFromZero);
             long pcDienThoai = (long)Math.Round(q_nv.PhuCap_DienThoai.Value * heSoNgayCong, MidpointRounding.AwayFromZero);
             long pcTrachNhiem = (long)Math.Round(q_nv.PhuCap_TrachNhiem.Value * heSoNgayCong, MidpointRounding.AwayFromZero);
             // Hiển thị các cột phụ cấp đã quy đổi
@@ -267,8 +267,8 @@ public partial class admin_quan_ly_nhan_vien_bang_cham_cong : System.Web.UI.Page
 
 
             htmlTable.Append("<td class='text-right text-bold'>" + _tongcong.ToString("#,##0") + "</td>");
-            htmlTable.Append("<td class='text-right fg-orange'>" + _phat.ToString("#,##0") + "</td>");
-            _thucnhan = _tongcong - _phat;
+            //htmlTable.Append("<td class='text-right fg-orange'>" + _phat.ToString("#,##0") + "</td>");
+            _thucnhan = _tongcong; // _thucnhan = _tongcong - _phat;
             htmlTable.Append("<td class='text-right text-bold fg-red'>" + _thucnhan.ToString("#,##0") + "</td>");
 
             htmlTable.Append("</tr>");
@@ -307,7 +307,7 @@ public partial class admin_quan_ly_nhan_vien_bang_cham_cong : System.Web.UI.Page
         htmlTable.Append("<td class='text-right text-bold'>" + TongKet_DoanhSo.ToString("#,##0") + "</td>");
         htmlTable.Append("<td class='text-right text-bold'>" + TongKet_ThuongDoanhSo.ToString("#,##0") + "</td>");
         htmlTable.Append("<td class='text-right text-bold'>" + TongKet_TongCong.ToString("#,##0") + "</td>");
-        htmlTable.Append("<td class='text-right text-bold fg-orange'>" + TongKet_Phat.ToString("#,##0") + "</td>");
+        //htmlTable.Append("<td class='text-right text-bold fg-orange'>" + TongKet_Phat.ToString("#,##0") + "</td>");
         htmlTable.Append("<td class='text-right text-bold fg-red'>" + TongKet_ThucNhan.ToString("#,##0") + "</td>");
         htmlTable.Append("</tr>");
         // Đóng thẻ table
