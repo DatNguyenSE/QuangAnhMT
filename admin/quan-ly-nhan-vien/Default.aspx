@@ -294,6 +294,14 @@
                                         </div>
                                     </div>
                                     <div class="mt-3">
+                                        <label class="fw-600">Loại nhân viên</label>
+                                        <div>
+                                            <asp:RadioButton ID="rb_ChinhThuc" runat="server" GroupName="loai_nhanvien" Text=" Chính thức" Checked="true" />
+                                            <span style="margin-left: 15px;"></span>
+                                            <asp:RadioButton ID="rb_HocViec" runat="server" GroupName="loai_nhanvien" Text=" Học việc" />
+                                        </div>
+                                    </div>
+                                    <div class="mt-3">
                                         <label class="fw-600 fg-red">Ngày vào làm</label>
                                         <div>
                                             <asp:TextBox ID="txt_ngayvaolam" runat="server" MaxLength="10" data-role="calendar-picker" data-outside="true" data-dialog-mode="true" data-week-start="1" data-locale="vi-VN" data-format="DD/MM/YYYY" data-input-format="DD/MM/YYYY" data-clear-button="true"></asp:TextBox>
@@ -680,6 +688,14 @@
                                                         </asp:PlaceHolder>
                                                         <asp:PlaceHolder ID="PlaceHolder5" runat="server" Visible='<%#Eval("trangthai_lamviec").ToString()=="Đã nghỉ việc" %>'>
                                                             <div class="button mini alert rounded">Đã nghỉ việc</div>
+                                                        </asp:PlaceHolder>
+                                                    </div>
+                                                    <div class="mt-1">
+                                                        <asp:PlaceHolder ID="PlaceHolder_ChinhThuc" runat="server" Visible='<%#Convert.ToBoolean(Eval("loai_nhanvien")) == true %>'>
+                                                            <div class="button mini primary rounded outline">Chính thức</div>
+                                                        </asp:PlaceHolder>
+                                                        <asp:PlaceHolder ID="PlaceHolder_HocViec" runat="server" Visible='<%#Convert.ToBoolean(Eval("loai_nhanvien")) == false %>'>
+                                                            <div class="button mini warning rounded outline">Học việc</div>
                                                         </asp:PlaceHolder>
                                                     </div>
                                                 </td>

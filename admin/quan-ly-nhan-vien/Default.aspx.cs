@@ -223,6 +223,7 @@ public partial class admin_Default : System.Web.UI.Page
                                     ob1.tennganhang,
                                     ob1.so_tknganhang,
                                     ob1.tenchu_tknganhang,
+                                    ob1.loai_nhanvien,
                                     ob1.LuongCoBan,
                                     ob1.PhuCap_AnUong,
                                     ob1.PhuCap_BHYT,
@@ -450,6 +451,8 @@ public partial class admin_Default : System.Web.UI.Page
             txt_sdt_nguoithan.Text = "";
             txt_tennguoithan.Text = "";
             txt_phantram_doanhso.Text = "";
+            rb_ChinhThuc.Checked = true;
+            rb_HocViec.Checked = false;
         }
         catch (Exception _ex)
         {
@@ -565,6 +568,8 @@ public partial class admin_Default : System.Web.UI.Page
                     txt_tennganhang.Text = q.tennganhang;
                     txt_so_tknganhang.Text = q.so_tknganhang;
                     txt_tenchu_tknganhang.Text = q.tenchu_tknganhang;
+                    rb_ChinhThuc.Checked = q.loai_nhanvien;
+                    rb_HocViec.Checked = !q.loai_nhanvien;
                     PlaceHolder1.Visible = false;
                     if (q.LuongCoBan != null)
                         txt_luongcoban.Text = q.LuongCoBan.Value.ToString("#,##0");
@@ -696,6 +701,10 @@ public partial class admin_Default : System.Web.UI.Page
             string _sdt_nguoithan = txt_sdt_nguoithan.Text.Trim().Replace(" ", "");
             string _ten_nguoithan = txt_tennguoithan.Text;
 
+            bool _loai_nhanvien = true;
+            if (rb_HocViec.Checked)
+                _loai_nhanvien = false;
+
 
             #endregion
             using (dbDataContext db = new dbDataContext())
@@ -792,6 +801,7 @@ public partial class admin_Default : System.Web.UI.Page
                     _ob.tennganhang = _tennganhang;
                     _ob.so_tknganhang = _so_tknganhang;
                     _ob.tenchu_tknganhang = _tenchu_tknganhang;
+                    _ob.loai_nhanvien = _loai_nhanvien;
                     _ob.LuongCoBan = _luongcoban;
                     _ob.PhuCap_AnUong = _phucap_anuong;
                     _ob.PhuCap_BHYT = _phucap_bhyt;
@@ -838,6 +848,7 @@ public partial class admin_Default : System.Web.UI.Page
                         _ob.tennganhang = _tennganhang;
                         _ob.so_tknganhang = _so_tknganhang;
                         _ob.tenchu_tknganhang = _tenchu_tknganhang;
+                        _ob.loai_nhanvien = _loai_nhanvien;
                         _ob.LuongCoBan = _luongcoban;
                         _ob.PhuCap_AnUong = _phucap_anuong;
                         _ob.PhuCap_BHYT = _phucap_bhyt;

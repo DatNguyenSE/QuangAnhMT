@@ -134,10 +134,10 @@
         <elementListCompartment Id="42c3e2f5-0cba-43cb-bb13-2ed498d96671" absoluteBounds="3.765, 17.21, 1.9700000000000002, 1.7878011067708335" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
       </nestedChildShapes>
     </classShape>
-    <classShape Id="37781618-752f-455b-8e5c-71ce56021628" absoluteBounds="6.25, 8.75, 2, 7.9245426432291648">
+    <classShape Id="749c7eeb-d6c1-484b-a0a2-019e954bef61" absoluteBounds="6.375, 9, 2, 8.1168440755208326">
       <DataClassMoniker Name="/dbDataContext/taikhoan_tb" />
       <nestedChildShapes>
-        <elementListCompartment Id="ddb3f3c2-04f4-4903-8f8e-e925448e39da" absoluteBounds="6.265, 9.21, 1.9700000000000002, 7.3645426432291661" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+        <elementListCompartment Id="908b15f6-eb01-4e7d-861c-103e171ce7aa" absoluteBounds="6.39, 9.46, 1.9700000000000002, 7.556844075520833" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
       </nestedChildShapes>
     </classShape>
   </nestedChildShapes>

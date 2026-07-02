@@ -375,6 +375,7 @@
       <Column Name="tennganhang" Type="System.String" DbType="NVarChar(100)" CanBeNull="true" />
       <Column Name="so_tknganhang" Type="System.String" DbType="VarChar(50)" CanBeNull="true" />
       <Column Name="tenchu_tknganhang" Type="System.String" DbType="NVarChar(100)" CanBeNull="true" />
+      <Column Name="loai_nhanvien" Type="System.Boolean" DbType="Bit NOT NULL" CanBeNull="false" />
     </Type>
   </Table>
   <Function Name="let99665_thaianaudio.spLoad_ExportPhieuMuonHang" Method="spLoad_ExportPhieuMuonHang">

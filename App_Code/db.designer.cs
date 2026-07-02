@@ -7211,6 +7211,8 @@ public partial class taikhoan_tb : INotifyPropertyChanging, INotifyPropertyChang
 	
 	private string _tenchu_tknganhang;
 	
+	private bool _loai_nhanvien;
+	
     #region Extensibility Method Definitions
     partial void OnLoaded();
     partial void OnValidate(System.Data.Linq.ChangeAction action);
@@ -7289,6 +7291,8 @@ public partial class taikhoan_tb : INotifyPropertyChanging, INotifyPropertyChang
     partial void Onso_tknganhangChanged();
     partial void Ontenchu_tknganhangChanging(string value);
     partial void Ontenchu_tknganhangChanged();
+    partial void Onloai_nhanvienChanging(bool value);
+    partial void Onloai_nhanvienChanged();
     #endregion
 	
 	public taikhoan_tb()
@@ -8032,6 +8036,26 @@ public partial class taikhoan_tb : INotifyPropertyChanging, INotifyPropertyChang
 				this._tenchu_tknganhang = value;
 				this.SendPropertyChanged("tenchu_tknganhang");
 				this.Ontenchu_tknganhangChanged();
+			}
+		}
+	}
+	
+	[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_loai_nhanvien", DbType="Bit NOT NULL")]
+	public bool loai_nhanvien
+	{
+		get
+		{
+			return this._loai_nhanvien;
+		}
+		set
+		{
+			if ((this._loai_nhanvien != value))
+			{
+				this.Onloai_nhanvienChanging(value);
+				this.SendPropertyChanging();
+				this._loai_nhanvien = value;
+				this.SendPropertyChanged("loai_nhanvien");
+				this.Onloai_nhanvienChanged();
 			}
 		}
 	}
