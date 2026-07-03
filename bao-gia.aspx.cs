@@ -113,7 +113,8 @@ public partial class bao_gia : System.Web.UI.Page
                 if (!string.IsNullOrWhiteSpace(Request.QueryString["id"]))
                 {
                     id = Request.QueryString["id"].ToString().Trim();
-                    var q = db.BaoGia_tbs.FirstOrDefault(p => p.id_guide.ToString().ToLower() == id.ToLower());
+                    Guid parsedId;
+                    var q = Guid.TryParse(id, out parsedId) ? db.BaoGia_tbs.FirstOrDefault(p => p.id_guide == parsedId) : null;
                     if (q != null)
                     {
                         tenkh = q.ten_khachhang; 
@@ -152,13 +153,14 @@ public partial class bao_gia : System.Web.UI.Page
                         {
                             // --- Meta tags ---
                             var tenkhSafe = (tenkh ?? string.Empty).ToUpperInvariant();
+                            string baseUrl = Request.Url.GetLeftPart(UriPartial.Authority);
                             string metaTags = $@"
     <!-- Title -->
     <title>BÁO GIÁ {tenkhSafe}</title>
 
     <!-- Open Graph Meta Tags -->
     <meta property='og:title' content='BÁO GIÁ {tenkhSafe}' />
-    <meta property='og:image' content='https://thaianaudio.vn/uploads/images/BAO-GIA-BG.png' />
+    <meta property='og:image' content='{baseUrl}/uploads/images/open-home.jpg?v=2' />
     <meta property='og:description' content='Bảng báo giá chi tiết từ THÁI AN AUDIO' />
 ";
                             literal_meta.Text = metaTags;

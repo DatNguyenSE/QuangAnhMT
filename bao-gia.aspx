@@ -140,7 +140,7 @@
     <form id="form1" runat="server">
         <div style="/*height: 148mm; */ width: 210mm!important; font-family: Arial!important; overflow: auto; margin: 0 auto; overflow: hidden" class="bg-white">
             <div style="border-left: 1px solid #000; border-right: 1px solid #000;">
-                <div id="head" class="p-2 fg-yellow" style="background: linear-gradient(to right, #c62828, #1565c0)">
+                <div id="head" class="p-2 fg-white bg-darkCobalt">
                     <div style="float: left; width: 90px">
                         <img src="/uploads/images/logo.png" width="90" />
                     </div>
@@ -152,12 +152,12 @@
                     </div>
                     <div class="clr-bc"></div>
                 </div>
-                <div class="text-center text-bold mt-5 mb-5" style="font-size: 26px">BÁO GIÁ SẢN PHẨM</div>
+                <div class="text-center text-bold mt-5 mb-5" style="font-size: 26px; color: #c62828;">BÁO GIÁ SẢN PHẨM</div>
                 <div class="row">
                     <div class="cell-7 pr-5">
                         <table class="style1-table1" style="width: 100%;">
                             <tr>
-                                <td colspan="2" class="text-bold text-center bg-light">THÔNG TIN KHÁCH HÀNG</td>
+                                <td colspan="2" class="text-bold text-center fg-white bg-darkCobalt">THÔNG TIN KHÁCH HÀNG</td>
                             </tr>
                             <tr>
                                 <td style="width: 130px">Tên khách hàng</td>
@@ -176,7 +176,7 @@
                     <div class="cell-5 pl-5">
                         <table class="style1-table2" style="width: 100%">
                             <tr>
-                                <td colspan="2" class="text-bold text-center bg-light">BÁO GIÁ SỐ <%=sobg %></td>
+                                <td colspan="2" class="text-bold text-center fg-white bg-darkCobalt">BÁO GIÁ SỐ <%=sobg %></td>
                             </tr>
                             <tr>
                                 <td style="width: 116px">Ngày báo giá</td>
