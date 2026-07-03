@@ -47,7 +47,7 @@
             text-decoration: none !important; /* Xóa gạch chân nếu cần */
         }
 
-        .style1-table .style1-table1 .style1-table2 {
+        .style1-table, .style1-table1, .style1-table2 {
             width: 100%; /* Chiều rộng 100% */
             border-collapse: collapse; /* Loại bỏ khoảng cách giữa các viền */
         }
@@ -145,10 +145,10 @@
                         <img src="/uploads/images/logo.png" width="90" />
                     </div>
                     <div style="float: right; width: calc(100% - 100px)">
-                        <div class="text-bold mt-2 " style="font-size: 18px">CÔNG TY TNHH THƯƠNG MẠI DỊCH VỤ ĐẦU TƯ HHM AUDIO</div>
-                        <div><small>Mã số thuế: 3703072451</small></div>
-                        <div><small><span class="mif-location"></span>525/9/55, Quang Trung, Gò Vấp, Hồ Chí Minh 70000</small></div>
-                        <div><small><span class="mif-phone"></span>0988 186 314 <span class="mif-earth pl-5"></span>www.quanganhMT.com</small></div>
+                        <div class="text-bold mt-2 " style="font-size: 18px">CÔNG TY TNHH QUANG ANH MT</div>
+                        <div><small>Mã số thuế: 0319480456</small></div>
+                        <div><small><span class="mif-location"></span>58/56 Thống Nhất, phường Gò Vấp, TP Hồ Chí Minh, Việt Nam.</small></div>
+                        <div><small><span class="mif-phone"></span>0365 498 768 / 098 818 6314 <span class="mif-earth pl-5"></span>www.quanganhaudio.com</small></div>
                     </div>
                     <div class="clr-bc"></div>
                 </div>
@@ -187,7 +187,7 @@
                                 <td class="fw-600"><%=hanbg %></td>
                             </tr>
                             <tr>
-                                <td>Nhân viên BG</td>
+                                <td>Người báo giá</td>
                                 <td class="fw-600"><%=nhanvienbg %></td>
                             </tr>
                             <tr>
@@ -318,12 +318,12 @@
                         {
 
                     %>
-                    <div class="text-bold">CÔNG TY TNHH THƯƠNG MẠI DỊCH VỤ ĐẦU TƯ HHM AUDIO</div>
-                    <div><small><b>Địa chỉ:</b> 525/9/55, Quang Trung, Gò Vấp, Hồ Chí Minh 70000</small></div>
-                    <div><small><b>Điện thoại:</b> 0988 186 314 | <b>Website:</b> www.quanganhMT.com</small></div>
+                    <div class="text-bold">CÔNG TY TNHH QUANG ANH MT</div>
+                    <div><small><b>Địa chỉ:</b> 58/56 Thống Nhất, phường Gò Vấp, TP Hồ Chí Minh, Việt Nam.</small></div>
+                    <div><small><b>Điện thoại:</b> 0365 498 768 / 098 818 6314 | <b>Website:</b> www.quanganhaudio.com</small></div>
                     <div class="info-ck" style="display: flex; align-items: center; gap: 20px;">
                         <div style="flex: 1;">
-                            <div class="mt-3 text-bold">STK: 0421000502463 | Vietcombank | Thái Đình An</div>
+                            <div class="mt-3 text-bold">STK: 1066.89.5697 | Vietcombank | CÔNG TY TNHH QUANG ANH MT</div>
                             <div class="mt-3">
                                 <i>Rất mong được sự hợp tác của Quý khách hàng.</i>
                             </div>
@@ -339,12 +339,12 @@
                     <%}
                         else
                         {  %>
-                    <div class="text-bold">CÔNG TY TNHH THƯƠNG MẠI DỊCH VỤ ĐẦU TƯ HHM AUDIO</div>
-                    <div><small><b>Địa chỉ:</b> 525/9/55, Quang Trung, Gò Vấp, Hồ Chí Minh 70000</small></div>
-                    <div><small><b>Điện thoại:</b> 0988 186 314 | <b>Website:</b> www.quanganhMT.com</small></div>
+                    <div class="text-bold">CÔNG TY TNHH QUANG ANH MT</div>
+                    <div><small><b>Địa chỉ:</b> 58/56 Thống Nhất, phường Gò Vấp, TP Hồ Chí Minh, Việt Nam.</small></div>
+                    <div><small><b>Điện thoại:</b> 0365 498 768 / 098 818 6314 | <b>Website:</b> www.quanganhaudio.com</small></div>
                     <div class="info-ck" style="display: flex; align-items: center; gap: 20px;">
                         <div style="flex: 1;">
-                            <div class="mt-3 text-bold">STK CÔNG TY: 1030308345 | Vietcombank</div>
+                            <div class="mt-3 text-bold">STK CÔNG TY: 1066.89.5697 | Vietcombank</div>
                             <div class="mt-3">
                                 <i>Rất mong được sự hợp tác của Quý khách hàng.</i>
                             </div>
@@ -359,7 +359,7 @@
                 <div class="cell-4 text-center text-bold">
                     GIÁM ĐỐC
                     <div>
-                        <img src="/uploads/images/CON-DAU-HHM-AUDIO.PNG" width="120" />
+                        <img src="/uploads/images/condau_quanganh.jpg" width="180" />
                     </div>
                     LIỄU CÔNG THẮNG
                 </div>

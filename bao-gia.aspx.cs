@@ -241,7 +241,7 @@ public partial class bao_gia : System.Web.UI.Page
         string encodedDescription = Uri.EscapeDataString(description);
         string encodedAccountName = Uri.EscapeDataString(accountName);
 
-        string qrDataString = $"https://img.vietqr.io/image/{bankId}-{accountNo}-qr_only.png?amount={amount}&addInfo={encodedDescription}&accountName={encodedAccountName}";
+        string qrDataString = "/uploads/images/qr_thanhtoan.png";
         if(isCheck)
         {
             imgQRCode.ImageUrl = qrDataString;
