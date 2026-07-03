@@ -104,7 +104,7 @@
                                 <div class="cell-lg-6 pr-4-lg">
                                     <div class="mt-3">
                                         <label class="fg-red fw-600">Số seri</label>
-                                        <asp:TextBox ID="txt_so_seri" runat="server" data-role="input" onfocus="this.blur()" style="background-color: #f8f9fa; pointer-events: none;"></asp:TextBox>
+                                        <asp:TextBox ID="txt_so_seri" runat="server" data-role="input"></asp:TextBox>
                                     </div>
                                     <div class="mt-3">
                                         <label class="fg-red fw-600">Tên sản phẩm</label>

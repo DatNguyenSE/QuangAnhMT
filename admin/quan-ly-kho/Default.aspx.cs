@@ -448,7 +448,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             //hiện form add_edit trong updatePanel_add
             pn_add.Visible = !pn_add.Visible;
             up_add.Update();
-            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), "generate_seri", "setTimeout(function(){ document.getElementById('" + txt_so_seri.ClientID + "').value = 'SN-' + Date.now(); }, 100);", true);
+            // ScriptManager.RegisterStartupScript(this.Page, this.GetType(), "generate_seri", ... removed auto generate seri
         }
         catch (Exception _ex)
         {
@@ -726,7 +726,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                     show_main();
                     up_main.Update();
                     ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Xử lý thành công.", "1000", "warning"), true);
-                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), "generate_seri", "setTimeout(function(){ document.getElementById('" + txt_so_seri.ClientID + "').value = 'SN-' + Date.now(); }, 100);", true);
+                    // ScriptManager.RegisterStartupScript(this.Page, this.GetType(), "generate_seri", ... removed auto generate seri
                     #endregion
                 }
                 else//edit
