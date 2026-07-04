@@ -229,7 +229,7 @@ public partial class admin_Default : System.Web.UI.Page
                                     ob1.PhuCap_DienThoai,
                                     ob1.PhuCap_TrachNhiem,
                                     ob1.PhuCap_Xangxe,
-                                    TongThuNhapThang = (ob1.LuongCoBan ?? 0) + ((ob1.PhuCap_AnUong ?? 0) * 26) + (ob1.PhuCap_DienThoai ?? 0) + (ob1.PhuCap_TrachNhiem ?? 0) + (ob1.PhuCap_Xangxe ?? 0),
+                                    TongThuNhapThang = (ob1.LuongCoBan ?? 0) + (ob1.PhuCap_AnUong ?? 0) + (ob1.PhuCap_DienThoai ?? 0) + (ob1.PhuCap_TrachNhiem ?? 0) + (ob1.PhuCap_Xangxe ?? 0),
                                     ob1.sdt_nguoithan,
                                     ob1.ten_nguoithan,
                                     ob1.phantram_doanhso_banhang
@@ -435,8 +435,8 @@ public partial class admin_Default : System.Web.UI.Page
         try
         {
             Label1.Text = null;
-            txt_taikhoan.Text = ""; txt_taikhoan.ReadOnly = false;
-            txt_matkhau.Text = "";
+            txt_taikhoan.Text = ""; txt_taikhoan.ReadOnly = false; txt_taikhoan.BackColor = System.Drawing.Color.White;
+            txt_matkhau.Text = ""; txt_matkhau.Attributes.Remove("value");
             txt_link_fileupload.Text = ""; txt_link_fileupload1.Text = ""; txt_link_fileupload2.Text = "";
             txt_so_cccd.Text = ""; txt_tennganhang.Text = ""; txt_so_tknganhang.Text = ""; txt_tenchu_tknganhang.Text = "";
             txt_hoten.Text = "";
@@ -490,6 +490,55 @@ public partial class admin_Default : System.Web.UI.Page
             else
                 _tk = "";
             Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
+        }
+    }
+    
+    protected void but_show_doimatkhau_Click(object sender, EventArgs e)
+    {
+        LinkButton button = (LinkButton)sender;
+        ViewState["taikhoan_doimatkhau"] = button.CommandArgument;
+        txt_matkhau_moi.Text = "";
+        txt_matkhau_moi.Attributes.Remove("value");
+        txt_matkhau_xacnhan.Text = "";
+        txt_matkhau_xacnhan.Attributes.Remove("value");
+        pn_doimatkhau.Visible = true;
+        up_doimatkhau.Update();
+    }
+
+    protected void but_close_doimatkhau_Click(object sender, EventArgs e)
+    {
+        pn_doimatkhau.Visible = false;
+        up_doimatkhau.Update();
+    }
+
+    protected void but_doimatkhau_Click(object sender, EventArgs e)
+    {
+        string matkhaumoi = txt_matkhau_moi.Text.Trim();
+        string xacnhan = txt_matkhau_xacnhan.Text.Trim();
+
+        if (string.IsNullOrEmpty(matkhaumoi) || string.IsNullOrEmpty(xacnhan))
+        {
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng nhập đầy đủ thông tin.", "false", "false", "OK", "alert", ""), true);
+            return;
+        }
+
+        if (matkhaumoi != xacnhan)
+        {
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Mật khẩu xác nhận không khớp.", "false", "false", "OK", "alert", ""), true);
+            return;
+        }
+
+        using (dbDataContext db = new dbDataContext())
+        {
+            var user = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == ViewState["taikhoan_doimatkhau"].ToString());
+            if (user != null)
+            {
+                user.matkhau = matkhaumoi;
+                db.SubmitChanges();
+                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Đổi mật khẩu thành công.", "1000", "success"), true);
+                pn_doimatkhau.Visible = false;
+                up_doimatkhau.Update();
+            }
         }
     }
     protected void but_close_form_add_Click(object sender, EventArgs e)
@@ -555,7 +604,7 @@ public partial class admin_Default : System.Web.UI.Page
                     ViewState["id_edit"] = _id;
 
                     txt_taikhoan.Text = q.taikhoan;
-                    txt_taikhoan.ReadOnly = false;
+                    txt_taikhoan.ReadOnly = true; txt_taikhoan.BackColor = System.Drawing.ColorTranslator.FromHtml("#e9ecef");
                     txt_matkhau.Attributes["value"] = q.matkhau;
                     txt_hoten.Text = q.hoten;
                     txt_dienthoai.Text = q.dienthoai;
@@ -570,7 +619,7 @@ public partial class admin_Default : System.Web.UI.Page
                     txt_tenchu_tknganhang.Text = q.tenchu_tknganhang;
                     rb_ChinhThuc.Checked = q.loai_nhanvien;
                     rb_HocViec.Checked = !q.loai_nhanvien;
-                    PlaceHolder1.Visible = true;
+                    PlaceHolder1.Visible = false;
                     if (q.LuongCoBan != null)
                         txt_luongcoban.Text = q.LuongCoBan.Value.ToString("#,##0");
                     if (q.PhuCap_Xangxe != null)
@@ -724,21 +773,12 @@ public partial class admin_Default : System.Web.UI.Page
                     ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng nhập họ tên.", "false", "false", "OK", "alert", ""), true);
                     return;
                 }
-                if (_ngaysinh == "")
+                if (_so_cccd == "")
                 {
-                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng chọn ngày sinh.", "false", "false", "OK", "alert", ""), true);
+                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng nhập số CCCD.", "false", "false", "OK", "alert", ""), true);
                     return;
                 }
-                if (_sdt == "")
-                {
-                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng nhập số điện thoại.", "false", "false", "OK", "alert", ""), true);
-                    return;
-                }
-                if (_ngayvaolam == "")
-                {
-                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng chọn ngày vào làm.", "false", "false", "OK", "alert", ""), true);
-                    return;
-                }
+
                 //if (_cccd_mattruoc == "")
                 //{
                 //    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng chọn ảnh CCCD mặt trước.", "false", "false", "OK", "alert", ""), true);
@@ -775,8 +815,8 @@ public partial class admin_Default : System.Web.UI.Page
                     taikhoan_tb _ob = new taikhoan_tb();
                     _ob.taikhoan = _user; _ob.matkhau = _pass;
                     _ob.hoten = _fullname;
-                    _ob.ngaysinh = DateTime.Parse(_ngaysinh);
-                    _ob.ngayvaolam = DateTime.Parse(_ngayvaolam);
+                    _ob.ngaysinh = string.IsNullOrEmpty(_ngaysinh) ? (DateTime?)null : DateTime.Parse(_ngaysinh);
+                    _ob.ngayvaolam = string.IsNullOrEmpty(_ngayvaolam) ? (DateTime?)null : DateTime.Parse(_ngayvaolam);
                     _ob.ngaytao = DateTime.Now;
                     _ob.phanloai = "Quản trị";
                     _ob.ten = str_cl.tachten(_fullname);
@@ -829,8 +869,8 @@ public partial class admin_Default : System.Web.UI.Page
                         #region Kiểm tra ngoại lệ. Sau đó cập nhật
                         taikhoan_tb _ob = q_edit;
                         _ob.hoten = _fullname;
-                        _ob.ngaysinh = DateTime.Parse(_ngaysinh);
-                        _ob.ngayvaolam = DateTime.Parse(_ngayvaolam);
+                        _ob.ngaysinh = string.IsNullOrEmpty(_ngaysinh) ? (DateTime?)null : DateTime.Parse(_ngaysinh);
+                        _ob.ngayvaolam = string.IsNullOrEmpty(_ngayvaolam) ? (DateTime?)null : DateTime.Parse(_ngayvaolam);
                         _ob.ten = str_cl.tachten(_fullname);
                         _ob.hoten_khongdau = str_cl.remove_vietnamchar(_fullname);
                         _ob.dienthoai = _sdt;
@@ -853,7 +893,6 @@ public partial class admin_Default : System.Web.UI.Page
                         _ob.sdt_nguoithan = _sdt_nguoithan;
                         _ob.ten_nguoithan = _ten_nguoithan;
                         _ob.phantram_doanhso_banhang = _phantram_thuong_doanhso;
-                        _ob.matkhau = _pass;
                         db.SubmitChanges();
                         
                         if (_user != ViewState["id_edit"].ToString())

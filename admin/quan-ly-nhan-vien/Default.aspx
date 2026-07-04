@@ -261,13 +261,13 @@
                                         </div>
                                     </div>
                                     <div class="mt-3">
-                                        <label class="fw-600 fg-red">Ngày sinh</label>
+                                        <label class="fw-600">Ngày sinh</label>
                                         <div>
                                             <asp:TextBox ID="txt_ngaysinh" runat="server" MaxLength="10" data-role="calendar-picker" data-outside="true" data-dialog-mode="true" data-week-start="1" data-locale="vi-VN" data-format="DD/MM/YYYY" data-input-format="DD/MM/YYYY" data-clear-button="true"></asp:TextBox>
                                         </div>
                                     </div>
                                     <div class="mt-3">
-                                        <label class="fw-600 fg-red">Điện thoại</label>
+                                        <label class="fw-600">Điện thoại</label>
                                         <div>
                                             <asp:TextBox ID="txt_dienthoai" runat="server" data-role="input"></asp:TextBox>
                                         </div>
@@ -302,7 +302,7 @@
                                         </div>
                                     </div>
                                     <div class="mt-3">
-                                        <label class="fw-600 fg-red">Ngày vào làm</label>
+                                        <label class="fw-600">Ngày vào làm</label>
                                         <div>
                                             <asp:TextBox ID="txt_ngayvaolam" runat="server" MaxLength="10" data-role="calendar-picker" data-outside="true" data-dialog-mode="true" data-week-start="1" data-locale="vi-VN" data-format="DD/MM/YYYY" data-input-format="DD/MM/YYYY" data-clear-button="true"></asp:TextBox>
                                         </div>
@@ -330,25 +330,25 @@
                                             </div>
                                         </div>
                                         <div class="mt-3">
-                                            <label class="fw-600">Phụ cấp xăng xe</label>
+                                            <label class="fw-600">Phụ cấp xăng xe /tháng</label>
                                             <div>
                                                 <asp:TextBox ID="txt_phucap_xangxe" runat="server" data-role="input" MaxLength="14" oninput="format_sotien_new(this)"></asp:TextBox>
                                             </div>
                                         </div>
                                         <div class="mt-3">
-                                            <label class="fw-600">Phụ cấp ăn trưa</label>
+                                            <label class="fw-600">Phụ cấp ăn trưa /tháng</label>
                                             <div>
                                                 <asp:TextBox ID="txt_phucap_anuong" runat="server" data-role="input" MaxLength="14" oninput="format_sotien_new(this)"></asp:TextBox>
                                             </div>
                                         </div>
                                         <div class="mt-3">
-                                            <label class="fw-600">Phụ cấp điện thoại</label>
+                                            <label class="fw-600">Phụ cấp điện thoại /tháng</label>
                                             <div>
                                                 <asp:TextBox ID="txt_phucap_dienthoai" runat="server" data-role="input" MaxLength="14" oninput="format_sotien_new(this)"></asp:TextBox>
                                             </div>
                                         </div>
                                         <div class="mt-3">
-                                            <label class="fw-600">Phụ cấp trách nhiệm</label>
+                                            <label class="fw-600">Phụ cấp trách nhiệm /tháng</label>
                                             <div>
                                                 <asp:TextBox ID="txt_phucap_trachniem" runat="server" data-role="input" MaxLength="14" oninput="format_sotien_new(this)"></asp:TextBox>
                                             </div>
@@ -557,7 +557,51 @@
             </div>
         </ProgressTemplate>
     </asp:UpdateProgress>--%>
-
+    <asp:UpdatePanel ID="up_doimatkhau" runat="server" UpdateMode="Conditional">
+        <ContentTemplate>
+            <asp:Panel ID="pn_doimatkhau" runat="server" Visible="false" DefaultButton="but_doimatkhau">
+                <div style="position: fixed; width: 100%; height: 52px; background-color: none; top: 0; left: 0; z-index: 1041!important;">
+                    <div style='top: 0; left: 0px; margin: 0 auto; max-width: 500px; opacity: 1;'>
+                        <div style='position: absolute; right: 18px; top: 14px; z-index: 1040!important'>
+                            <a href='#' class='fg-white d-inline' id="A2" runat="server" onserverclick="but_close_doimatkhau_Click" title='Đóng'>
+                                <span class='mif mif-cross mif-2x fg-red fg-lightRed-hover'></span>
+                            </a>
+                        </div>
+                        <div class="bg-white pl-4 pl-8-md pr-8-md pr-4" style="height: 52px;">
+                            <div class="pt-4 text-upper text-bold">ĐỔI MẬT KHẨU</div>
+                            <hr />
+                        </div>
+                    </div>
+                </div>
+                <div style="position: fixed; width: 100%; height: 100%; top: 0; left: 0; overflow: auto; z-index: 1040!important; background-image: url('/uploads/images/bg1.png');">
+                    <div style='top: 0; left: 0; margin: 0 auto; max-width: 506px; opacity: 1;'>
+                        <div class="bg-white border bd-transparent pl-4 pl-8-md pr-8-md pr-4" style="padding-top: 52px">
+                            <div class="row">
+                                <div class="cell-lg-12">
+                                    <div class="mt-3">
+                                        <label class="fw-600 fg-red">Mật khẩu mới</label>
+                                        <div>
+                                            <asp:TextBox ID="txt_matkhau_moi" TextMode="Password" runat="server" data-role="input"></asp:TextBox>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3">
+                                        <label class="fw-600 fg-red">Nhập lại mật khẩu mới</label>
+                                        <div>
+                                            <asp:TextBox ID="txt_matkhau_xacnhan" TextMode="Password" runat="server" data-role="input"></asp:TextBox>
+                                        </div>
+                                    </div>
+                                    <div class="mt-6 mb-20 text-right">
+                                        <asp:Button ID="but_doimatkhau" runat="server" CssClass="success" Text="LƯU THAY ĐỔI" OnClick="but_doimatkhau_Click" />
+                                    </div>
+                                    <div class="mb-20"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </asp:Panel>
+        </ContentTemplate>
+    </asp:UpdatePanel>
 
     <asp:UpdatePanel ID="up_main" runat="server" UpdateMode="Conditional">
         <Triggers>
@@ -724,7 +768,7 @@
                                                         <div style="float: right"><small><%# Eval("PhuCap_Xangxe", "{0:#,##0}") %></small></div>
                                                         <div style="clear: both"></div>
                                                         <div style="float: left; width"><small>Ăn trưa</small></div>
-                                                        <div style="float: right"><small><%# (((Int64?)Eval("PhuCap_AnUong") ?? 0) * 26).ToString("#,##0") %></small></div>
+                                                        <div style="float: right"><small><%# Eval("PhuCap_AnUong", "{0:#,##0}") %></small></div>
                                                         <div style="clear: both"></div>
                                                         <div style="float: left; width"><small>Trách nhiệm</small></div>
                                                         <div style="float: right"><small><%# Eval("PhuCap_TrachNhiem", "{0:#,##0}") %></small></div>
@@ -750,7 +794,7 @@
                                                         </button>
                                                         <ul class="d-menu place-right" data-role="dropdown">
                                                             <li><asp:LinkButton ID="but_show_chinhsua_dropdown" OnClick="but_show_chinhsua_Click" CommandArgument='<%#Eval("taikhoan") %>' runat="server">Chỉnh sửa</asp:LinkButton></li>
-                                                            <%--<li><a href="#">Đổi mật khẩu</a></li>--%>
+                                                            <li><asp:LinkButton ID="but_show_doimatkhau" OnClick="but_show_doimatkhau_Click" CommandArgument='<%#Eval("taikhoan") %>' runat="server">Đổi mật khẩu</asp:LinkButton></li>
                                                             <li>
                                                                 <asp:LinkButton ID="but_show_form_phanquyen" OnClick="but_show_form_phanquyen_Click" CommandArgument='<%#Eval("taikhoan") %>' runat="server">Phân quyền</asp:LinkButton></li>
                                                             <li>

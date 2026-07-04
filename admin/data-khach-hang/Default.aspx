@@ -169,6 +169,7 @@
                                         <th style="width: 140px; min-width: 140px;">NV chăm sóc</th>
                                         <th style="width: 1px; min-width: 80px;">Báo giá</th>
                                         <th style="width: 1px; min-width: 80px;">Đã bán</th>
+                                        <th style="width: 1px;"></th>
                                         <%--<th style="width: 300px; min-width: 300px;">Thông số</th>--%>
                                     </tr>
                                 </thead>
@@ -212,6 +213,21 @@
                                                 <td>
                                                     <asp:Button ID="Button2" runat="server" Text='<%#Eval("SoLanDaBan","{0:#,##0}") %>' CssClass="text-bold mini success rounded"  />
                                                 </td>
+                                                <td style="vertical-align: middle">
+                                                    <div class="dropdown-button place-right">
+                                                        <button class="button small bg-transparent" type="button">
+                                                            <span class="mif mif-more-horiz"></span>
+                                                        </button>
+                                                        <ul class="d-menu place-right" data-role="dropdown">
+                                                            <li>
+                                                                <asp:LinkButton ID="but_show_chinhsua" OnClick="but_show_chinhsua_Click" CommandArgument='<%#Eval("id") %>' runat="server">Chỉnh sửa</asp:LinkButton>
+                                                            </li>
+                                                            <li>
+                                                                <asp:LinkButton ID="but_xoa_item" OnClientClick="return confirm('Bạn có chắc chắn muốn xóa khách hàng này?');" OnClick="but_xoa_item_Click" CommandArgument='<%#Eval("id") %>' runat="server" CssClass="fg-red">Xóa</asp:LinkButton>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                </td>
                                             </tr>
                                         </ItemTemplate>
                                     </asp:Repeater>
@@ -246,7 +262,7 @@
                         </div>
                         <div class="bg-white pl-4 pl-8-md pr-8-md pr-4" style="height: 52px;">
                             <div class="pt-4 text-upper text-bold">
-                                THÊM KHÁCH HÀNG
+                                <asp:Label ID="Label1" runat="server">THÊM KHÁCH HÀNG</asp:Label>
                             </div>
                             <hr />
                         </div>
@@ -278,7 +294,7 @@
                                     <div class="mt-3">
                                         <label class="fw-600">Nhân viên chăm sóc</label>
                                         <div>
-                                            <asp:TextBox ID="txt_nhanvien_chamsoc" runat="server" data-role="input"></asp:TextBox>
+                                            <asp:DropDownList ID="txt_nhanvien_chamsoc" runat="server" data-role="select" data-filter-placeholder="Search..."></asp:DropDownList>
                                         </div>
                                     </div>
 

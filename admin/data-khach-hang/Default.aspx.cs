@@ -87,6 +87,15 @@ public partial class admin_data_khach_hang_Default : System.Web.UI.Page
 
 
 
+            using (dbDataContext db = new dbDataContext())
+            {
+                var nhanviens = db.taikhoan_tbs.Where(p => p.trangthai_lamviec == "Đang làm việc" && (p.phanloai == "Quản trị" || p.phanloai == "Nhân viên")).Select(p => new { p.taikhoan, p.hoten }).ToList();
+                txt_nhanvien_chamsoc.DataSource = nhanviens;
+                txt_nhanvien_chamsoc.DataValueField = "taikhoan";
+                txt_nhanvien_chamsoc.DataTextField = "hoten";
+                txt_nhanvien_chamsoc.DataBind();
+                txt_nhanvien_chamsoc.Items.Insert(0, new ListItem("Chọn nhân viên chăm sóc", ""));
+            }
             set_dulieu_macdinh();
             show_main();
 
@@ -468,6 +477,33 @@ public partial class admin_data_khach_hang_Default : System.Web.UI.Page
         }
 
     }
+
+    protected void but_xoa_item_Click(object sender, EventArgs e)
+    {
+        try
+        {
+            check_login_cl.check_login_admin("22", "23");
+            LinkButton button = (LinkButton)sender;
+            string _id = button.CommandArgument;
+            using (dbDataContext db = new dbDataContext())
+            {
+                var dm = db.Data_KhachHang_tbs.FirstOrDefault(p => p.id.ToString() == _id);
+                if (dm != null)
+                {
+                    db.Data_KhachHang_tbs.DeleteOnSubmit(dm);
+                    db.SubmitChanges();
+                }
+            }
+            show_main();
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Xóa thành công.", "1000", "warning"), true);
+        }
+        catch (Exception _ex)
+        {
+            string _tk = Session["taikhoan"] as string;
+            if (!string.IsNullOrEmpty(_tk)) _tk = mahoa_cl.giaima_Bcorn(_tk); else _tk = "";
+            Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
+        }
+    }
     #endregion
 
     #region Thêm khách hàng
@@ -476,9 +512,48 @@ public partial class admin_data_khach_hang_Default : System.Web.UI.Page
         txt_sdt.Text = "";
         txt_tenkh.Text = "";
         txt_diachi.Text = "";
-        txt_nhanvien_chamsoc.Text = ViewState["taikhoan"] != null ? ViewState["taikhoan"].ToString() : "";
+        txt_nhanvien_chamsoc.SelectedIndex = 0;
+        ViewState["add_edit"] = "add";
+        Label1.Text = "THÊM KHÁCH HÀNG";
+        but_add_edit.Text = "THÊM MỚI";
         pn_add.Visible = true;
         up_add.Update();
+    }
+    
+    protected void but_show_chinhsua_Click(object sender, EventArgs e)
+    {
+        try
+        {
+            LinkButton button = (LinkButton)sender;
+            string _id = button.CommandArgument;
+            ViewState["id_edit"] = _id;
+            using (dbDataContext db = new dbDataContext())
+            {
+                var q = db.Data_KhachHang_tbs.FirstOrDefault(p => p.id.ToString() == _id);
+                if (q != null)
+                {
+                    txt_sdt.Text = q.sdt;
+                    txt_tenkh.Text = q.ten;
+                    txt_diachi.Text = q.diachi;
+                    if (q.nhanvien_chamsoc != null && txt_nhanvien_chamsoc.Items.FindByValue(q.nhanvien_chamsoc) != null)
+                        txt_nhanvien_chamsoc.SelectedValue = q.nhanvien_chamsoc;
+                    else
+                        txt_nhanvien_chamsoc.SelectedIndex = 0;
+                    
+                    ViewState["add_edit"] = "edit";
+                    Label1.Text = "CẬP NHẬT KHÁCH HÀNG";
+                    but_add_edit.Text = "CẬP NHẬT";
+                }
+            }
+            pn_add.Visible = true;
+            up_add.Update();
+        }
+        catch (Exception _ex)
+        {
+            string _tk = Session["taikhoan"] as string;
+            if (!string.IsNullOrEmpty(_tk)) _tk = mahoa_cl.giaima_Bcorn(_tk); else _tk = "";
+            Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
+        }
     }
 
     protected void but_close_form_add_Click(object sender, EventArgs e)
@@ -492,7 +567,8 @@ public partial class admin_data_khach_hang_Default : System.Web.UI.Page
         string _sdt = txt_sdt.Text.Trim();
         string _ten = txt_tenkh.Text.Trim();
         string _diachi = txt_diachi.Text.Trim();
-        string _nhanvien = txt_nhanvien_chamsoc.Text.Trim();
+        string _nhanvien = txt_nhanvien_chamsoc.SelectedValue;
+        if (string.IsNullOrEmpty(_nhanvien)) _nhanvien = null;
 
         if (string.IsNullOrEmpty(_sdt))
         {
@@ -502,25 +578,49 @@ public partial class admin_data_khach_hang_Default : System.Web.UI.Page
 
         using (dbDataContext db = new dbDataContext())
         {
-            var check = db.Data_KhachHang_tbs.FirstOrDefault(p => p.sdt == _sdt);
-            if (check != null)
+            if (ViewState["add_edit"] != null && ViewState["add_edit"].ToString() == "edit")
             {
-                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Số điện thoại đã tồn tại trong hệ thống.", "false", "false", "OK", "alert", ""), true);
-                return;
+                var ob = db.Data_KhachHang_tbs.FirstOrDefault(p => p.id.ToString() == ViewState["id_edit"].ToString());
+                if (ob != null)
+                {
+                    var check = db.Data_KhachHang_tbs.FirstOrDefault(p => p.sdt == _sdt && p.id != ob.id);
+                    if (check != null)
+                    {
+                        ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Số điện thoại đã tồn tại trong hệ thống.", "false", "false", "OK", "alert", ""), true);
+                        return;
+                    }
+                    ob.sdt = _sdt;
+                    ob.ten = _ten;
+                    ob.diachi = _diachi;
+                    ob.nhanvien_chamsoc = _nhanvien;
+                    db.SubmitChanges();
+                }
             }
+            else
+            {
+                var check = db.Data_KhachHang_tbs.FirstOrDefault(p => p.sdt == _sdt);
+                if (check != null)
+                {
+                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Số điện thoại đã tồn tại trong hệ thống.", "false", "false", "OK", "alert", ""), true);
+                    return;
+                }
 
-            Data_KhachHang_tb ob = new Data_KhachHang_tb();
-            ob.sdt = _sdt;
-            ob.ten = _ten;
-            ob.diachi = _diachi;
-            ob.ngay_capnhat = DateTime.Now;
-            ob.nhanvien_chamsoc = _nhanvien;
-            
-            db.Data_KhachHang_tbs.InsertOnSubmit(ob);
-            db.SubmitChanges();
+                Data_KhachHang_tb ob = new Data_KhachHang_tb();
+                ob.sdt = _sdt;
+                ob.ten = _ten;
+                ob.diachi = _diachi;
+                ob.ngay_capnhat = DateTime.Now;
+                ob.nhanvien_chamsoc = _nhanvien;
+                
+                db.Data_KhachHang_tbs.InsertOnSubmit(ob);
+                db.SubmitChanges();
+            }
         }
 
-        // Không đóng modal (pn_add.Visible = false) theo yêu cầu
+        if (ViewState["add_edit"] != null && ViewState["add_edit"].ToString() == "edit")
+        {
+            pn_add.Visible = false;
+        }
         up_add.Update();
         show_main();
         up_main.Update(); // Cập nhật lại grid dữ liệu bên ngoài
@@ -529,8 +629,9 @@ public partial class admin_data_khach_hang_Default : System.Web.UI.Page
         txt_sdt.Text = "";
         txt_tenkh.Text = "";
         txt_diachi.Text = "";
+        txt_nhanvien_chamsoc.SelectedIndex = 0;
 
-        ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Thêm khách hàng thành công.", "1000", "success"), true);
+        ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Xử lý thành công.", "1000", "success"), true);
     }
     #endregion
 }

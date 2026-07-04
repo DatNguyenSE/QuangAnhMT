@@ -232,8 +232,10 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                 list_all = list_all.OrderBy(p => p.Nhom).ThenBy(p => p.TenSP);
                 int _Tong_Record = list_all.Count();
 
-                Int64 _tongbanle = list_all.Sum(p => p.TongBanLe.Value), _tonggianhap = list_all.Sum(p => p.TongGiaNhap.Value);
-                ViewState["tong_ton"] = list_all.Sum(p => p.soluong_hientai.Value).ToString("#,##0");
+                Int64 _tongbanle = _Tong_Record > 0 ? list_all.Sum(p => p.TongBanLe.Value) : 0;
+                Int64 _tonggianhap = _Tong_Record > 0 ? list_all.Sum(p => p.TongGiaNhap.Value) : 0;
+                Int64 _tong_ton = _Tong_Record > 0 ? list_all.Sum(p => p.soluong_hientai.Value) : 0;
+                ViewState["tong_ton"] = _tong_ton.ToString("#,##0");
                 ViewState["tong_giale"] = _tongbanle.ToString("#,##0");
                 ViewState["tong_gianhap"] = _tonggianhap.ToString("#,##0");
                 ViewState["tong_laigop"] = (_tongbanle - _tonggianhap).ToString("#,##0");
@@ -243,7 +245,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                 // Xử lý số record mỗi trang
                 int show = Number_cl.Check_Int(txt_show.Text.Trim()); if (show <= 0) show = 30;
                 //xử lý trang hiện tại. Đảm bảo current_page không nhỏ hơn 1 và không lớn hơn total_page
-                int current_page = int.Parse(ViewState["current_page_qlkho"].ToString()); int total_page = number_of_page_class.return_total_page(_Tong_Record, show); if (current_page < 1) current_page = 1; else if (current_page > total_page) current_page = total_page;
+                int current_page = int.Parse(ViewState["current_page_qlkho"].ToString()); int total_page = number_of_page_class.return_total_page(_Tong_Record, show); if (total_page == 0) total_page = 1; if (current_page > total_page) current_page = total_page; if (current_page < 1) current_page = 1;
                 ViewState["total_page"] = total_page;
                 //xử lý nút bấm tới lui
                 if (current_page >= total_page)
@@ -661,30 +663,14 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             {
                 #region Kiểm tra ngoại lệ.
 
-
+                if (_so_seri == "")
+                {
+                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng nhập số seri.", "false", "false", "OK", "alert", ""), true);
+                    return;
+                }
                 if (_tensp == "")
                 {
                     ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng nhập tên sản phẩm.", "false", "false", "OK", "alert", ""), true);
-                    return;
-                }
-                if (_anh == "")
-                {
-                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng chọn ảnh sản phẩm.", "false", "false", "OK", "alert", ""), true);
-                    return;
-                }
-                if (_id_hang == "")
-                {
-                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng chọn hãng sản phẩm.", "false", "false", "OK", "alert", ""), true);
-                    return;
-                }
-                if (_id_nhom == "")
-                {
-                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng chọn nhóm sản phẩm.", "false", "false", "OK", "alert", ""), true);
-                    return;
-                }
-                if (_id_donvitinh == "")
-                {
-                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng chọn đơn vị tính.", "false", "false", "OK", "alert", ""), true);
                     return;
                 }
 
@@ -696,6 +682,12 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                     if (q != null)
                     {
                         ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Sản phẩm này đã tồn tại.", "false", "false", "OK", "alert", ""), true);
+                        return;
+                    }
+                    var q_seri = db.KhoSanPham_tbs.FirstOrDefault(p => p.so_seri == _so_seri);
+                    if (q_seri != null)
+                    {
+                        ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Số seri này đã tồn tại.", "false", "false", "OK", "alert", ""), true);
                         return;
                     }
                     #region thêm mới
@@ -739,6 +731,12 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                         if (q != null)
                         {
                             ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Sản phẩm này đã tồn tại.", "false", "false", "OK", "alert", ""), true);
+                            return;
+                        }
+                        var q_seri = db.KhoSanPham_tbs.FirstOrDefault(p => p.so_seri == _so_seri && p.id.ToString() != ViewState["id_edit"].ToString());
+                        if (q_seri != null)
+                        {
+                            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Số seri này đã tồn tại.", "false", "false", "OK", "alert", ""), true);
                             return;
                         }
 
@@ -1461,6 +1459,39 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
         {
             string _tk = Session["taikhoan"] as string; // Sử dụng 'as' để tránh lỗi nếu là null
             if (!string.IsNullOrEmpty(_tk)) // Kiểm tra xem '_tk' có hợp lệ hay không
+            {
+                _tk = mahoa_cl.giaima_Bcorn(_tk);
+            }
+            else
+                _tk = "";
+            Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
+        }
+    }
+
+    protected void but_xoa_item_Click(object sender, EventArgs e)
+    {
+        try
+        {
+            check_login_cl.check_login_admin("11", "11");
+            LinkButton button = (LinkButton)sender;
+            string _id = button.CommandArgument;
+            using (dbDataContext db = new dbDataContext())
+            {
+                var q = db.KhoSanPham_tbs.FirstOrDefault(p => p.id.ToString() == _id);
+                if (q != null)
+                {
+                    db.KhoSanPham_tbs.DeleteOnSubmit(q);
+                    db.SubmitChanges();
+                    show_main();
+                    up_main.Update();
+                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Xử lý thành công.", "1000", "warning"), true);
+                }
+            }
+        }
+        catch (Exception _ex)
+        {
+            string _tk = Session["taikhoan"] as string;
+            if (!string.IsNullOrEmpty(_tk))
             {
                 _tk = mahoa_cl.giaima_Bcorn(_tk);
             }

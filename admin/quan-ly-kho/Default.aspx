@@ -111,7 +111,7 @@
                                         <asp:TextBox ID="txt_name" runat="server" data-role="input" MaxLength="100"></asp:TextBox>
                                     </div>
                                     <div class="mt-3">
-                                        <label class="fw-600 fg-red">Ảnh sản phẩm</label>
+                                        <label class="fw-600">Ảnh sản phẩm</label>
                                         <input type="file" id="fileInput" onchange="uploadFile()" data-role="file" data-button-title="<span class='mif-file-upload'></span>" />
                                         <div id="message" runat="server"></div>
                                         <div id="uploadedFilePath"></div>
@@ -133,19 +133,19 @@
                                         <asp:CheckBox runat="server" ID="check_hangthanhly" Text="Hàng thanh lý"></asp:CheckBox>
                                     </div>
                                     <div class="mt-3">
-                                        <label class="fw-600 fg-red">Hãng sản phẩm</label>
+                                        <label class="fw-600">Hãng sản phẩm</label>
                                         <div>
                                             <asp:DropDownList ID="DropDownList1" runat="server" data-role="select"></asp:DropDownList>
                                         </div>
                                     </div>
                                     <div class="mt-3">
-                                        <label class="fw-600 fg-red">Nhóm sản phẩm</label>
+                                        <label class="fw-600">Nhóm sản phẩm</label>
                                         <div>
                                             <asp:DropDownList ID="DropDownList2" runat="server" data-role="select"></asp:DropDownList>
                                         </div>
                                     </div>
                                     <div class="mt-3">
-                                        <label class="fw-600 fg-red">Đơn vị tính</label>
+                                        <label class="fw-600">Đơn vị tính</label>
                                         <div>
                                             <asp:DropDownList ID="DropDownList3" runat="server" data-role="select"></asp:DropDownList>
                                         </div>
@@ -581,6 +581,9 @@
                                                             </li>
                                                             <li>
                                                                 <a href="javascript:void(0)" onclick="showQRCode('<%#Eval("so_seri") %>')">Mã QR</a>
+                                                            </li>
+                                                            <li>
+                                                                <asp:LinkButton ID="but_xoa_item" OnClientClick="return confirm('Bạn có chắc chắn muốn xóa sản phẩm này?');" OnClick="but_xoa_item_Click" CommandArgument='<%#Eval("id") %>' runat="server" CssClass="fg-red">Xóa</asp:LinkButton>
                                                             </li>
                                                             <%-- <li class="divider"></li>
              <li><a href="#">Sao chép thông tin đăng nhập</a></li>

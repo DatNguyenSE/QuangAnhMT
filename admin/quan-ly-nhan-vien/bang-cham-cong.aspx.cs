@@ -221,7 +221,7 @@ public partial class admin_quan_ly_nhan_vien_bang_cham_cong : System.Web.UI.Page
             decimal heSoNgayCong = tongNgayCong / 26m;
             // Tính phụ cấp quy đổi theo tỷ lệ (làm tròn .5 lên)
             long pcXangXe = (long)Math.Round(q_nv.PhuCap_Xangxe.Value * heSoNgayCong, MidpointRounding.AwayFromZero);
-            long pcAnUong = (long)Math.Round(q_nv.PhuCap_AnUong.Value * (decimal)tongNgayCong, MidpointRounding.AwayFromZero);
+            long pcAnUong = (long)Math.Round(q_nv.PhuCap_AnUong.Value * heSoNgayCong, MidpointRounding.AwayFromZero);
             long pcDienThoai = (long)Math.Round(q_nv.PhuCap_DienThoai.Value * heSoNgayCong, MidpointRounding.AwayFromZero);
             long pcTrachNhiem = (long)Math.Round(q_nv.PhuCap_TrachNhiem.Value * heSoNgayCong, MidpointRounding.AwayFromZero);
             // Hiển thị các cột phụ cấp đã quy đổi
