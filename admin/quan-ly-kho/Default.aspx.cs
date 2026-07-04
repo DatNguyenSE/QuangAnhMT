@@ -200,12 +200,12 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                 // Kiểm tra xem textbox có dữ liệu tìm kiếm không
                 string _key = txt_timkiem.Text.Trim();
                 if (!string.IsNullOrEmpty(_key))
-                    list_all = list_all.Where(p => p.TenSP.Contains(_key) || p.id.ToString() == _key);
+                    list_all = list_all.Where(p => p.TenSP.Contains(_key) || p.Hang.Contains(_key) || p.Nhom.Contains(_key) || p.model == _key || p.id.ToString() == _key || p.so_seri.ToString() == _key);
                 else
                 {
                     string _key1 = txt_timkiem1.Text.Trim();
                     if (!string.IsNullOrEmpty(_key1))
-                        list_all = list_all.Where(p => p.TenSP.Contains(_key1) || p.Hang.Contains(_key1) || p.Nhom.Contains(_key1) || p.model == _key1 || p.id.ToString() == _key1);
+                        list_all = list_all.Where(p => p.TenSP.Contains(_key1) || p.Hang.Contains(_key1) || p.Nhom.Contains(_key1) || p.model == _key1 || p.id.ToString() == _key1 || p.so_seri.ToString() == _key1);
                 }
 
                 ////xử lý theo thời gian
@@ -1448,6 +1448,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
 
                 // Hiển thị thông báo thành công
                 show_main();
+                up_main.Update();
                 ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Xử lý thành công.", "1000", "warning"), true);
             }
             else
@@ -1580,7 +1581,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
         try
         {
             Label3.Text = null;
-            Label4.Text = null; 
+            Label4.Text = null;
             ViewState["id_sanpham"] = null;
             txt_soluong_nhap.Text = "";
             //txt_gianhaphang.Text = "";
@@ -1681,7 +1682,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                 }
             }
         }
-        catch(Exception _ex)
+        catch (Exception _ex)
         {
             Response.Redirect("/admin");
         }

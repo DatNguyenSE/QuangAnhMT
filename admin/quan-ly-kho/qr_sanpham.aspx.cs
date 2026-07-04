@@ -11,7 +11,7 @@ public partial class admin_quan_ly_kho_qr_sanpham : System.Web.UI.Page
         if (!IsPostBack)
         {
             // Yêu cầu đăng nhập. Quyền 'qr' (hoặc quyền chung)
-            check_login_cl.check_login_admin("qr", "qr");
+            check_login_cl.check_login_admin("7", "7");
 
             string so_seri = Request.QueryString["so_seri"];
             if (!string.IsNullOrEmpty(so_seri))

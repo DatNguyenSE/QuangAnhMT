@@ -462,7 +462,8 @@
                             <table class="bcorn-fix-title-table">
                                 <thead>
                                     <tr class="">
-                                        <th style="width: 1px;">ID</th>
+                                        <%--<th style="width: 1px;">ID</th>--%>
+                                        <th style="width: 1px;">Số Seri</th>
                                         <th style="width: 1px;">
                                             <%--data-role="checkbox" data-style="2"--%>
                                             <input data-role="hint" data-hint-position="top" data-hint-text="Chọn/Bỏ chọn" type="checkbox" onkeypress="if (event.keyCode==13) return false;" onclick="$('.checkbox-table input[type=checkbox]').prop('checked', this.checked)">
@@ -470,7 +471,7 @@
                                         <th style="width: 50px; min-width: 50px;">Ảnh</th>
                                         <th style="width: 50px; min-width: 50px;">Mã QR</th>
                                         <th style="width: 160px; min-width: 160px;">Sản phẩm</th>
-                                        <th style="width: 120px; min-width: 120px;">Số seri</th>
+                                      <%--  <th style="width: 120px; min-width: 120px;">Số seri</th>--%>
                                         <th style="width: 1px; min-width: 1px;">VAT</th>
                                         <th style="width: 1px; min-width: 1px;">ĐVT</th>
                                         
@@ -500,10 +501,13 @@
                                                 <asp:Label ID="lbID" runat="server" Text='<%#Eval("id") %>'></asp:Label>
                                             </span>
                                             <tr>
-                                                <td class="text-center">
+                                                <%--<td class="text-center">
                                                     <asp:LinkButton CssClass="fg-white" OnClick="but_show_chinhsua_Click" data-role="hint" data-hint-position="top" data-hint-text="Chỉnh sửa" ID="but_name_1" CommandArgument='<%# Eval("id") %>' runat="server">
                                                         <%#Eval("id") %>
                                                     </asp:LinkButton>
+                                                </td>--%>
+                                                <td class="text-center">
+                                                    <%#Eval("so_seri") %>
                                                 </td>
                                                 <%--<td class="text-center"><%# Container.ItemIndex + 1 %></td>--%>
                                                 <td class="checkbox-table">
@@ -532,7 +536,7 @@
                                                         </asp:PlaceHolder>
                                                     </div>
                                                 </td>
-                                                <td><%#Eval("so_seri") %></td>
+                                                
                                                 <td>
                                                     <asp:PlaceHolder ID="PlaceHolder2" runat="server" Visible='<%#Eval("cohoadon").ToString()=="True" %>'>
                                                         <span class="mif mif-checkmark fg-green"></span>
@@ -568,7 +572,10 @@
                                                         </button>
                                                         <ul class="d-menu place-right" data-role="dropdown">
                                                             <%--<li><a href="#">Chỉnh sửa</a></li>
-             <li><a href="#">Đổi mật khẩu</a></li>--%>
+             <li><a href="#">Đổi mật khẩu</a></li>--%><li>
+    <asp:LinkButton ID="LinkButton2" OnClick="but_show_chinhsua_Click" CommandArgument='<%#Eval("id") %>' runat="server">Chỉnh sửa</asp:LinkButton>
+</li>
+                                                            
                                                             <li>
                                                                 <asp:LinkButton ID="but_show_form_nhaphang" OnClick="but_show_form_nhaphang_Click" CommandArgument='<%#Eval("id") %>' runat="server">Nhập hàng</asp:LinkButton>
                                                             </li>
@@ -590,7 +597,7 @@
                                     </asp:Repeater>
                                     <tr>
                                         <td class=" bg-white"></td>
-                                        <td colspan="4" class="text-bold text-right">TỔNG TÀI SẢN</td>
+                                        <td colspan="7" class="text-bold text-right">TỔNG TÀI SẢN</td>
                                         <td class="text-center text-bold"><%=ViewState["tong_ton"] %></td>
                                         <td class="text-right text-bold"><%=ViewState["tong_giale"] %></td>
                                         <td class="text-right text-bold">
@@ -598,14 +605,14 @@
                                                 <%=ViewState["tong_gianhap"] %>
                                             </asp:PlaceHolder>
                                         </td>
-                                        <td colspan="7"></td>
+                                        <td colspan="5"></td>
                                     </tr>
                                     <asp:PlaceHolder ID="PlaceHolder3" runat="server" Visible="false">
                                         <tr>
                                             <td class=" bg-white"></td>
-                                            <td colspan="4" class="text-bold text-right">LÃI GỘP (NẾU BÁN HẾT)</td>
+                                            <td colspan="7" class="text-bold text-right">LÃI GỘP (NẾU BÁN HẾT)</td>
                                             <td colspan="3" class="text-right text-bold"><%=ViewState["tong_laigop"] %></td>
-                                            <td colspan="7"></td>
+                                            <td colspan="5"></td>
                                         </tr>
                                     </asp:PlaceHolder>
                                 </tbody>

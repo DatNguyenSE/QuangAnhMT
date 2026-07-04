@@ -6,7 +6,7 @@
 <head runat="server">
 
     <%--Basic --%>
-    <title>PHẦN MỀM QUẢN LÝ THÁI AN AUDIO</title>
+    <title>PHẦN MỀM QUẢN LÝ QUANG ANH AUDIO</title>
     <meta charset="UTF-8" />
     <meta http-equiv="content-language" content="vi" />
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes" />
@@ -27,7 +27,7 @@
     <link rel='icon' href='/uploads/images/avt.png' sizes='192x192' />
     <link rel='icon' href='/uploads/images/avt.png' sizes='144x144' />
 
-    <meta property='og:title' content='PHẦN MỀM QUẢN LÝ THÁI AN AUDIO' />
+    <meta property='og:title' content='PHẦN MỀM QUẢN LÝ QUANG ANH AUDIO' />
     <meta property='og:image' content='/uploads/images/home-open.jpg' />
 
     <%--Open Graph Meta Tags --%>
@@ -41,7 +41,15 @@
 <meta name="description" content="Mô tả ngắn và hấp dẫn về nội dung của trang web của bạn." />
 <link rel="canonical" href="https://Hotasoft.com" />--%>
 
+       <link rel='icon' href='/uploads/images/logo.png' sizes='16x16' type='image/png'>
+   <link rel='icon' href='/uploads/images/logo.png' sizes='32x32' type='image/png'>
+   <link rel='icon' href='/uploads/images/logo.png' sizes='48x48' type='image/png'>
 
+   <!-- Apple Touch Icon -->
+   <link rel='apple-touch-icon' href='/uploads/images/logo.png' sizes='180x180'>
+   <link rel='apple-touch-icon' href='/uploads/images/logo.png' sizes='167x167'>
+   <link rel='apple-touch-icon' href='/uploads/images/logo.png' sizes='152x152'>
+   <link rel='apple-touch-icon' href='/uploads/images/logo.png' sizes='120x120'>
     <%--Favicon & icon Mobile & meta--%>
     <asp:Literal ID="literal_fav_icon" runat="server"></asp:Literal>
 
@@ -93,7 +101,7 @@
                                 <div style="float: right; width: 100%">
                                     <asp:UpdatePanel ID="UpdatePanel1" runat="server" UpdateMode="Conditional">
                                         <ContentTemplate>
-                                            <asp:Button ID="but_login" runat="server" Text="ĐĂNG NHẬP" CssClass="button primary " OnClick="but_login_Click" Width="100%" />
+                                            <asp:Button ID="but_login" runat="server" Text="ĐĂNG NHẬP" CssClass="button info " OnClick="but_login_Click" Width="100%" />
                                         </ContentTemplate>
                                     </asp:UpdatePanel>
                                     <asp:UpdateProgress ID="UpdateProgress1" runat="server" AssociatedUpdatePanelID="UpdatePanel1">
