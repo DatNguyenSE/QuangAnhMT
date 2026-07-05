@@ -522,11 +522,11 @@
                                                 </td>
                                                 <td>
                                                     <div data-role="lightbox" class="c-pointer">
-                                                        <img src='<%# "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + HttpUtility.UrlEncode(Request.Url.GetLeftPart(UriPartial.Authority) + "/admin/quan-ly-kho/qr_sanpham.aspx?so_seri=" + Eval("so_seri")) %>' class="img-cover-vuong" width="50" height="50" />
+                                                        <img src='<%# "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + HttpUtility.UrlEncode(Request.Url.GetLeftPart(UriPartial.Authority) + "/admin/quan-ly-kho/qr_sanpham.aspx?id=" + Eval("id")) %>' class="img-cover-vuong" width="50" height="50" />
                                                     </div>
                                                 </td>
                                                 <td style="text-align: left!important">
-                                                    <asp:LinkButton CssClass="fg-cobalt" OnClick="but_show_chitiet_Click" data-role="hint" data-hint-position="top" data-hint-text="Chi tiết" ID="but_show_chitiet" CommandArgument='<%# Eval("id") %>' runat="server">
+                                                    <asp:LinkButton CssClass="fg-cobalt" OnClick="but_show_chinhsua_Click" data-role="hint" data-hint-position="top" data-hint-text="Chỉnh sửa" ID="but_show_chitiet" CommandArgument='<%# Eval("id") %>' runat="server">
     <%#Eval("TenSP") %>
                                                     </asp:LinkButton>
 
@@ -575,12 +575,15 @@
              <li><a href="#">Đổi mật khẩu</a></li>--%><li>
     <asp:LinkButton ID="LinkButton2" OnClick="but_show_chinhsua_Click" CommandArgument='<%#Eval("id") %>' runat="server">Chỉnh sửa</asp:LinkButton>
 </li>
+<li>
+    <asp:LinkButton ID="but_sao_chep" OnClientClick="return confirm('Bạn có chắc chắn muốn sao chép sản phẩm này?');" OnClick="but_sao_chep_Click" CommandArgument='<%#Eval("id") %>' runat="server">Sao chép</asp:LinkButton>
+</li>
                                                             
                                                             <li>
                                                                 <asp:LinkButton ID="but_show_form_nhaphang" OnClick="but_show_form_nhaphang_Click" CommandArgument='<%#Eval("id") %>' runat="server">Nhập hàng</asp:LinkButton>
                                                             </li>
                                                             <li>
-                                                                <a href="javascript:void(0)" onclick="showQRCode('<%#Eval("so_seri") %>')">Mã QR</a>
+                                                                <a href="javascript:void(0)" onclick="showQRCode('<%#Eval("id") %>', '<%#Eval("so_seri") %>')">Mã QR</a>
                                                             </li>
                                                             <li>
                                                                 <asp:LinkButton ID="but_xoa_item" OnClientClick="return confirm('Bạn có chắc chắn muốn xóa sản phẩm này?');" OnClick="but_xoa_item_Click" CommandArgument='<%#Eval("id") %>' runat="server" CssClass="fg-red">Xóa</asp:LinkButton>
@@ -730,18 +733,18 @@
     </div>
 
     <script>
-        function showQRCode(seri) {
-            if (!seri) {
-                alert('Sản phẩm này chưa có số seri!');
+        function showQRCode(id, seri) {
+            if (!id) {
+                alert('Không lấy được ID sản phẩm!');
                 return;
             }
             var domain = window.location.origin;
-            var qrUrl = domain + '/admin/quan-ly-kho/qr_sanpham.aspx?so_seri=' + seri;
+            var qrUrl = domain + '/admin/quan-ly-kho/qr_sanpham.aspx?id=' + id;
             // Dùng api tạo qr
             var qrSrc = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(qrUrl);
             
             document.getElementById('qrImage').src = qrSrc;
-            document.getElementById('qrSeriLabel').innerText = 'Seri: ' + seri;
+            document.getElementById('qrSeriLabel').innerText = 'Seri: ' + (seri ? seri : 'Không có');
             document.getElementById('qrModal').style.display = 'block';
         }
     </script>

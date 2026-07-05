@@ -1468,6 +1468,58 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
         }
     }
 
+    protected void but_sao_chep_Click(object sender, EventArgs e)
+    {
+        try
+        {
+            LinkButton button = (LinkButton)sender;
+            string _id = button.CommandArgument;
+            using (dbDataContext db = new dbDataContext())
+            {
+                var q = db.KhoSanPham_tbs.FirstOrDefault(p => p.id.ToString() == _id);
+                if (q != null)
+                {
+                    KhoSanPham_tb _ob = new KhoSanPham_tb();
+                    _ob.sanpham_tuychon = q.sanpham_tuychon;
+                    _ob.so_seri = q.so_seri + " (copy)";
+                    _ob.ten = q.ten;
+                    _ob.id_nhom = q.id_nhom;
+                    _ob.id_hang = q.id_hang;
+                    _ob.donvitinh = q.donvitinh;
+                    _ob.anh = q.anh;
+                    _ob.model = q.model;
+                    _ob.thongso_kythuat = q.thongso_kythuat;
+                    _ob.giabanle = q.giabanle;
+                    _ob.gianhap = q.gianhap;
+                    _ob.cohoadon = q.cohoadon;
+                    _ob.hangthanhly = q.hangthanhly;
+                    _ob.ghichu = q.ghichu;
+                    _ob.ngaytao = q.ngaytao;
+                    _ob.nguoitao = q.nguoitao;
+                    _ob.soluong_hientai = q.soluong_hientai;
+
+                    db.KhoSanPham_tbs.InsertOnSubmit(_ob);
+                    db.SubmitChanges();
+
+                    show_main();
+                    up_main.Update();
+                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Sao chép thành công.", "1000", "success"), true);
+                }
+            }
+        }
+        catch (Exception _ex)
+        {
+            string _tk = Session["taikhoan"] as string;
+            if (!string.IsNullOrEmpty(_tk))
+            {
+                _tk = mahoa_cl.giaima_Bcorn(_tk);
+            }
+            else
+                _tk = "";
+            Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
+        }
+    }
+
     protected void but_xoa_item_Click(object sender, EventArgs e)
     {
         try

@@ -169,6 +169,7 @@
                                         <th style="width: 140px; min-width: 140px;">NV chăm sóc</th>
                                         <th style="width: 1px; min-width: 80px;">Báo giá</th>
                                         <th style="width: 1px; min-width: 80px;">Đã bán</th>
+                                        <th style="width: 1px; min-width: 80px;">% Giảm</th>
                                         <th style="width: 1px;"></th>
                                         <%--<th style="width: 300px; min-width: 300px;">Thông số</th>--%>
                                     </tr>
@@ -212,6 +213,9 @@
                                                 </td>
                                                 <td>
                                                     <asp:Button ID="Button2" runat="server" Text='<%#Eval("SoLanDaBan","{0:#,##0}") %>' CssClass="text-bold mini success rounded"  />
+                                                </td>
+                                                <td class="text-center text-bold fg-red">
+                                                    <%#Eval("pt_GiamGia") != null ? string.Format("{0:0.##}", Eval("pt_GiamGia")) + "%" : "" %>
                                                 </td>
                                                 <td style="vertical-align: middle">
                                                     <div class="dropdown-button place-right">
@@ -295,6 +299,12 @@
                                         <label class="fw-600">Nhân viên chăm sóc</label>
                                         <div>
                                             <asp:DropDownList ID="txt_nhanvien_chamsoc" runat="server" data-role="select" data-filter-placeholder="Search..."></asp:DropDownList>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3">
+                                        <label class="fw-600">Phần trăm giảm giá</label>
+                                        <div>
+                                            <asp:TextBox ID="txt_pt_GiamGia" runat="server" data-role="input" type="number"></asp:TextBox>
                                         </div>
                                     </div>
 

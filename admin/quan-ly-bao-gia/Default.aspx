@@ -220,8 +220,14 @@
                                 </div>
                                 <div class="cell-lg-4  pl-2-lg pr-2-lg">
                                     <div class="mt-2">
-                                        <small class="fg-red fw-600">Giảm giá đặc biệt</small>
+                                        <small class="fg-red fw-600">Giảm giá đặc biệt (số tiền)</small>
                                         <asp:TextBox ID="txt_giamgia_dacbiet" CssClass="input-small" Text="" placeholder="Nhập số tiền" onfocus="AutoSelect(this)" MaxLength="14" oninput="format_sotien_new(this)" runat="server" data-role="input"></asp:TextBox>
+                                    </div>
+                                </div>
+                                <div class="cell-lg-4  pl-2-lg pr-2-lg">
+                                    <div class="mt-2">
+                                        <small class="fg-red fw-600">Phần trăm giảm giá (%)</small>
+                                        <asp:TextBox ID="txt_giamgia_phantram_kh" CssClass="input-small" Text="" type="number" step="0.01" placeholder="Nhập %" onfocus="AutoSelect(this)" runat="server" data-role="input"></asp:TextBox>
                                     </div>
                                 </div>
 
@@ -368,7 +374,7 @@
                                                         {  %>
                                                     <tr class="bg-yellow fg-red text-bold">
                                                         <td></td>
-                                                        <td colspan="8" class="text-right">GIẢM GIÁ ĐẶC BIỆT</td>
+                                                        <td colspan="8" class="text-right">GIẢM GIÁ ĐẶC BIỆT (SỐ TIỀN)</td>
                                                         <td class="text-right text-bold">
                                                             <%= ViewState["giamgia_dacbiet"] != null ? Convert.ToInt64(ViewState["giamgia_dacbiet"]).ToString("#,##0") : "0" %></td>
                                                         <td colspan="1"></td>

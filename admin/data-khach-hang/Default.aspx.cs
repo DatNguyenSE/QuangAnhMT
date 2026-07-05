@@ -122,6 +122,7 @@ public partial class admin_data_khach_hang_Default : System.Web.UI.Page
                                 ob1.ngay_capnhat,
                                 taikhoan_NV_ChamSoc = ob1.nhanvien_chamsoc,
                                 HoTenNhanVien = ob2 == null ? "" : ob2.hoten,
+                                pt_GiamGia = ob1.pt_GiamGia,
                                 SoLanBaoGia = db.BaoGia_tbs.Count(bg => bg.sdt_khachhang == ob1.sdt), // Đếm số lần báo giá
                                 SoLanDaBan = db.BaoGia_tbs.Count(bg => bg.sdt_khachhang == ob1.sdt && bg.trangthai == "Đã ký HĐ")
                             }).AsQueryable();
@@ -512,6 +513,7 @@ public partial class admin_data_khach_hang_Default : System.Web.UI.Page
         txt_sdt.Text = "";
         txt_tenkh.Text = "";
         txt_diachi.Text = "";
+        txt_pt_GiamGia.Text = "";
         txt_nhanvien_chamsoc.SelectedIndex = 0;
         ViewState["add_edit"] = "add";
         Label1.Text = "THÊM KHÁCH HÀNG";
@@ -535,6 +537,7 @@ public partial class admin_data_khach_hang_Default : System.Web.UI.Page
                     txt_sdt.Text = q.sdt;
                     txt_tenkh.Text = q.ten;
                     txt_diachi.Text = q.diachi;
+                    txt_pt_GiamGia.Text = q.pt_GiamGia != null ? q.pt_GiamGia.ToString() : "";
                     if (q.nhanvien_chamsoc != null && txt_nhanvien_chamsoc.Items.FindByValue(q.nhanvien_chamsoc) != null)
                         txt_nhanvien_chamsoc.SelectedValue = q.nhanvien_chamsoc;
                     else
@@ -569,6 +572,25 @@ public partial class admin_data_khach_hang_Default : System.Web.UI.Page
         string _diachi = txt_diachi.Text.Trim();
         string _nhanvien = txt_nhanvien_chamsoc.SelectedValue;
         if (string.IsNullOrEmpty(_nhanvien)) _nhanvien = null;
+        decimal? _pt_GiamGia = null;
+        if (!string.IsNullOrEmpty(txt_pt_GiamGia.Text.Trim()))
+        {
+            decimal tempGiamGia;
+            if (decimal.TryParse(txt_pt_GiamGia.Text.Trim(), out tempGiamGia))
+            {
+                if (tempGiamGia < 0 || tempGiamGia > 100)
+                {
+                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Phần trăm giảm giá phải từ 0 đến 100.", "false", "false", "OK", "alert", ""), true);
+                    return;
+                }
+                _pt_GiamGia = tempGiamGia;
+            }
+            else
+            {
+                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Phần trăm giảm giá không hợp lệ.", "false", "false", "OK", "alert", ""), true);
+                return;
+            }
+        }
 
         if (string.IsNullOrEmpty(_sdt))
         {
@@ -593,6 +615,7 @@ public partial class admin_data_khach_hang_Default : System.Web.UI.Page
                     ob.ten = _ten;
                     ob.diachi = _diachi;
                     ob.nhanvien_chamsoc = _nhanvien;
+                    ob.pt_GiamGia = _pt_GiamGia;
                     db.SubmitChanges();
                 }
             }
@@ -611,6 +634,7 @@ public partial class admin_data_khach_hang_Default : System.Web.UI.Page
                 ob.diachi = _diachi;
                 ob.ngay_capnhat = DateTime.Now;
                 ob.nhanvien_chamsoc = _nhanvien;
+                ob.pt_GiamGia = _pt_GiamGia;
                 
                 db.Data_KhachHang_tbs.InsertOnSubmit(ob);
                 db.SubmitChanges();
@@ -629,6 +653,7 @@ public partial class admin_data_khach_hang_Default : System.Web.UI.Page
         txt_sdt.Text = "";
         txt_tenkh.Text = "";
         txt_diachi.Text = "";
+        txt_pt_GiamGia.Text = "";
         txt_nhanvien_chamsoc.SelectedIndex = 0;
 
         ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Xử lý thành công.", "1000", "success"), true);

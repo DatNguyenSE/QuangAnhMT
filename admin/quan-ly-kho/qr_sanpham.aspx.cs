@@ -13,10 +13,10 @@ public partial class admin_quan_ly_kho_qr_sanpham : System.Web.UI.Page
             // Yêu cầu đăng nhập. Quyền 'qr' (hoặc quyền chung)
             check_login_cl.check_login_admin("7", "7");
 
-            string so_seri = Request.QueryString["so_seri"];
-            if (!string.IsNullOrEmpty(so_seri))
+            string id = Request.QueryString["id"];
+            if (!string.IsNullOrEmpty(id))
             {
-                LoadProductDetails(so_seri);
+                LoadProductDetails(id);
             }
             else
             {
@@ -26,7 +26,7 @@ public partial class admin_quan_ly_kho_qr_sanpham : System.Web.UI.Page
         }
     }
 
-    private void LoadProductDetails(string so_seri)
+    private void LoadProductDetails(string id)
     {
         try
         {
@@ -42,7 +42,7 @@ public partial class admin_quan_ly_kho_qr_sanpham : System.Web.UI.Page
                          join ob4 in db.DuLieuNguon_tbs
                              .Where(p => p.kyhieu == "donvitinh") on ob1.donvitinh equals ob4.id.ToString() into DVTGroup
                          from ob4 in DVTGroup.DefaultIfEmpty()
-                         where ob1.so_seri == so_seri
+                         where ob1.id.ToString() == id
                          select new
                          {
                              Id = ob1.id,
@@ -142,7 +142,7 @@ public partial class admin_quan_ly_kho_qr_sanpham : System.Web.UI.Page
                     db.SubmitChanges();
 
                     // Load lại thông tin
-                    LoadProductDetails(q.so_seri);
+                    LoadProductDetails(q.id.ToString());
                     up_main.Update();
 
                     //reset control

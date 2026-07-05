@@ -1,4 +1,4 @@
-﻿using NPOI.SS.Formula.Functions;
+using NPOI.SS.Formula.Functions;
 using NPOI.XSSF.UserModel;
 using OfficeOpenXml;
 using System;
@@ -1398,6 +1398,17 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
             int _ngayhieuluc = Number_cl.Check_Int(txt_songayhieuluc.Text.Trim());
             int _vat = Number_cl.Check_Int(txt_vat.Text.Trim());
             Int64 _giamgia_dacbiet = Number_cl.Check_Int64(txt_giamgia_dacbiet.Text.Trim());
+            decimal? _pt_GiamGia = null;
+            if (!string.IsNullOrEmpty(txt_giamgia_phantram_kh.Text.Trim()))
+            {
+                decimal temp;
+                if (!decimal.TryParse(txt_giamgia_phantram_kh.Text.Trim(), out temp))
+                {
+                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Phần trăm giảm giá không hợp lệ.", "false", "false", "OK", "alert", ""), true);
+                    return;
+                }
+                _pt_GiamGia = temp;
+            }
             DateTime _ngayhientai = DateTime.Now;
             #endregion
 
@@ -1427,6 +1438,11 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                 if (_vat < 0 || _vat > 100)
                 {
                     ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "VAT từ 0 đến 100.", "false", "false", "OK", "alert", ""), true);
+                    return;
+                }
+                if (_pt_GiamGia.HasValue && (_pt_GiamGia.Value < 0 || _pt_GiamGia.Value > 100))
+                {
+                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Phần trăm giảm giá phải từ 0 đến 100.", "false", "false", "OK", "alert", ""), true);
                     return;
                 }
                 #endregion
@@ -1459,6 +1475,7 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                     {
                         Data_KhachHang_tb _ob1 = new Data_KhachHang_tb();
                         _ob1.sdt = _sdt; _ob1.ten = _ten_kh; _ob1.diachi = _diachi; _ob1.ngay_capnhat = _ngayhientai; _ob1.nhanvien_chamsoc = ViewState["taikhoan"].ToString();
+                        _ob1.pt_GiamGia = _pt_GiamGia ?? 0;
                         db.Data_KhachHang_tbs.InsertOnSubmit(_ob1);
                     }
                     else//nếu có rồi mà đổi thông tin thì cập nhật mới
@@ -1469,6 +1486,7 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                         if (_diachi_old.ToUpper() != _diachi.ToUpper())
                             q.diachi = _diachi;
                         q.nhanvien_chamsoc = ViewState["taikhoan"].ToString();
+                        q.pt_GiamGia = _pt_GiamGia;
                     }
                     #endregion
 
@@ -1583,6 +1601,7 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                         {
                             Data_KhachHang_tb _ob1 = new Data_KhachHang_tb();
                             _ob1.sdt = _sdt; _ob1.ten = _ten_kh; _ob1.diachi = _diachi; _ob1.ngay_capnhat = _ngayhientai;
+                            _ob1.pt_GiamGia = _pt_GiamGia ?? 0;
                             db.Data_KhachHang_tbs.InsertOnSubmit(_ob1);
                         }
                         else//nếu có rồi mà đổi thông tin thì cập nhật mới
@@ -1592,6 +1611,7 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                                 q.ten = _ten_kh;
                             if (_diachi_old.ToUpper() != _diachi.ToUpper())
                                 q.diachi = _diachi;
+                            q.pt_GiamGia = _pt_GiamGia;
                         }
                         #endregion
 
@@ -2059,6 +2079,7 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                 txt_sdt.Text = _sdt;
                 txt_ten_kh.Text = q.ten;
                 txt_diachi_kh.Text = q.diachi;
+                txt_giamgia_phantram_kh.Text = q.pt_GiamGia != null ? q.pt_GiamGia.Value.ToString("0.##").Replace(",", ".") : "0";
             }
             //else
             //{
@@ -2066,6 +2087,7 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
             //    txt_diachi_kh.Text = "";
             //}
         }
+        up_add.Update();
     }
 
 
