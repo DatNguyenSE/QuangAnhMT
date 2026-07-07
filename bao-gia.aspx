@@ -257,15 +257,27 @@
                             <td colspan="8" class="text-right">TỔNG CỘNG</td>
                             <td class="text-right text-bold"><%=ViewState["TongSauGiam_ChiTiet"] %></td>
                         </tr>
-                        <% if (ViewState["giamgia_dacbiet"] != null && ViewState["giamgia_dacbiet"].ToString() != "0")
+                        <% if ((ViewState["pt_giamgiadacbiet"] != null && ViewState["pt_giamgiadacbiet"].ToString() != "0") || (ViewState["giamgia_dacbiet"] != null && ViewState["giamgia_dacbiet"].ToString() != "0"))
+                            { %>
+                        <% if (ViewState["pt_giamgiadacbiet"] != null && ViewState["pt_giamgiadacbiet"].ToString() != "0")
                             { %>
                         <tr class="bg-yellow fg-red text-bold">
                             <td></td>
-                            <td colspan="8" class="text-right">GIẢM GIÁ ĐẶC BIỆT</td>
+                            <td colspan="8" class="text-right">GIẢM GIÁ ĐẶC BIỆT (%)</td>
                             <td class="text-right text-bold">
-                                <%= Convert.ToInt64(ViewState["giamgia_dacbiet"]).ToString("#,##0") %>
+                                <%= ViewState["pt_giamgiadacbiet"] %>%
+                                <div><small><%= ViewState["giamgia_dacbiet"] != null ? Convert.ToInt64(ViewState["giamgia_dacbiet"]).ToString("#,##0") : "0" %></small></div>
                             </td>
                         </tr>
+                        <% } else { %>
+                        <tr class="bg-yellow fg-red text-bold">
+                            <td></td>
+                            <td colspan="8" class="text-right">GIẢM GIÁ ĐẶC BIỆT (số tiền)</td>
+                            <td class="text-right text-bold">
+                                <%= ViewState["giamgia_dacbiet"] != null ? Convert.ToInt64(ViewState["giamgia_dacbiet"]).ToString("#,##0") : "0" %>
+                            </td>
+                        </tr>
+                        <% } %>
                         <% if (ViewState["vat_chitiet"] != null && ViewState["vat_chitiet"].ToString() != "0")
                             { %>
                         <tr class="text-bold">

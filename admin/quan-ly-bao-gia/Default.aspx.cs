@@ -1044,7 +1044,8 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
     {
         try
         {
-            Label1.Text = null; txt_vat.Text = "0"; txt_giamgia_dacbiet.Text = "0";
+            Label1.Text = null; txt_vat.Text = "0"; txt_giamgia_kh.Text = "0";
+        rd_loai_giamgia.SelectedValue = "phantram";
             txt_sdt.Text = ""; txt_ten_kh.Text = ""; txt_diachi_kh.Text = ""; PlaceHolder1.Visible = false; txt_songayhieuluc.Text = "30";
             Repeater2.DataSource = null;
             Repeater2.DataBind();
@@ -1191,7 +1192,17 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                         };
         if (q_chitiet.Any())
         {
-
+            var bg = db.BaoGia_tbs.FirstOrDefault(p => p.id.ToString() == _idbg);
+            if (bg != null)
+            {
+                ViewState["pt_giamgiadacbiet"] = bg.pt_giamgiadacbiet ?? 0;
+                ViewState["giamgia_dacbiet"] = bg.giamgiadacbiet ?? 0;
+            }
+            else
+            {
+                ViewState["pt_giamgiadacbiet"] = "0";
+                ViewState["giamgia_dacbiet"] = "0";
+            }
 
             ViewState["TongThanhTien_ChiTiet"] = q_chitiet.Sum(p => p.thanhtien.Value).ToString("#,##0");
             ViewState["TongGiam_ChiTiet"] = q_chitiet.Sum(p => p.giamgia_thanhtien.Value).ToString("#,##0");
@@ -1340,7 +1351,17 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                 txt_sdt.Text = q.sdt_khachhang;
                 txt_ten_kh.Text = q.ten_khachhang;
                 txt_diachi_kh.Text = q.diachi_khachhang;
-                txt_giamgia_dacbiet.Text = q.giamgiadacbiet.Value.ToString("#,##0");
+                
+                if (q.pt_giamgiadacbiet.HasValue && q.pt_giamgiadacbiet.Value > 0)
+                {
+                    rd_loai_giamgia.SelectedValue = "phantram";
+                    txt_giamgia_kh.Text = q.pt_giamgiadacbiet.Value.ToString();
+                }
+                else
+                {
+                    rd_loai_giamgia.SelectedValue = "sotien";
+                    txt_giamgia_kh.Text = (q.giamgiadacbiet ?? 0).ToString("#,##0");
+                }
                 txt_vat.Text = q.vat.ToString();
 
                 // Tính số ngày giữa ngày hết hạn và ngày báo giá
@@ -1397,17 +1418,25 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
             string _diachi = txt_diachi_kh.Text.Trim();
             int _ngayhieuluc = Number_cl.Check_Int(txt_songayhieuluc.Text.Trim());
             int _vat = Number_cl.Check_Int(txt_vat.Text.Trim());
-            Int64 _giamgia_dacbiet = Number_cl.Check_Int64(txt_giamgia_dacbiet.Text.Trim());
+            Int64 _giamgia_dacbiet = 0;
             decimal? _pt_GiamGia = null;
-            if (!string.IsNullOrEmpty(txt_giamgia_phantram_kh.Text.Trim()))
+            if (rd_loai_giamgia.SelectedValue == "phantram")
             {
-                decimal temp;
-                if (!decimal.TryParse(txt_giamgia_phantram_kh.Text.Trim(), out temp))
+                if (!string.IsNullOrEmpty(txt_giamgia_kh.Text.Trim()))
                 {
-                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Phần trăm giảm giá không hợp lệ.", "false", "false", "OK", "alert", ""), true);
-                    return;
+                    decimal temp;
+                    if (!decimal.TryParse(txt_giamgia_kh.Text.Trim(), out temp))
+                    {
+                        ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Phần trăm giảm giá không hợp lệ.", "false", "false", "OK", "alert", ""), true);
+                        return;
+                    }
+                    _pt_GiamGia = temp;
                 }
-                _pt_GiamGia = temp;
+            }
+            else
+            {
+                _giamgia_dacbiet = Number_cl.Check_Int64(txt_giamgia_kh.Text.Trim());
+                _pt_GiamGia = 0; // Reset phần trăm để tính theo số tiền
             }
             DateTime _ngayhientai = DateTime.Now;
             #endregion
@@ -1457,7 +1486,16 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                     _ob.ten_khachhang = _ten_kh;
                     _ob.diachi_khachhang = _diachi;
                     _ob.ngaybaogia = _ngayhientai;
-                    _ob.giamgiadacbiet = _giamgia_dacbiet;
+                    if (rd_loai_giamgia.SelectedValue == "phantram")
+                    {
+                        _ob.pt_giamgiadacbiet = (long)(_pt_GiamGia ?? 0);
+                        _ob.giamgiadacbiet = 0;
+                    }
+                    else
+                    {
+                        _ob.pt_giamgiadacbiet = 0;
+                        _ob.giamgiadacbiet = _giamgia_dacbiet;
+                    }
                     _ob.vat = _vat;
                     _ob.ngayhethan = _ngayhientai.AddDays(_ngayhieuluc);
                     _ob.nguoibaogia = ViewState["taikhoan"].ToString();
@@ -1475,7 +1513,9 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                     {
                         Data_KhachHang_tb _ob1 = new Data_KhachHang_tb();
                         _ob1.sdt = _sdt; _ob1.ten = _ten_kh; _ob1.diachi = _diachi; _ob1.ngay_capnhat = _ngayhientai; _ob1.nhanvien_chamsoc = ViewState["taikhoan"].ToString();
-                        _ob1.pt_GiamGia = _pt_GiamGia ?? 0;
+                        if (rd_loai_giamgia.SelectedValue == "phantram") {
+                            _ob1.pt_GiamGia = _pt_GiamGia ?? 0;
+                        }
                         db.Data_KhachHang_tbs.InsertOnSubmit(_ob1);
                     }
                     else//nếu có rồi mà đổi thông tin thì cập nhật mới
@@ -1486,7 +1526,9 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                         if (_diachi_old.ToUpper() != _diachi.ToUpper())
                             q.diachi = _diachi;
                         q.nhanvien_chamsoc = ViewState["taikhoan"].ToString();
-                        q.pt_GiamGia = _pt_GiamGia;
+                        if (rd_loai_giamgia.SelectedValue == "phantram") {
+                            q.pt_GiamGia = _pt_GiamGia;
+                        }
                     }
                     #endregion
 
@@ -1566,7 +1608,16 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                         _ob.sdt_khachhang = _sdt;
                         _ob.ten_khachhang = _ten_kh;
                         _ob.diachi_khachhang = _diachi;
-                        _ob.giamgiadacbiet = _giamgia_dacbiet;
+                        if (rd_loai_giamgia.SelectedValue == "phantram")
+                        {
+                            _ob.pt_giamgiadacbiet = (long)(_pt_GiamGia ?? 0);
+                            _ob.giamgiadacbiet = 0; // Sẽ được tính lại trong update_baogia
+                        }
+                        else
+                        {
+                            _ob.pt_giamgiadacbiet = 0;
+                            _ob.giamgiadacbiet = _giamgia_dacbiet;
+                        }
                         _ob.vat = _vat;
                         _ob.ngayhethan = q_edit.ngaybaogia.Value.AddDays(_ngayhieuluc);
                         if (_ob.ngayhethan.Value.Date < DateTime.Now.Date)//nếu đã hết hạn
@@ -1601,7 +1652,9 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                         {
                             Data_KhachHang_tb _ob1 = new Data_KhachHang_tb();
                             _ob1.sdt = _sdt; _ob1.ten = _ten_kh; _ob1.diachi = _diachi; _ob1.ngay_capnhat = _ngayhientai;
-                            _ob1.pt_GiamGia = _pt_GiamGia ?? 0;
+                            if (rd_loai_giamgia.SelectedValue == "phantram") {
+                                _ob1.pt_GiamGia = _pt_GiamGia ?? 0;
+                            }
                             db.Data_KhachHang_tbs.InsertOnSubmit(_ob1);
                         }
                         else//nếu có rồi mà đổi thông tin thì cập nhật mới
@@ -1611,7 +1664,9 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                                 q.ten = _ten_kh;
                             if (_diachi_old.ToUpper() != _diachi.ToUpper())
                                 q.diachi = _diachi;
-                            q.pt_GiamGia = _pt_GiamGia;
+                            if (rd_loai_giamgia.SelectedValue == "phantram") {
+                                q.pt_GiamGia = _pt_GiamGia;
+                            }
                         }
                         #endregion
 
@@ -2079,7 +2134,17 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                 txt_sdt.Text = _sdt;
                 txt_ten_kh.Text = q.ten;
                 txt_diachi_kh.Text = q.diachi;
-                txt_giamgia_phantram_kh.Text = q.pt_GiamGia != null ? q.pt_GiamGia.Value.ToString("0.##").Replace(",", ".") : "0";
+                
+                if (q.pt_GiamGia != null && q.pt_GiamGia > 0)
+                {
+                    rd_loai_giamgia.SelectedValue = "phantram";
+                    txt_giamgia_kh.Text = q.pt_GiamGia.Value.ToString("0.##").Replace(",", ".");
+                }
+                else
+                {
+                    rd_loai_giamgia.SelectedValue = "sotien";
+                    txt_giamgia_kh.Text = "0";
+                }
             }
             //else
             //{
@@ -2474,7 +2539,6 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
         var q = db.BaoGia_tbs.FirstOrDefault(p => p.id.ToString() == _idbg);
         if (q != null)
         {
-            Int64 _giamgiadacbiet = q.giamgiadacbiet ?? 0; // Đảm bảo không null
             int _vat = q.vat ?? 0; // Đảm bảo không null
             Int64 _tongsaugiam = 0; // Tổng sau giảm từng sản phẩm
 
@@ -2483,6 +2547,14 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
             if (q_chitiet.Any())
             {
                 _tongsaugiam = q_chitiet.Sum(p => p.TongSauGiam ?? 0); // Đảm bảo không null
+            }
+
+            // Tính giảm giá đặc biệt dựa trên pt_giamgiadacbiet của báo giá
+            Int64 _giamgiadacbiet = q.giamgiadacbiet ?? 0;
+            if (q.pt_giamgiadacbiet.HasValue && q.pt_giamgiadacbiet.Value > 0)
+            {
+                _giamgiadacbiet = (Int64)(_tongsaugiam * q.pt_giamgiadacbiet.Value / 100);
+                q.giamgiadacbiet = _giamgiadacbiet;
             }
 
             // Tính VAT (chỉ khi _vat > 0)

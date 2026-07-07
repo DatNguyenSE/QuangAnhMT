@@ -220,14 +220,12 @@
                                 </div>
                                 <div class="cell-lg-4  pl-2-lg pr-2-lg">
                                     <div class="mt-2">
-                                        <small class="fg-red fw-600">Giảm giá đặc biệt (số tiền)</small>
-                                        <asp:TextBox ID="txt_giamgia_dacbiet" CssClass="input-small" Text="" placeholder="Nhập số tiền" onfocus="AutoSelect(this)" MaxLength="14" oninput="format_sotien_new(this)" runat="server" data-role="input"></asp:TextBox>
-                                    </div>
-                                </div>
-                                <div class="cell-lg-4  pl-2-lg pr-2-lg">
-                                    <div class="mt-2">
-                                        <small class="fg-red fw-600">Phần trăm giảm giá (%)</small>
-                                        <asp:TextBox ID="txt_giamgia_phantram_kh" CssClass="input-small" Text="" type="number" step="0.01" placeholder="Nhập %" onfocus="AutoSelect(this)" runat="server" data-role="input"></asp:TextBox>
+                                        <small class="fg-red fw-600">Giảm giá khách hàng</small>
+                                        <asp:TextBox ID="txt_giamgia_kh" CssClass="input-small" Text="0" placeholder="Nhập số tiền hoặc %" onfocus="AutoSelect(this)" runat="server" data-role="input"></asp:TextBox>
+                                        <asp:RadioButtonList ID="rd_loai_giamgia" runat="server" RepeatDirection="Horizontal" CssClass="mt-1" style="font-size: 14px; display: flex; gap: 10px;">
+                                            <asp:ListItem Value="phantram" Selected="True">Phần trăm (%)</asp:ListItem>
+                                            <asp:ListItem Value="sotien">Số tiền</asp:ListItem>
+                                        </asp:RadioButtonList>
                                     </div>
                                 </div>
 
@@ -370,15 +368,30 @@
                                                         <td class="text-right text-bold"><%=ViewState["TongSauGiam_ChiTiet"] %></td>
                                                         <td colspan="1"></td>
                                                     </tr>
-                                                    <%if (ViewState["giamgia_dacbiet"].ToString() != "0")
+                                                    <%if ((ViewState["pt_giamgiadacbiet"] != null && ViewState["pt_giamgiadacbiet"].ToString() != "0") || (ViewState["giamgia_dacbiet"] != null && ViewState["giamgia_dacbiet"].ToString() != "0"))
+                                                        {  %>
+                                                    <%if (ViewState["pt_giamgiadacbiet"] != null && ViewState["pt_giamgiadacbiet"].ToString() != "0")
                                                         {  %>
                                                     <tr class="bg-yellow fg-red text-bold">
                                                         <td></td>
-                                                        <td colspan="8" class="text-right">GIẢM GIÁ ĐẶC BIỆT (SỐ TIỀN)</td>
+                                                        <td colspan="8" class="text-right">GIẢM GIÁ ĐẶC BIỆT (%)</td>
+                                                        <td class="text-right text-bold">
+                                                            <%= ViewState["pt_giamgiadacbiet"]%>%
+                                                           <div><small><%= ViewState["giamgia_dacbiet"] != null ? Convert.ToInt64(ViewState["giamgia_dacbiet"]).ToString("#,##0") : "0" %></small></div>
+                                                        </td>
+                                                        <td colspan="1"></td>
+                                                    </tr>
+                                                    <%}
+                                                    else
+                                                        {  %>
+                                                    <tr class="bg-yellow fg-red text-bold">
+                                                        <td></td>
+                                                        <td colspan="8" class="text-right">GIẢM GIÁ ĐẶC BIỆT (số tiền)</td>
                                                         <td class="text-right text-bold">
                                                             <%= ViewState["giamgia_dacbiet"] != null ? Convert.ToInt64(ViewState["giamgia_dacbiet"]).ToString("#,##0") : "0" %></td>
                                                         <td colspan="1"></td>
                                                     </tr>
+                                                    <%} %>
                                                     <%if (ViewState["vat_chitiet"].ToString() != "0")
                                                         {  %>
                                                     <tr class="text-bold">

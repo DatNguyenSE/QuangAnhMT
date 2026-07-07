@@ -129,6 +129,15 @@ public partial class bao_gia : System.Web.UI.Page
                             nhanvienbg = q_nhanvien.hoten;
                             sdtnv = q_nhanvien.dienthoai;
                         }
+                        if (q.pt_giamgiadacbiet.HasValue && q.pt_giamgiadacbiet.Value != 0)
+                        {
+                            ViewState["pt_giamgiadacbiet"] = q.pt_giamgiadacbiet.Value;
+                        }
+                        else
+                        {
+                            ViewState["pt_giamgiadacbiet"] = "0";
+                        }
+                        
                         if (q.giamgiadacbiet != 0)
                         {
                             ViewState["giamgia_dacbiet"] = q.giamgiadacbiet;
