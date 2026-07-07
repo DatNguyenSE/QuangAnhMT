@@ -3,7 +3,25 @@ function dialog_updating() { Metro.dialog.create({ title: 'Thông báo', content
 /*thông báo đã sao chép thành công*/
 function thongbao_dasaochep() { Metro.notify.create("Sao chép thành công.", "Thông báo", {}); }
 /*định dạng phần ngàn khi nhập số vào textbox*/
-function format_sotien_new(textbox) { var value = parseFloat(textbox.value.replace(/\./g, '').replace(',', '.')); if (!isNaN(value)) { textbox.value = value.toLocaleString('de-DE', { minimumFractionDigits: 0, maximumFractionDigits: 3 }); } else { textbox.value = ''; } }
+function format_sotien_new(textbox) {
+    var originalLength = textbox.value.length;
+    var start = textbox.selectionStart;
+    var value = parseFloat(textbox.value.replace(/\./g, '').replace(',', '.'));
+    if (!isNaN(value)) {
+        var newVal = value.toLocaleString('de-DE', { minimumFractionDigits: 0, maximumFractionDigits: 3 });
+        if (textbox.value !== newVal) {
+            textbox.value = newVal;
+            if (start !== null && start !== undefined) {
+                var newStart = start + (textbox.value.length - originalLength);
+                textbox.setSelectionRange(newStart, newStart);
+            }
+        }
+    } else {
+        if (textbox.value !== '') {
+            textbox.value = '';
+        }
+    }
+}
 /*TỰ ĐỘNG BÔI ĐEN KHI CHỌN VÀO TEXTBOX*/
 function AutoSelect(textBox) { textBox.select(); }
 

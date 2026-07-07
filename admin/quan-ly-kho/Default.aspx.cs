@@ -1,4 +1,4 @@
-﻿using OfficeOpenXml;
+using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -570,8 +570,8 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                 txt_link_fileupload.Text = q.anh;
                 txt_model.Text = q.model;
                 txt_thongso.Text = q.thongso_kythuat;
-                txt_gianhap.Text = q.gianhap.Value.ToString("#,##0");
-                txt_giaban.Text = q.giabanle.Value.ToString("#,##0");
+                txt_gianhap.Text = q.gianhap.Value.ToString("#,##0").Replace(",", ".");
+                txt_giaban.Text = q.giabanle.Value.ToString("#,##0").Replace(",", ".");
 
                 if (q.anh != "")
                 {
