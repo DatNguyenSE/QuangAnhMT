@@ -1,4 +1,4 @@
-using OfficeOpenXml;
+﻿using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -678,12 +678,6 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
 
                 if (ViewState["add_edit"].ToString() == "add")
                 {
-                    var q = db.KhoSanPham_tbs.FirstOrDefault(p => p.ten.ToUpper() == _tensp.ToUpper());
-                    if (q != null)
-                    {
-                        ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Sản phẩm này đã tồn tại.", "false", "false", "OK", "alert", ""), true);
-                        return;
-                    }
                     var q_seri = db.KhoSanPham_tbs.FirstOrDefault(p => p.so_seri == _so_seri);
                     if (q_seri != null)
                     {
@@ -727,12 +721,6 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                     var q_edit = db.KhoSanPham_tbs.FirstOrDefault(p => p.id.ToString() == ViewState["id_edit"].ToString());
                     if (q_edit != null)
                     {
-                        var q = db.KhoSanPham_tbs.FirstOrDefault(p => p.ten.ToUpper() == _tensp.ToUpper() && p.id.ToString() != ViewState["id_edit"].ToString());
-                        if (q != null)
-                        {
-                            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Sản phẩm này đã tồn tại.", "false", "false", "OK", "alert", ""), true);
-                            return;
-                        }
                         var q_seri = db.KhoSanPham_tbs.FirstOrDefault(p => p.so_seri == _so_seri && p.id.ToString() != ViewState["id_edit"].ToString());
                         if (q_seri != null)
                         {
