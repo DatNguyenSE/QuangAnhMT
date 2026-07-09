@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -174,6 +174,14 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
                                 join tk in db.taikhoan_tbs
                                 on ob1.nguoitao equals tk.taikhoan into TaiKhoanGroup
                                 from tk in TaiKhoanGroup.DefaultIfEmpty()
+                                let tongTien = chiTietGroup.Sum(ct => (long?)ct.thanhtien) ?? 0
+                                let tongGiamCT = chiTietGroup.Sum(ct => (long?)ct.giamgia_thanhtien) ?? 0
+                                let tongSauGiamCT = chiTietGroup.Sum(ct => (long?)ct.TongSauGiam) ?? 0
+                                let giamGiaDacBiet = (long?)ob1.giamgiadacbiet ?? 0
+                                let tongGiam = tongGiamCT + giamGiaDacBiet
+                                let tongSauGiam = tongSauGiamCT - giamGiaDacBiet
+                                let tienVAT = ob1.vat != null && ob1.vat != 0 ? tongSauGiam * ((decimal)ob1.vat / 100) : 0
+                                let tongSauThue = ob1.vat != null && ob1.vat != 0 ? tongSauGiam * (1 + (decimal)ob1.vat / 100) : tongSauGiam
                                 select new
                                 {
                                     ob1.id,
@@ -182,9 +190,12 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
                                     ob1.sdt_khachhang,
                                     ob1.ten_khachhang,
                                     ob1.diachi_khachhang,
-                                    TongTien = chiTietGroup.Any() ? chiTietGroup.Sum(ct => (Int64?)ct.thanhtien) ?? 0 : 0,
-                                    TongGiam = chiTietGroup.Any() ? chiTietGroup.Sum(ct => (Int64?)ct.giamgia_thanhtien) ?? 0 : 0,
-                                    TongSauGiam = chiTietGroup.Any() ? chiTietGroup.Sum(ct => (Int64?)ct.TongSauGiam) ?? 0 : 0,
+                                    TongTien = tongTien,
+                                    TongGiam = tongGiam,
+                                    TongSauGiam = tongSauGiam,
+                                    vat = ob1.vat ?? 0,
+                                    TongTien_VAT = tienVAT,
+                                    TongSauThue = tongSauThue,
                                     congno = ob1.congno ?? 0,
                                     ob1.ghichu,
                                     ob1.NgayHenKhachTra,
@@ -285,14 +296,16 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
                     ViewState["TongThanhTien"] = list_all.Sum(p => p.TongTien).ToString("#,##0");
                     ViewState["TongGiam"] = list_all.Sum(p => p.TongGiam).ToString("#,##0");
                     ViewState["TongSauGiam"] = list_all.Sum(p => p.TongSauGiam).ToString("#,##0");
-
-
+                    ViewState["TongTien_VAT"] = Convert.ToInt64(list_all.Sum(p => p.TongTien_VAT)).ToString("#,##0");
+                    ViewState["TongSauThue"] = Convert.ToInt64(list_all.Sum(p => p.TongSauThue)).ToString("#,##0");
                 }
                 else
                 {
                     ViewState["TongThanhTien"] = "0";
                     ViewState["TongGiam"] = "0";
                     ViewState["TongSauGiam"] = "0";
+                    ViewState["TongTien_VAT"] = "0";
+                    ViewState["TongSauThue"] = "0";
                 }
                 #endregion
 
@@ -440,6 +453,8 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
         Label1.Text = null; txt_ngaynhan.Text = ""; txt_ngayhentra.Text = "";
         txt_sdt.Text = ""; txt_ten_kh.Text = ""; txt_diachi_kh.Text = "";
         PlaceHolder1.Visible = false;
+        ph_current_file.Visible = false;
+        txt_excel_filepath.Text = "";
         Repeater2.DataSource = null;
         Repeater2.DataBind();
         ViewState["add_edit"] = null;
@@ -563,6 +578,25 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
 
                 ViewState["donhang_saugiamgia"] = TongSauGiam_ChiTiet;
                 ViewState["thanhtien_vat_chitiet"] = 0;
+
+                var q = db.HangBaoHanh_tbs.FirstOrDefault(p => p.id.ToString() == _idbg);
+                long giamGiaDacBiet = 0;
+                decimal vatRate = 0;
+
+                if (q != null)
+                {
+                    giamGiaDacBiet = q.giamgiadacbiet ?? 0;
+                    vatRate = q.vat ?? 0;
+
+                    ViewState["pt_giamgiadacbiet"] = q.pt_giamgiadacbiet ?? 0;
+                    ViewState["giamgia_dacbiet"] = giamGiaDacBiet;
+                    ViewState["vat_chitiet"] = vatRate;
+                }
+
+                long tongVAT = (long)((TongSauGiam_ChiTiet - giamGiaDacBiet) * vatRate / 100);
+                ViewState["thanhtien_vat_chitiet"] = tongVAT.ToString("#,##0");
+
+                ViewState["donhang_saugiamgia"] = TongSauGiam_ChiTiet - giamGiaDacBiet + tongVAT;
             }
             else
             {
@@ -570,6 +604,11 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
                 ViewState["TongThanhTien_ChiTiet"] = "0";
                 ViewState["TongGiam_ChiTiet"] = "0";
                 ViewState["TongSauGiam_ChiTiet"] = "0";
+                ViewState["pt_giamgiadacbiet"] = "0";
+                ViewState["giamgia_dacbiet"] = "0";
+                ViewState["vat_chitiet"] = "0";
+                ViewState["thanhtien_vat_chitiet"] = "0";
+                ViewState["donhang_saugiamgia"] = "0";
             }
             Repeater2.DataSource = q_chitiet.OrderBy(p => p.ten);
             Repeater2.DataBind();
@@ -644,6 +683,18 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
                 txt_ngaynhan.Text = q.ngaynhan.Value.ToShortDateString();
                 txt_ngayhentra.Text = q.NgayHenKhachTra.Value.ToShortDateString();
 
+                if (q.pt_giamgiadacbiet != null && q.pt_giamgiadacbiet > 0)
+                {
+                    rd_loai_giamgia.SelectedValue = "phantram";
+                    txt_giamgia_kh.Text = q.pt_giamgiadacbiet.Value.ToString();
+                }
+                else
+                {
+                    rd_loai_giamgia.SelectedValue = "sotien";
+                    txt_giamgia_kh.Text = q.giamgiadacbiet != null ? q.giamgiadacbiet.Value.ToString("#,##0") : "0";
+                }
+                txt_vat.Text = q.vat != null ? q.vat.Value.ToString() : "0";
+
                 var data = db.DuLieuNguon_tbs
             .Where(p => p.kyhieu == "hangsanpham" || p.kyhieu == "nhomsanpham" || p.kyhieu == "donvitinh")
             .ToList();
@@ -654,6 +705,7 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
 
 
                 load_edit(db, _id);
+                ShowCurrentFile(_id);
                 Int64 _congno = 0;
                 if (q.congno != null)
                     _congno = q.congno.Value;
@@ -682,6 +734,19 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
         DateTime _ngaynhan = DateTime.Parse(txt_ngaynhan.Text);
         DateTime _ngayhentra = DateTime.Parse(txt_ngayhentra.Text);
         string _ghichu = txt_ghichu.Text.Trim();
+        
+        long _giamgia_dacbiet = 0;
+        decimal? _pt_GiamGia = null;
+        if (rd_loai_giamgia.SelectedValue == "phantram")
+        {
+            _pt_GiamGia = Number_cl.Check_Decimal(txt_giamgia_kh.Text);
+        }
+        else
+        {
+            _giamgia_dacbiet = Number_cl.Check_Int64(txt_giamgia_kh.Text);
+        }
+        int _vat = Number_cl.Check_Int(txt_vat.Text);
+
         #endregion
 
         using (dbDataContext db = new dbDataContext())
@@ -714,10 +779,24 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
                 _ob.diachi_khachhang = _diachi;
                 _ob.ngaynhan = _ngaynhan;
                 _ob.NgayHenKhachTra = _ngayhentra;
+                
+                if (rd_loai_giamgia.SelectedValue == "phantram")
+                {
+                    _ob.pt_giamgiadacbiet = (long)(_pt_GiamGia ?? 0);
+                    _ob.giamgiadacbiet = 0;
+                }
+                else
+                {
+                    _ob.pt_giamgiadacbiet = 0;
+                    _ob.giamgiadacbiet = _giamgia_dacbiet;
+                }
+                _ob.vat = _vat;
+                
                 _ob.nguoitao = ViewState["taikhoan"].ToString();
                 _ob.ngaytao = _ngayhientai;
                 _ob.trangthai = "Đã nhận";
                 _ob.tongtien = 0;
+                _ob.giatri_thuc_donhang = 0;
                 _ob.congno = 0;
                 _ob.ghichu = _ghichu;
                 _ob.trehen = false;
@@ -732,6 +811,10 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
                 {
                     Data_KhachHang_tb _ob1 = new Data_KhachHang_tb();
                     _ob1.sdt = _sdt; _ob1.ten = _ten_kh; _ob1.diachi = _diachi; _ob1.ngay_capnhat = _ngayhientai; _ob1.nhanvien_chamsoc = ViewState["taikhoan"].ToString();
+                    if (rd_loai_giamgia.SelectedValue == "phantram")
+                    {
+                        _ob1.pt_GiamGia = _pt_GiamGia ?? 0;
+                    }
                     db.Data_KhachHang_tbs.InsertOnSubmit(_ob1);
                 }
                 else//nếu có rồi mà đổi thông tin thì cập nhật mới
@@ -742,11 +825,17 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
                     if (_diachi_old.ToUpper() != _diachi.ToUpper())
                         q.diachi = _diachi;
                     q.nhanvien_chamsoc = ViewState["taikhoan"].ToString();
+                    if (rd_loai_giamgia.SelectedValue == "phantram")
+                    {
+                        q.pt_GiamGia = _pt_GiamGia;
+                    }
                 }
                 #endregion
 
                 db.SubmitChanges();
-
+                SaveUploadedFile(_ob.id.ToString());
+                ShowCurrentFile(_ob.id.ToString());
+ 
                 PlaceHolder8.Visible = false;
 
 
@@ -796,6 +885,18 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
                     _ob.NgayHenKhachTra = _ngayhentra;
                     _ob.ghichu = _ghichu;
 
+                    if (rd_loai_giamgia.SelectedValue == "phantram")
+                    {
+                        _ob.pt_giamgiadacbiet = (long)(_pt_GiamGia ?? 0);
+                        _ob.giamgiadacbiet = 0;
+                    }
+                    else
+                    {
+                        _ob.pt_giamgiadacbiet = 0;
+                        _ob.giamgiadacbiet = _giamgia_dacbiet;
+                    }
+                    _ob.vat = _vat;
+
                     if (_ob.trangthai != "Đã trả")
                     {
                         if (_ob.NgayHenKhachTra.Value.Date < DateTime.Now.Date)//nếu đã hết hạn
@@ -813,6 +914,10 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
                     {
                         Data_KhachHang_tb _ob1 = new Data_KhachHang_tb();
                         _ob1.sdt = _sdt; _ob1.ten = _ten_kh; _ob1.diachi = _diachi; _ob1.ngay_capnhat = _ngayhientai;
+                        if (rd_loai_giamgia.SelectedValue == "phantram")
+                        {
+                            _ob1.pt_GiamGia = _pt_GiamGia ?? 0;
+                        }
                         db.Data_KhachHang_tbs.InsertOnSubmit(_ob1);
                     }
                     else//nếu có rồi mà đổi thông tin thì cập nhật mới
@@ -822,6 +927,10 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
                             q.ten = _ten_kh;
                         if (_diachi_old.ToUpper() != _diachi.ToUpper())
                             q.diachi = _diachi;
+                        if (rd_loai_giamgia.SelectedValue == "phantram")
+                        {
+                            q.pt_GiamGia = _pt_GiamGia;
+                        }
                     }
                     #endregion
 
@@ -867,7 +976,9 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
                     #endregion
 
                     db.SubmitChanges();
-
+                    SaveUploadedFile(ViewState["id_edit"].ToString());
+                    ShowCurrentFile(ViewState["id_edit"].ToString());
+ 
                     if (ViewState["id_to_home"] != null)
                         ViewState["id_to_home"] = null;
 
@@ -1118,7 +1229,8 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
 
 
                             db.HangBaoHanh_tbs.DeleteOnSubmit(dm);
-
+                            DeleteUploadedFile(dm.id.ToString());
+ 
                             string _idbg = dm.id.ToString();
                             var q = db.HangBaoHanh_ChiTiet_tbs.Where(p => p.id_PhieuBaoHanh == _idbg);
                             foreach (var t in q)
@@ -1150,6 +1262,89 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
         {
             string _tk = Session["taikhoan"] as string; // Sử dụng 'as' để tránh lỗi nếu là null
             if (!string.IsNullOrEmpty(_tk)) // Kiểm tra xem '_tk' có hợp lệ hay không
+            {
+                _tk = mahoa_cl.giaima_Bcorn(_tk);
+            }
+            else
+                _tk = "";
+            Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
+        }
+    }
+
+    protected void lnk_xoadong_Click(object sender, EventArgs e)
+    {
+        try
+        {
+            check_login_cl.check_login_admin("38", "38");
+            LinkButton button = (LinkButton)sender;
+            string _idbg = button.CommandArgument;
+
+            using (dbDataContext db = new dbDataContext())
+            {
+                var dm = db.HangBaoHanh_tbs.FirstOrDefault(d => d.id.ToString() == _idbg);
+                if (dm != null)
+                {
+                    if (dm.trangthai != "Đã trả")
+                    {
+                        db.HangBaoHanh_tbs.DeleteOnSubmit(dm);
+                        DeleteUploadedFile(_idbg);
+
+                        var q = db.HangBaoHanh_ChiTiet_tbs.Where(p => p.id_PhieuBaoHanh == _idbg);
+                        foreach (var t in q)
+                        {
+                            db.HangBaoHanh_ChiTiet_tbs.DeleteOnSubmit(t);
+                        }
+
+                        var q1 = db.HangBaoHanh_LichSu_ThanhToan_tbs.Where(p => p.id_PhieuBaoHanh == _idbg);
+                        foreach (var t1 in q1)
+                        {
+                            db.HangBaoHanh_LichSu_ThanhToan_tbs.DeleteOnSubmit(t1);
+                        }
+
+                        db.SubmitChanges();
+                        show_main();
+                        ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Xử lý thành công.", "1000", "warning"), true);
+                    }
+                    else
+                    {
+                        ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Phiếu bảo hành đã trả hàng không thể xóa.", "false", "false", "OK", "alert", ""), true);
+                    }
+                }
+            }
+        }
+        catch (Exception _ex)
+        {
+            string _tk = Session["taikhoan"] as string;
+            if (!string.IsNullOrEmpty(_tk))
+            {
+                _tk = mahoa_cl.giaima_Bcorn(_tk);
+            }
+            else
+                _tk = "";
+            Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
+        }
+    }
+
+    protected void btn_delete_excel_Click(object sender, EventArgs e)
+    {
+        try
+        {
+            check_login_cl.check_login_admin("37", "37");
+            if (ViewState["id_edit"] != null)
+            {
+                string _id = ViewState["id_edit"].ToString();
+                DeleteUploadedFile(_id);
+                ph_current_file.Visible = false;
+                show_main();
+                up_main.Update();
+                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
+                    thongbao_class.metro_notifi("Thông báo", "Xóa file Excel thành công.", "1000", "warning"), true);
+            }
+        }
+        catch (Exception _ex)
+        {
+            string _tk = Session["taikhoan"] as string;
+            if (!string.IsNullOrEmpty(_tk))
             {
                 _tk = mahoa_cl.giaima_Bcorn(_tk);
             }
@@ -1268,6 +1463,17 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
                 txt_sdt.Text = _sdt;
                 txt_ten_kh.Text = q.ten;
                 txt_diachi_kh.Text = q.diachi;
+
+                if (q.pt_GiamGia != null && q.pt_GiamGia > 0)
+                {
+                    rd_loai_giamgia.SelectedValue = "phantram";
+                    txt_giamgia_kh.Text = q.pt_GiamGia.Value.ToString("0.##").Replace(",", ".");
+                }
+                else
+                {
+                    rd_loai_giamgia.SelectedValue = "sotien";
+                    txt_giamgia_kh.Text = "0";
+                }
             }
             //else
             //{
@@ -1566,9 +1772,33 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
                 {
                     checkBox.Visible = false;
                 }
-                //hoặc
-                // Lấy giá trị cần so sánh từ DataItem (sửa 'ten_field' thành tên trường dữ liệu phù hợp)
-                //string valueToCompare = DataBinder.Eval(dataItem, "Tên Cột")?.ToString() ?? string.Empty;
+            }
+            var ph_excel_list = (PlaceHolder)e.Item.FindControl("ph_excel_list");
+            var lnk_excel_list = (HyperLink)e.Item.FindControl("lnk_excel_list");
+            if (ph_excel_list != null && lnk_excel_list != null)
+            {
+                string _id = dataItem.id.ToString();
+                string relativePath = "/uploads/excel-baohanh/" + _id + ".xlsx";
+                string absolutePath = Server.MapPath("~" + relativePath);
+                if (System.IO.File.Exists(absolutePath))
+                {
+                    ph_excel_list.Visible = true;
+                    lnk_excel_list.NavigateUrl = relativePath;
+                }
+                else
+                {
+                    string relativePathXls = "/uploads/excel-baohanh/" + _id + ".xls";
+                    string absolutePathXls = Server.MapPath("~" + relativePathXls);
+                    if (System.IO.File.Exists(absolutePathXls))
+                    {
+                        ph_excel_list.Visible = true;
+                        lnk_excel_list.NavigateUrl = relativePathXls;
+                    }
+                    else
+                    {
+                        ph_excel_list.Visible = false;
+                    }
+                }
             }
         }
     }
@@ -1579,20 +1809,34 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
         if (q != null)
         {
             Int64 _tongsaugiam = 0; // Tổng sau giảm từng sản phẩm
+            int _vat = q.vat ?? 0;
 
             // Lấy danh sách chi tiết báo giá
             var q_chitiet = db.HangBaoHanh_ChiTiet_tbs.Where(p => p.id_PhieuBaoHanh == _idbg);
             if (q_chitiet.Any())
             {
                 _tongsaugiam = q_chitiet.Sum(p => p.TongSauGiam ?? 0); // Đảm bảo không null
-                                                                       // Cập nhật vào bảng báo giá
+                
+                // Tính giảm giá đặc biệt dựa trên pt_giamgiadacbiet của báo giá
+                Int64 _giamgiadacbiet = q.giamgiadacbiet ?? 0;
+                if (q.pt_giamgiadacbiet.HasValue && q.pt_giamgiadacbiet.Value > 0)
+                {
+                    _giamgiadacbiet = (Int64)(_tongsaugiam * q.pt_giamgiadacbiet.Value / 100);
+                    q.giamgiadacbiet = _giamgiadacbiet;
+                }
+
+                // Tính VAT (chỉ khi _vat > 0)
+                Int64 _tongvat = (_vat > 0) ? (_tongsaugiam - _giamgiadacbiet) * _vat / 100 : 0;
+                
+                // Cập nhật vào bảng báo giá
                 q.tongtien = _tongsaugiam;
+                q.giatri_thuc_donhang = _tongsaugiam - _giamgiadacbiet + _tongvat;
 
                 Int64 _dathanhtoan = 0;
                 var q_lichsu_thanhtoan = db.HangBaoHanh_LichSu_ThanhToan_tbs.Where(p => p.id_PhieuBaoHanh == _idbg);
                 if (q_lichsu_thanhtoan.Any())
                     _dathanhtoan = q_lichsu_thanhtoan.Sum(p => p.sotien_thanhtoan.Value);
-                q.congno = _tongsaugiam - _dathanhtoan;
+                q.congno = q.giatri_thuc_donhang - _dathanhtoan;
 
 
                 db.SubmitChanges();
@@ -1604,6 +1848,7 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
                     db.HangBaoHanh_LichSu_ThanhToan_tbs.DeleteOnSubmit(t);
                 }
                 q.tongtien = 0;
+                q.giatri_thuc_donhang = 0;
                 q.congno = 0;
                 db.SubmitChanges();
             }
@@ -1651,6 +1896,67 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
                 txt_sotien_thanhtoan_congno.Text = baoGia.congno.Value.ToString("#,##0");
                 ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
                   thongbao_class.metro_notifi("Thông báo", "Xử lý thành công.", "1000", "warning"), true);
+            }
+        }
+    }
+
+    private void SaveUploadedFile(string ticketId)
+    {
+        if (!string.IsNullOrEmpty(txt_excel_filepath.Text))
+        {
+            string tempFilePath = Server.MapPath(txt_excel_filepath.Text);
+            if (System.IO.File.Exists(tempFilePath))
+            {
+                string ext = System.IO.Path.GetExtension(tempFilePath).ToLower();
+                string folderPath = Server.MapPath("~/uploads/excel-baohanh/");
+                if (!System.IO.Directory.Exists(folderPath))
+                {
+                    System.IO.Directory.CreateDirectory(folderPath);
+                }
+
+                string xlsPath = System.IO.Path.Combine(folderPath, ticketId + ".xls");
+                string xlsxPath = System.IO.Path.Combine(folderPath, ticketId + ".xlsx");
+                if (System.IO.File.Exists(xlsPath)) System.IO.File.Delete(xlsPath);
+                if (System.IO.File.Exists(xlsxPath)) System.IO.File.Delete(xlsxPath);
+
+                string savePath = System.IO.Path.Combine(folderPath, ticketId + ext);
+                System.IO.File.Move(tempFilePath, savePath);
+                
+                txt_excel_filepath.Text = "";
+            }
+        }
+    }
+
+    private void DeleteUploadedFile(string ticketId)
+    {
+        string folderPath = Server.MapPath("~/uploads/excel-baohanh/");
+        string xlsPath = System.IO.Path.Combine(folderPath, ticketId + ".xls");
+        string xlsxPath = System.IO.Path.Combine(folderPath, ticketId + ".xlsx");
+        if (System.IO.File.Exists(xlsPath)) System.IO.File.Delete(xlsPath);
+        if (System.IO.File.Exists(xlsxPath)) System.IO.File.Delete(xlsxPath);
+    }
+
+    private void ShowCurrentFile(string ticketId)
+    {
+        string relativePath = "/uploads/excel-baohanh/" + ticketId + ".xlsx";
+        string absolutePath = Server.MapPath("~" + relativePath);
+        if (System.IO.File.Exists(absolutePath))
+        {
+            ph_current_file.Visible = true;
+            lnk_download_file.NavigateUrl = relativePath;
+        }
+        else
+        {
+            string relativePathXls = "/uploads/excel-baohanh/" + ticketId + ".xls";
+            string absolutePathXls = Server.MapPath("~" + relativePathXls);
+            if (System.IO.File.Exists(absolutePathXls))
+            {
+                ph_current_file.Visible = true;
+                lnk_download_file.NavigateUrl = relativePathXls;
+            }
+            else
+            {
+                ph_current_file.Visible = false;
             }
         }
     }

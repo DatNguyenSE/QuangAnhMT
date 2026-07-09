@@ -163,6 +163,12 @@
                 <span class="caption">Báo giá & Bán hàng</span>
             </a>
         </li>
+        <li class="<%=a11 %>">
+            <a href="/admin/theo-doi-hang-da-ban/default.aspx">
+                <span class="icon"><span class="mif-history"></span></span>
+                <span class="caption">Theo dõi hàng đã bán</span>
+            </a>
+        </li>
         <li class="">
             <a href="/admin/thong-ke/ban-hang.aspx">
                 <span class="icon"><span class="mif-dollar2"></span></span>

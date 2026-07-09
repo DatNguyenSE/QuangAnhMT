@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -7,7 +7,7 @@ using System.Web.UI.WebControls;
 
 public partial class admin_uc_menu_left_uc : System.Web.UI.UserControl
 {
-    public string a0, a1, a1_1, a1_2, a1_3, a2, a3, a4, a5, a6, a7, a8, a9, a10, muon_hang;
+    public string a0, a1, a1_1, a1_2, a1_3, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, muon_hang;
     protected void Page_Load(object sender, EventArgs e)
     {
         if (!IsPostBack)
@@ -22,6 +22,7 @@ public partial class admin_uc_menu_left_uc : System.Web.UI.UserControl
                     case ("/admin/quan-ly-cong-viec/default.aspx"): a9 = "active"; Session["title"] = "Công việc"; break;
                     case ("/admin/data-khach-hang/default.aspx"): a8 = "active"; Session["title"] = "Data khách hàng"; break;
                     case ("/admin/quan-ly-bao-gia/default.aspx"): a7 = "active"; Session["title"] = "Quản lý báo giá"; break;
+                    case ("/admin/theo-doi-hang-da-ban/default.aspx"): a11 = "active"; Session["title"] = "Theo dõi hàng đã bán"; break;
                     case ("/admin/quan-ly-he-thong/cai-dat.aspx"): a5 = "active"; Session["title"] = "Cài đặt hệ thống"; break;
                     case ("/admin/quan-ly-nhan-vien/bang-cham-cong.aspx"): a6 = "active"; Session["title"] = "Bảng chấm công"; break;
                     case ("/admin/quan-ly-kho/default.aspx"): a3 = "active"; Session["title"] = "Quản lý kho"; break;

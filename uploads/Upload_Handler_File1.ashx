@@ -1,4 +1,4 @@
-﻿<%@ WebHandler Language="C#" Class="Upload_Handler_File1" %>
+<%@ WebHandler Language="C#" Class="Upload_Handler_File1" %>
 using System;
 using System.Web;
 using System.IO;
@@ -20,7 +20,7 @@ public class Upload_Handler_File1 : IHttpHandler
                 HttpPostedFile file = context.Request.Files[0];
 
                 // Kiểm tra loại tệp
-                string[] allowedExtensions = { ".docx", ".doc", ".pdf",".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".heic"  };
+                string[] allowedExtensions = { ".docx", ".doc", ".pdf",".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".heic", ".xlsx", ".xls"  };
                 string fileExtension = Path.GetExtension(file.FileName).ToLower();
                 if (!Array.Exists(allowedExtensions, ext => ext == fileExtension))
                 {

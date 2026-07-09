@@ -1558,6 +1558,8 @@ public partial class admin_Default : System.Web.UI.Page
         check_list_quyen_congviec.SelectedIndex = -1;
         check_all_quyen_baohanh.Checked = false;
         check_list_quyen_baohanh.SelectedIndex = -1;
+        check_all_quyen_theodoihangdaban.Checked = false;
+        check_list_quyen_theodoihangdaban.SelectedIndex = -1;
 
         ViewState["tk_phanquyen"] = null;
     }
@@ -1657,6 +1659,13 @@ public partial class admin_Default : System.Web.UI.Page
                 // Kiểm tra xem tất cả các quyền có được chọn không
                 check_all_quyen_baohanh.Checked = check_list_quyen_baohanh.Items.Cast<ListItem>().All(i => i.Selected);
                 #endregion
+                #region theo dõi hàng đã bán
+                foreach (ListItem item in check_list_quyen_theodoihangdaban.Items)
+                {
+                    item.Selected = quyenArray.Contains(item.Value);
+                }
+                check_all_quyen_theodoihangdaban.Checked = check_list_quyen_theodoihangdaban.Items.Cast<ListItem>().All(i => i.Selected);
+                #endregion
             }
         }
         pn_phanquyen.Visible = !pn_phanquyen.Visible;
@@ -1719,9 +1728,15 @@ public partial class admin_Default : System.Web.UI.Page
                     .Where(item => item.Selected)
                     .Select(item => item.Value)
                     .ToArray());
+                // Tạo chuỗi quyền THEO DÕI HÀNG ĐÃ BÁN
+                string _quyen_theodoihangdaban = string.Join(",",
+                    check_list_quyen_theodoihangdaban.Items.Cast<ListItem>()
+                    .Where(item => item.Selected)
+                    .Select(item => item.Value)
+                    .ToArray());
 
                 // Nối tất cả các quyền lại với nhau
-                string all_quyen = string.Join(",", _quyen_quanlynhanvien, _quyen_quanlyhethong, _quyen_quanlykho, _quyen_quanlybaogia, _quyen_quanlydatakhachhang, _quyen_quanlyhopdong, _quyen_congviec, _quyen_baohanh);
+                string all_quyen = string.Join(",", _quyen_quanlynhanvien, _quyen_quanlyhethong, _quyen_quanlykho, _quyen_quanlybaogia, _quyen_quanlydatakhachhang, _quyen_quanlyhopdong, _quyen_congviec, _quyen_baohanh, _quyen_theodoihangdaban);
 
                 q.permission = all_quyen;
 
@@ -1976,6 +1991,30 @@ public partial class admin_Default : System.Web.UI.Page
 
         // Cập nhật trạng thái của check_all_page theo kết quả kiểm tra
         check_all_quyen_baohanh.Checked = allSelected;
+    }
+    #endregion
+    #region quản lý theo dõi hàng đã bán
+    protected void check_all_quyen_theodoihangdaban_CheckedChanged(object sender, EventArgs e)
+    {
+        bool isChecked = check_all_quyen_theodoihangdaban.Checked;
+        foreach (ListItem item in check_list_quyen_theodoihangdaban.Items)
+        {
+            item.Selected = isChecked;
+        }
+    }
+
+    protected void check_list_quyen_theodoihangdaban_SelectedIndexChanged(object sender, EventArgs e)
+    {
+        bool allSelected = true;
+        foreach (ListItem item in check_list_quyen_theodoihangdaban.Items)
+        {
+            if (!item.Selected)
+            {
+                allSelected = false;
+                break;
+            }
+        }
+        check_all_quyen_theodoihangdaban.Checked = allSelected;
     }
     #endregion
     #endregion

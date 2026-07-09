@@ -132,6 +132,14 @@
                                             <asp:ListItem Text="Xóa hàng bảo hành" Value="38" Selected="false"></asp:ListItem>
                                         </asp:CheckBoxList>
                                     </div>
+                                    <div class="mt-3">
+                                        <div class="mt-1">
+                                            <asp:CheckBox ID="check_all_quyen_theodoihangdaban" runat="server" CssClass="text-bold" Text="THEO DÕI HÀNG ĐÃ BÁN" OnCheckedChanged="check_all_quyen_theodoihangdaban_CheckedChanged" AutoPostBack="true" />
+                                        </div>
+                                        <asp:CheckBoxList ID="check_list_quyen_theodoihangdaban" runat="server" AutoPostBack="true" OnSelectedIndexChanged="check_list_quyen_theodoihangdaban_SelectedIndexChanged">
+                                            <asp:ListItem Text="Xem theo dõi hàng đã bán" Value="41" Selected="false"></asp:ListItem>
+                                        </asp:CheckBoxList>
+                                    </div>
                                 </div>
                             </div>
 

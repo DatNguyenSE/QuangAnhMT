@@ -1,4 +1,4 @@
-﻿<%@ Page Title="Hàng bảo hành" Language="C#" MasterPageFile="~/admin/MasterPageAdmin.master" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="admin_hang_bao_hanh_Default" %>
+<%@ Page Title="Hàng bảo hành" Language="C#" MasterPageFile="~/admin/MasterPageAdmin.master" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="admin_hang_bao_hanh_Default" %>
 
 <%@ Register Assembly="AjaxControlToolkit" Namespace="AjaxControlToolkit" TagPrefix="ajaxToolkit" %>
 <%@ Register Assembly="CKEditor.NET" Namespace="CKEditor.NET" TagPrefix="CKEditor" %>
@@ -124,6 +124,23 @@
                                 </div>
                                 <div class="cell-lg-4  pl-2-lg pr-2-lg">
                                     <div class="mt-2">
+                                        <small class="fg-red fw-600">Giảm giá khách hàng</small>
+                                        <asp:TextBox ID="txt_giamgia_kh" CssClass="input-small" Text="0" placeholder="Nhập số tiền hoặc %" onfocus="AutoSelect(this)" runat="server" data-role="input"></asp:TextBox>
+                                        <asp:RadioButtonList ID="rd_loai_giamgia" runat="server" RepeatDirection="Horizontal" CssClass="mt-1" style="font-size: 14px; display: flex; gap: 10px;">
+                                            <asp:ListItem Value="phantram" Selected="True">Phần trăm (%)</asp:ListItem>
+                                            <asp:ListItem Value="sotien">Số tiền</asp:ListItem>
+                                        </asp:RadioButtonList>
+                                    </div>
+                                </div>
+
+                                <div class="cell-lg-4  pl-2-lg pr-2-lg">
+                                    <div class="mt-2">
+                                        <small class="fg-red fw-600">VAT (%)</small>
+                                        <asp:TextBox ID="txt_vat" Text="0" CssClass="input-small" onfocus="AutoSelect(this)" MaxLength="3" oninput="format_sotien_new(this)" runat="server" data-role="input"></asp:TextBox>
+                                    </div>
+                                </div>
+                                <div class="cell-lg-4  pl-2-lg pr-2-lg">
+                                    <div class="mt-2">
                                         <small class="fg-red fw-600">Ngày nhận</small>
                                         <div>
                                             <asp:TextBox ID="txt_ngaynhan" runat="server" MaxLength="10" data-role="calendar-picker" data-outside="true" data-dialog-mode="true" data-week-start="1" data-locale="vi-VN" data-format="DD/MM/YYYY" data-input-format="DD/MM/YYYY" data-clear-button="false"></asp:TextBox>
@@ -144,6 +161,25 @@
                                         <asp:TextBox ID="txt_ghichu" CssClass="" runat="server" data-role="input"></asp:TextBox>
                                     </div>
                                 </div>
+                                <div class="cell-lg-4  pl-2-lg pr-2-lg">
+                                     <div class="mt-2">
+                                         <small class="fw-600">File Excel Bảo Hành</small>
+                                         <input type="file" id="excelFileInput" onchange="uploadExcelFile()" data-role="file" data-button-title="Chọn file" />
+                                         <asp:TextBox ID="txt_excel_filepath" runat="server" style="display:none;"></asp:TextBox>
+                                         <div id="message_excel" class="fg-red"></div>
+                                         <div id="uploadedFilePath_excel" class="fg-green"></div>
+                                         <asp:PlaceHolder ID="ph_current_file" runat="server" Visible="false">
+                                             <div class="mt-2" style="display: flex; gap: 10px;">
+                                                 <asp:HyperLink ID="lnk_download_file" runat="server" Target="_blank" CssClass="button mini success rounded">
+                                                     <span class="mif-file-excel pr-1"></span> Tải file Excel hiện tại
+                                                 </asp:HyperLink>
+                                                 <asp:LinkButton ID="btn_delete_excel" runat="server" CssClass="button mini alert rounded" OnClick="btn_delete_excel_Click" OnClientClick="return confirm('Bạn có chắc chắn muốn xóa file Excel này không?');">
+                                                     <span class="mif-bin pr-1"></span> Xóa file
+                                                 </asp:LinkButton>
+                                             </div>
+                                         </asp:PlaceHolder>
+                                     </div>
+                                 </div>
 
 
                             </div>
@@ -307,14 +343,74 @@
                                                         <td class="text-right text-bold"><%=ViewState["TongSauGiam_ChiTiet"] %></td>
                                                         <td colspan="1"></td>
                                                     </tr>
+                                                    <%if ((ViewState["pt_giamgiadacbiet"] != null && ViewState["pt_giamgiadacbiet"].ToString() != "0") || (ViewState["giamgia_dacbiet"] != null && ViewState["giamgia_dacbiet"].ToString() != "0"))
+                                                        {  %>
+                                                    <%if (ViewState["pt_giamgiadacbiet"] != null && ViewState["pt_giamgiadacbiet"].ToString() != "0")
+                                                        {  %>
+                                                    <tr class="bg-yellow fg-red text-bold">
+                                                        <td></td>
+                                                        <td colspan="8" class="text-right">GIẢM GIÁ ĐẶC BIỆT (%)</td>
+                                                        <td class="text-right text-bold">
+                                                            <%= ViewState["pt_giamgiadacbiet"]%>%
+                                                           <div><small><%= ViewState["giamgia_dacbiet"] != null ? Convert.ToInt64(ViewState["giamgia_dacbiet"]).ToString("#,##0") : "0" %></small></div>
+                                                        </td>
+                                                        <td colspan="1"></td>
+                                                    </tr>
+                                                    <%}
+                                                    else
+                                                        {  %>
+                                                    <tr class="bg-yellow fg-red text-bold">
+                                                        <td></td>
+                                                        <td colspan="8" class="text-right">GIẢM GIÁ ĐẶC BIỆT (số tiền)</td>
+                                                        <td class="text-right text-bold">
+                                                            <%= ViewState["giamgia_dacbiet"] != null ? Convert.ToInt64(ViewState["giamgia_dacbiet"]).ToString("#,##0") : "0" %></td>
+                                                        <td colspan="1"></td>
+                                                    </tr>
+                                                    <%} %>
+                                                    <%if (ViewState["vat_chitiet"] != null && ViewState["vat_chitiet"].ToString() != "0")
+                                                        {  %>
+                                                    <tr class="text-bold">
+                                                        <td></td>
+                                                        <td colspan="8" class="text-right">VAT</td>
+                                                        <td class="text-right text-bold">
+                                                            <%= ViewState["vat_chitiet"]%>%
+                                                           <div><small><%= ViewState["thanhtien_vat_chitiet"]%></small></div>
+                                                        </td>
+                                                        <td colspan="1"></td>
+                                                    </tr>
+                                                    <%} %>
 
-                                                    <%--<tr class="bg-cobalt fg-white text-bold">
+                                                    <tr class="bg-cobalt fg-white text-bold">
                                                         <td></td>
                                                         <td colspan="8" class="text-right">GIÁ TRỊ THỰC CỦA ĐƠN HÀNG</td>
                                                         <td class="text-right text-bold">
                                                             <%= ViewState["donhang_saugiamgia"] != null ? Convert.ToInt64(ViewState["donhang_saugiamgia"]).ToString("#,##0") : "0" %></td>
                                                         <td colspan="1"></td>
-                                                    </tr>--%>
+                                                    </tr>
+                                                    <%}
+                                                        else
+                                                        {  %>
+                                                    <%if (ViewState["vat_chitiet"] != null && ViewState["vat_chitiet"].ToString() != "0")
+                                                        {  %>
+                                                    <tr class="text-bold">
+                                                        <td></td>
+                                                        <td colspan="8" class="text-right">VAT</td>
+                                                        <td class="text-right text-bold">
+                                                            <%= ViewState["vat_chitiet"]%>%
+                                                             <div><small><%= ViewState["thanhtien_vat_chitiet"]%></small></div>
+                                                        </td>
+                                                        <td colspan="1"></td>
+                                                    </tr>
+                                                    <%} %>
+
+                                                    <tr class="bg-cobalt fg-white text-bold">
+                                                        <td></td>
+                                                        <td colspan="8" class="text-right">GIÁ TRỊ THỰC CỦA ĐƠN HÀNG</td>
+                                                        <td class="text-right text-bold">
+                                                            <%= ViewState["donhang_saugiamgia"] != null ? Convert.ToInt64(ViewState["donhang_saugiamgia"]).ToString("#,##0") : "0" %></td>
+                                                        <td colspan="1"></td>
+                                                    </tr>
+                                                    <%} %>
                                                 </tfoot>
                                             </table>
                                         </div>
@@ -619,8 +715,10 @@
                                         <th style="width: 1px; min-width: 1px;">Tổng tiền</th>
                                         <th style="width: 1px; min-width: 1px;">Tổng giảm</th>
                                         <th style="width: 1px; min-width: 1px;">Tổng sau giảm</th>
+                                        <th style="width: 1px; min-width: 1px;">VAT (%)</th>
+                                        <th style="width: 1px; min-width: 1px;">Sau thuế</th>
                                         <th style="width: 100px; min-width: 100px;">Ghi chú</th>
-                                       <%-- <th style="width: 1px; min-width: 1px;"></th>--%>
+                                        <th style="width: 1px; min-width: 1px;"></th>
                                     </tr>
                                 </thead>
 
@@ -635,6 +733,13 @@
                                                     <asp:LinkButton CssClass="fg-white" OnClick="but_show_chinhsua_Click" data-role="hint" data-hint-position="top" data-hint-text="Chi tiết" ID="but_name_1" CommandArgument='<%# Eval("id") %>' runat="server">
                                                         <%#Eval("id") %>
                                                     </asp:LinkButton>
+                                                    <asp:PlaceHolder ID="ph_excel_list" runat="server" Visible="false">
+                                                        <div>
+                                                            <asp:HyperLink ID="lnk_excel_list" Target="_blank" ToolTip="Tải file excel bảo hành" runat="server">
+                                                                <span class="mif-file-excel fg-green mif-lg"></span>
+                                                            </asp:HyperLink>
+                                                        </div>
+                                                    </asp:PlaceHolder>
                                                 </td>
                                                 <td class="checkbox-table">
                                                     <asp:CheckBox ID="checkID" runat="server" onkeypress="if (event.keyCode==13) return false;" />
@@ -678,32 +783,43 @@
                                                     </asp:PlaceHolder>
                                                 </td>
                                                 <td class="text-right">
-                                                    <div><%#Eval("TongSauGiam","{0:#,##0}") %></div>
-                                                    <asp:PlaceHolder ID="PlaceHolder6" runat="server" Visible='<%#Eval("congno").ToString()!="0" %>'>
+                                                    <%#Eval("TongSauGiam","{0:#,##0}") %>
+                                                    <asp:PlaceHolder ID="PlaceHolder6" runat="server" Visible="false">
 
                                                         <asp:LinkButton CssClass="button mini alert rounded ani-flash" OnClick="but_show_chinhsua_Click" data-role="hint" data-hint-position="top" data-hint-text="Thanh toán công nợ" ID="LinkButton1" CommandArgument='<%# Eval("id") %>' runat="server">
            <%# Eval("congno","{0:#,##0}") %>
                                                         </asp:LinkButton>
                                                     </asp:PlaceHolder>
                                                 </td>
-                                                <td> <%#Eval("ghichu") %></td>
+                                                 <td class="text-center fg-green"><%#Eval("vat") %>%
+                                                      <asp:PlaceHolder ID="PlaceHolder7" runat="server" Visible='<%#Eval("vat").ToString()!="0" %>'>
+                                                          <div><small><%#Eval("TongTien_VAT","{0:#,##0}") %></small></div>
+                                                      </asp:PlaceHolder>
+                                                 </td>
+                                                 <td class="text-right text-bold"><%#Eval("TongSauThue","{0:#,##0}") %>
+                                                     <asp:PlaceHolder ID="PlaceHolder6_new" runat="server" Visible='<%#Eval("congno").ToString()!="0" %>'>
+                                                         <asp:LinkButton CssClass="button mini alert rounded ani-flash" OnClick="but_show_chinhsua_Click" data-role="hint" data-hint-position="top" data-hint-text="Thanh toán công nợ" ID="LinkButton1_new" CommandArgument='<%# Eval("id") %>' runat="server">
+                                                                <%# Eval("congno","{0:#,##0}") %>
+                                                         </asp:LinkButton>
+                                                     </asp:PlaceHolder>
+                                                 </td>
+                                                 <td> <%#Eval("ghichu") %></td>
 
-                                               <%-- <td style="vertical-align: middle">
-                                                 
+                                                <td style="vertical-align: middle">
                                                     <div class="dropdown-button place-right">
                                                         <button class="button small bg-transparent">
                                                             <span class="mif mif-more-horiz"></span>
                                                         </button>
                                                         <ul class="d-menu place-right" data-role="dropdown">
-
                                                             <li>
-                                                                <asp:LinkButton ID="but_show_form_daban" OnClick="but_show_form_daban_Click" CommandArgument='<%# Eval("id")%>' runat="server">Xác nhận đã trả hàng</asp:LinkButton></li>
-
-
-                                                        
+                                                                <asp:LinkButton ID="lnkEdit" OnClick="but_show_chinhsua_Click" CommandArgument='<%# Eval("id") %>' runat="server">Chỉnh sửa</asp:LinkButton>
+                                                            </li>
+                                                            <li>
+                                                                <asp:LinkButton ID="lnkDelete" OnClick="lnk_xoadong_Click" CommandArgument='<%# Eval("id") %>' OnClientClick="return confirm('Bạn có chắc chắn muốn xóa phiếu bảo hành này?');" runat="server">Xóa</asp:LinkButton>
+                                                            </li>
                                                         </ul>
                                                     </div>
-                                                </td>--%>
+                                                </td>
                                             </tr>
                                         </ItemTemplate>
                                     </asp:Repeater>
@@ -721,6 +837,11 @@
                                             <div class="fg-orange"><%=ViewState["TongGiam"] %></div>
                                             <%} %></td>
                                         <td class="text-right"><%=ViewState["TongSauGiam"] %></td>
+                                         <td class="fg-green text-right">
+                                             <%=ViewState["TongTien_VAT"] %>
+                                         </td>
+                                         <td class="text-bold text-right"><%=ViewState["TongSauThue"] %></td>
+                                        <td></td>
                                         <td></td>
                                     </tr>
                                 </tfoot>
@@ -790,7 +911,47 @@
                  messageDiv.innerHTML = "Vui lòng chọn file.";
              }
          }
-    </script>
+         function uploadExcelFile() {
+             var fileInput = document.getElementById("excelFileInput");
+             var messageDiv = document.getElementById("message_excel");
+             var uploadedFilePathDiv = document.getElementById("uploadedFilePath_excel");
+
+             if (fileInput.files.length > 0) {
+                 var file = fileInput.files[0];
+
+                 var allowedExtensions = [".xlsx", ".xls"];
+                 var fileExtension = file.name.substr(file.name.lastIndexOf(".")).toLowerCase();
+                 if (allowedExtensions.indexOf(fileExtension) === -1) {
+                     messageDiv.innerHTML = "Định dạng file không hợp lệ. Chỉ chấp nhận .xlsx, .xls";
+                     return;
+                 }
+
+                 var maxFileSize = 100 * 1024 * 1024; // 100 MB
+                 if (file.size > maxFileSize) {
+                     messageDiv.innerHTML = "Vui lòng chọn file có kích thước nhỏ hơn 100 MB.";
+                     return;
+                 }
+
+                 var formData = new FormData();
+                 formData.append("file", file);
+
+                 var xhr = new XMLHttpRequest();
+                 xhr.open("POST", "/uploads/Upload_Handler_File1.ashx", true);
+                 xhr.onload = function () {
+                     if (xhr.status === 200) {
+                         messageDiv.innerHTML = "";
+                         uploadedFilePathDiv.innerHTML = "<div><small>Đã chọn: " + file.name + "</small></div>";
+                         document.getElementById('<%= txt_excel_filepath.ClientID %>').value = xhr.responseText;
+                     } else {
+                         messageDiv.innerHTML = xhr.responseText || "Lỗi upload.";
+                     }
+                 };
+                 xhr.send(formData);
+             } else {
+                 messageDiv.innerHTML = "Vui lòng chọn file.";
+             }
+         }
+     </script>
 
 
 </asp:Content>
