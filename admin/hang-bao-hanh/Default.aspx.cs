@@ -201,9 +201,9 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
                     long searchId = -1;
                     long.TryParse(_key, out searchId);
 
-                    // Tìm trước các ID phiếu có chứa số Seri tương ứng (truy vấn độc lập rất nhanh)
+                    // Tìm trước các ID phiếu có chứa số Seri hoặc Số phiếu trả tương ứng (truy vấn độc lập rất nhanh)
                     var matchedStrIds = db.HangBaoHanh_ChiTiet_tbs
-                                          .Where(c => c.seri.Contains(_key))
+                                          .Where(c => c.seri.Contains(_key) || c.so_phieu_tra.Contains(_key))
                                           .Select(c => c.id_PhieuBaoHanh)
                                           .Distinct()
                                           .ToList();
