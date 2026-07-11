@@ -96,6 +96,10 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
         #endregion
 
     }
+    public string _id_phongban = "";
+    public List<DuLieuNguon_tb> _listHang = null;
+    public List<DuLieuNguon_tb> _listDVT = null;
+
     protected void Page_Load(object sender, EventArgs e)
     {
         if (Request.QueryString["action"] == "importExcel")
@@ -188,6 +192,11 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
         {
             using (dbDataContext db = new dbDataContext())
             {
+                // Tự động kiểm tra và cập nhật trạng thái "Trễ hẹn" vào Database (Bật nếu quá hạn, Tắt nếu chưa tới hạn)
+                db.ExecuteCommand(@"UPDATE [let99665_thaianaudio].[HangBaoHanh_tb] 
+                                    SET trehen = CASE WHEN NgayHenKhachTra < CAST(GETDATE() AS DATE) THEN 1 ELSE 0 END 
+                                    WHERE trangthai <> N'Đã trả' 
+                                    AND (trehen IS NULL OR trehen <> CASE WHEN NgayHenKhachTra < CAST(GETDATE() AS DATE) THEN 1 ELSE 0 END)");
 
                 #region lấy dữ liệu
                 var phieuQuery = db.HangBaoHanh_tbs.AsQueryable();
@@ -456,6 +465,9 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
         txt_giamgia_phantram.Text = "0";
         txt_model.Text = "";
         txt_thongso.Text = "";
+        txt_sotien_baohanhg.Text = "0";
+        txt_seri_add.Text = "";
+        txt_thoihan_baohanh_add.Text = "";
 
         DropDownList2.DataSource = null;
         DropDownList2.DataBind();
@@ -574,12 +586,16 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
                             };
             if (q_chitiet.Any())
             {
-                ViewState["TongThanhTien_ChiTiet"] = q_chitiet.Sum(p => p.thanhtien.Value).ToString("#,##0");
-                ViewState["TongGiam_ChiTiet"] = q_chitiet.Sum(p => p.giamgia_thanhtien.Value).ToString("#,##0");
-                Int64 TongSauGiam_ChiTiet = q_chitiet.Sum(p => p.TongSauGiam.Value);
+                var lstChitiet = q_chitiet.ToList();
+                ViewState["TongThanhTien_ChiTiet"] = lstChitiet.Sum(p => p.thanhtien.Value).ToString("#,##0");
+                ViewState["TongGiam_ChiTiet"] = lstChitiet.Sum(p => p.giamgia_thanhtien.Value).ToString("#,##0");
+                Int64 TongSauGiam_ChiTiet = lstChitiet.Sum(p => p.TongSauGiam.Value);
                 ViewState["TongSauGiam_ChiTiet"] = TongSauGiam_ChiTiet.ToString("#,##0");
 
-                ViewState["donhang_saugiamgia"] = TongSauGiam_ChiTiet;
+                Int64 TongChiPhiSuaChua = (Int64)lstChitiet.Sum(p => p.congno_doitac ?? 0);
+                ViewState["TongChiPhiSuaChua_ChiTiet"] = TongChiPhiSuaChua.ToString("#,##0");
+
+                ViewState["donhang_saugiamgia"] = TongSauGiam_ChiTiet + TongChiPhiSuaChua;
                 ViewState["thanhtien_vat_chitiet"] = 0;
 
                 var q = db.HangBaoHanh_tbs.FirstOrDefault(p => p.id.ToString() == _idbg);
@@ -596,10 +612,10 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
                     ViewState["vat_chitiet"] = vatRate;
                 }
 
-                long tongVAT = (long)((TongSauGiam_ChiTiet - giamGiaDacBiet) * vatRate / 100);
+                long tongVAT = (long)((TongSauGiam_ChiTiet + TongChiPhiSuaChua - giamGiaDacBiet) * vatRate / 100);
                 ViewState["thanhtien_vat_chitiet"] = tongVAT.ToString("#,##0");
 
-                ViewState["donhang_saugiamgia"] = TongSauGiam_ChiTiet - giamGiaDacBiet + tongVAT;
+                ViewState["donhang_saugiamgia"] = TongSauGiam_ChiTiet + TongChiPhiSuaChua - giamGiaDacBiet + tongVAT;
             }
             else
             {
@@ -607,6 +623,7 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
                 ViewState["TongThanhTien_ChiTiet"] = "0";
                 ViewState["TongGiam_ChiTiet"] = "0";
                 ViewState["TongSauGiam_ChiTiet"] = "0";
+                ViewState["TongChiPhiSuaChua_ChiTiet"] = "0";
                 ViewState["pt_giamgiadacbiet"] = "0";
                 ViewState["giamgia_dacbiet"] = "0";
                 ViewState["vat_chitiet"] = "0";
@@ -692,9 +709,9 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
                     if (ddl_trangthai.Items.FindByValue(q.trangthai.Trim()) != null)
                         ddl_trangthai.SelectedValue = q.trangthai.Trim();
                 }
-                txt_ngaytrathucte.Text = q.NgayTra_ThucTe != null ? q.NgayTra_ThucTe.Value.ToShortDateString() : "";
+                //txt_ngaytrathucte.Text = q.NgayTra_ThucTe != null ? q.NgayTra_ThucTe.Value.ToShortDateString() : "";
                 txt_congno.Text = q.congno != null ? q.congno.Value.ToString("#,##0") : "0";
-                chk_trehen.Checked = q.trehen ?? false;
+                //chk_trehen.Checked = q.trehen ?? false;
 
                 if (q.pt_giamgiadacbiet != null && q.pt_giamgiadacbiet > 0)
                 {
@@ -817,12 +834,12 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
                 // Lưu master fields mới
                 _ob.trangthai = ddl_trangthai.SelectedValue;
                 _ob.congno = Number_cl.Check_Int64(txt_congno.Text.Trim());
-                _ob.trehen = chk_trehen.Checked;
-                if (!string.IsNullOrEmpty(txt_ngaytrathucte.Text.Trim())) {
-                    _ob.NgayTra_ThucTe = DateTime.ParseExact(txt_ngaytrathucte.Text.Trim(), "dd/MM/yyyy", null);
-                } else {
-                    _ob.NgayTra_ThucTe = null;
-                }
+                //_ob.trehen = chk_trehen.Checked;
+                //if (!string.IsNullOrEmpty(txt_ngaytrathucte.Text.Trim())) {
+                //    _ob.NgayTra_ThucTe = DateTime.ParseExact(txt_ngaytrathucte.Text.Trim(), "dd/MM/yyyy", null);
+                //} else {
+                //    _ob.NgayTra_ThucTe = null;
+                //}
                 _ob.vat = _vat;
                 
                 _ob.nguoitao = ViewState["taikhoan"].ToString();
@@ -933,12 +950,12 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
                     // Cập nhật master fields mới
                     _ob.trangthai = ddl_trangthai.SelectedValue;
                     _ob.congno = Number_cl.Check_Int64(txt_congno.Text.Trim());
-                    _ob.trehen = chk_trehen.Checked;
-                    if (!string.IsNullOrEmpty(txt_ngaytrathucte.Text.Trim())) {
-                        _ob.NgayTra_ThucTe = DateTime.ParseExact(txt_ngaytrathucte.Text.Trim(), "dd/MM/yyyy", null);
-                    } else {
-                        _ob.NgayTra_ThucTe = null;
-                    }
+                    //_ob.trehen = chk_trehen.Checked;
+                    //if (!string.IsNullOrEmpty(txt_ngaytrathucte.Text.Trim())) {
+                    //    _ob.NgayTra_ThucTe = DateTime.ParseExact(txt_ngaytrathucte.Text.Trim(), "dd/MM/yyyy", null);
+                    //} else {
+                    //    _ob.NgayTra_ThucTe = null;
+                    //}
 
                     if (_ob.trangthai != "Đã trả")
                     {
@@ -989,8 +1006,8 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
                         // Tìm các điều khiển mới
                         TextBox txt_seri = (TextBox)item.FindControl("txt_seri");
                         TextBox txt_thoihan_baohanh = (TextBox)item.FindControl("txt_thoihan_baohanh");
-                        TextBox txt_hang_chitiet = (TextBox)item.FindControl("txt_hang_chitiet");
-                        TextBox txt_dvt_chitiet = (TextBox)item.FindControl("txt_dvt_chitiet");
+                        DropDownList ddl_hang_chitiet = (DropDownList)item.FindControl("ddl_hang_chitiet");
+                        DropDownList ddl_dvt_chitiet = (DropDownList)item.FindControl("ddl_dvt_chitiet");
                         TextBox txt_model_chitiet = (TextBox)item.FindControl("txt_model_chitiet");
                         TextBox txt_thongso_chitiet = (TextBox)item.FindControl("txt_thongso_chitiet");
                         TextBox txt_ghichu_sanpham = (TextBox)item.FindControl("txt_ghichu_sanpham");
@@ -1038,8 +1055,8 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
                                     // Lưu các trường mới
                                     if(txt_seri != null) q_chitiet.seri = txt_seri.Text.Trim();
                                     if(txt_thoihan_baohanh != null) q_chitiet.thoi_han_baohanh = txt_thoihan_baohanh.Text.Trim();
-                                    if(txt_hang_chitiet != null) q_chitiet.id_hang = GetOrInsertDuLieuNguon(db, txt_hang_chitiet.Text.Trim(), "hangsanpham");
-                                    if(txt_dvt_chitiet != null) q_chitiet.donvitinh = GetOrInsertDuLieuNguon(db, txt_dvt_chitiet.Text.Trim(), "donvitinh");
+                                    if(ddl_hang_chitiet != null) q_chitiet.id_hang = ddl_hang_chitiet.SelectedValue;
+                                    if(ddl_dvt_chitiet != null) q_chitiet.donvitinh = ddl_dvt_chitiet.SelectedValue;
                                     if(txt_model_chitiet != null) q_chitiet.model = txt_model_chitiet.Text.Trim();
                                     if(txt_thongso_chitiet != null) q_chitiet.thongso_kythuat = txt_thongso_chitiet.Text.Trim();
                                     if(txt_ghichu_sanpham != null) q_chitiet.ghichu_sanpham = txt_ghichu_sanpham.Text.Trim();
@@ -1681,6 +1698,7 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
 
             txt_name.Text = ""; txt_link_fileupload.Text = ""; txt_model.Text = ""; txt_thongso.Text = "";
             txt_soluong.Text = "1"; txt_giamgia_phantram.Text = "0"; txt_seri_add.Text = ""; txt_thoihan_baohanh_add.Text = "";
+            txt_sotien_baohanhg.Text = "0";
             ddl_hang_add.SelectedIndex = 0; ddl_dvt_add.SelectedIndex = 0;
 
 
@@ -1921,7 +1939,8 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
             var q_chitiet = db.HangBaoHanh_ChiTiet_tbs.Where(p => p.id_PhieuBaoHanh == _idbg);
             if (q_chitiet.Any())
             {
-                _tongsaugiam = q_chitiet.Sum(p => p.TongSauGiam ?? 0); // Đảm bảo không null
+                var lstChitiet = q_chitiet.ToList();
+                _tongsaugiam = lstChitiet.Sum(p => p.TongSauGiam ?? 0) + (Int64)lstChitiet.Sum(p => p.congno_doitac ?? 0); // Đảm bảo không null và cộng thêm chi phí sửa chữa
                 
                 // Tính giảm giá đặc biệt dựa trên pt_giamgiadacbiet của báo giá
                 Int64 _giamgiadacbiet = q.giamgiadacbiet ?? 0;
@@ -1995,6 +2014,10 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
                 };
                 db.HangBaoHanh_LichSu_ThanhToan_tbs.InsertOnSubmit(lichSuThanhToan);
                 baoGia.congno = baoGia.congno - _thanhtoan;
+                
+                // Tự động gán Ngày trả thực tế khi thanh toán công nợ thành công
+                baoGia.NgayTra_ThucTe = DateTime.Now;
+                
                 db.SubmitChanges();
                 load_congno(db, _idbg, baoGia.congno.Value, baoGia.trangthai);
                 show_main();
@@ -2333,5 +2356,56 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
         }
         
         Response.End();
+    }
+
+    protected void Repeater2_ItemDataBound(object sender, RepeaterItemEventArgs e)
+    {
+        if (e.Item.ItemType == ListItemType.Item || e.Item.ItemType == ListItemType.AlternatingItem)
+        {
+            DropDownList ddl_hang = (DropDownList)e.Item.FindControl("ddl_hang_chitiet");
+            DropDownList ddl_dvt = (DropDownList)e.Item.FindControl("ddl_dvt_chitiet");
+
+            if (_listHang == null || _listDVT == null)
+            {
+                using (dbDataContext db = new dbDataContext())
+                {
+                    var data = db.DuLieuNguon_tbs.Where(p => p.kyhieu == "hangsanpham" || p.kyhieu == "donvitinh").ToList();
+                    _listHang = data.Where(p => p.kyhieu == "hangsanpham").OrderBy(p => p.ten).ToList();
+                    _listDVT = data.Where(p => p.kyhieu == "donvitinh").OrderBy(p => p.ten).ToList();
+                }
+            }
+
+            if (ddl_hang != null)
+            {
+                ddl_hang.DataSource = _listHang;
+                ddl_hang.DataValueField = "id";
+                ddl_hang.DataTextField = "ten";
+                ddl_hang.DataBind();
+                ddl_hang.Items.Insert(0, new ListItem("Chọn hãng", ""));
+
+                string tenHang = Convert.ToString(DataBinder.Eval(e.Item.DataItem, "TenHang"));
+                if (!string.IsNullOrEmpty(tenHang))
+                {
+                    var item = ddl_hang.Items.FindByText(tenHang);
+                    if (item != null) item.Selected = true;
+                }
+            }
+
+            if (ddl_dvt != null)
+            {
+                ddl_dvt.DataSource = _listDVT;
+                ddl_dvt.DataValueField = "id";
+                ddl_dvt.DataTextField = "ten";
+                ddl_dvt.DataBind();
+                ddl_dvt.Items.Insert(0, new ListItem("Chọn ĐVT", ""));
+
+                string tenDVT = Convert.ToString(DataBinder.Eval(e.Item.DataItem, "DVT"));
+                if (!string.IsNullOrEmpty(tenDVT))
+                {
+                    var item = ddl_dvt.Items.FindByText(tenDVT);
+                    if (item != null) item.Selected = true;
+                }
+            }
+        }
     }
 }

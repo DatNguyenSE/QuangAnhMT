@@ -166,7 +166,7 @@
                                         </asp:DropDownList>
                                     </div>
                                 </div>
-                                <div class="cell-lg-4 pl-2-lg pr-2-lg">
+                                <div class="cell-lg-4 pl-2-lg pr-2-lg" style="display:none;">
                                     <div class="mt-2">
                                         <small class="fw-600">Ngày trả thực tế</small>
                                         <div>
@@ -188,7 +188,7 @@
                                 </div>
                                 <div class="cell-lg-4 pl-2-lg pr-2-lg">
                                     <div class="mt-4 pt-1">
-                                        <asp:CheckBox ID="chk_trehen" runat="server" Text="Trễ hẹn" CssClass="fg-red text-bold" />
+                                        <asp:CheckBox ID="chk_trehen" Visible="false" runat="server" Text="Trễ hẹn" CssClass="fg-red text-bold" />
                                     </div>
                                 </div>
                                 <div class="cell-lg-4  pl-2-lg pr-2-lg">
@@ -302,7 +302,7 @@
                                     <div class="cell-lg-12">
                                         <div style="overflow: auto" class=" mt-3">
                                             <div class="row">
-                                                <asp:Repeater ID="Repeater2" runat="server">
+                                                <asp:Repeater ID="Repeater2" runat="server" OnItemDataBound="Repeater2_ItemDataBound">
                                                     <ItemTemplate>
                                                         <span style="display: none">
                                                             <asp:Label ID="lbID_chitiet" runat="server" Text='<%#Eval("id") %>'></asp:Label>
@@ -345,11 +345,11 @@
                                                                             </div>
                                                                             <div class="cell-6 mt-2">
                                                                                 <small class="fw-600">Hãng</small>
-                                                                                <asp:TextBox data-role="input" CssClass="input-small" ID="txt_hang_chitiet" runat="server" Text='<%#Eval("TenHang") %>'></asp:TextBox>
+                                                                                <asp:DropDownList ID="ddl_hang_chitiet" runat="server" data-role="select" data-filter="true"></asp:DropDownList>
                                                                             </div>
                                                                             <div class="cell-6 mt-2">
                                                                                 <small class="fw-600">Đơn vị tính</small>
-                                                                                <asp:TextBox data-role="input" CssClass="input-small" ID="txt_dvt_chitiet" runat="server" Text='<%#Eval("DVT") %>'></asp:TextBox>
+                                                                                <asp:DropDownList ID="ddl_dvt_chitiet" runat="server" data-role="select" data-filter="true"></asp:DropDownList>
                                                                             </div>
                                                                             <div class="cell-6 mt-2">
                                                                                 <small class="fw-600">Model</small>
@@ -441,6 +441,10 @@
                                                             <tr class="bg-light text-bold">
                                                                 <td class="text-right">TỔNG CỘNG</td>
                                                                 <td class="text-right text-bold" style="width: 200px;"><%=ViewState["TongSauGiam_ChiTiet"] %></td>
+                                                            </tr>
+                                                            <tr class="bg-light fg-red text-bold">
+                                                                <td class="text-right">TỔNG CHI PHÍ SỬA CHỮA</td>
+                                                                <td class="text-right text-bold"><%=ViewState["TongChiPhiSuaChua_ChiTiet"] ?? "0" %></td>
                                                             </tr>
                                                             <%if ((ViewState["pt_giamgiadacbiet"] != null && ViewState["pt_giamgiadacbiet"].ToString() != "0") || (ViewState["giamgia_dacbiet"] != null && ViewState["giamgia_dacbiet"].ToString() != "0"))
                                                                 {  %>
@@ -837,7 +841,7 @@
                         <li data-role="hint" data-hint-position="top" data-hint-text="Tạo phiếu">
                             <asp:LinkButton ID="but_show_form_add" OnClick="but_show_form_add_Click" runat="server"><span class="mif-plus"></span></asp:LinkButton>
                         </li>
-                        <li data-role="hint" data-hint-position="top" data-hint-text="Nhập file Excel">
+                        <li data-role="hint" data-hint-position="top" data-hint-text="Nhập file Excel" style="display:none;">
                             <asp:LinkButton ID="but_show_form_import" OnClientClick="document.getElementById('pn_import').style.display='block'; return false;" runat="server"><span class="mif-file-excel"></span></asp:LinkButton>
                         </li>
                         <%--<li data-role="hint" data-hint-position="top" data-hint-text="Lưu">
