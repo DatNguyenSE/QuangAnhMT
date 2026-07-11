@@ -460,12 +460,26 @@ public partial class admin_Default : System.Web.UI.Page
    
        
                 #region lấy dữ liệu
-                var list_all = (from ob1 in db.HangBaoHanh_tbs.Where(p=>p.trangthai!="Đã trả")
-                                join ob2 in db.HangBaoHanh_ChiTiet_tbs
-                                on ob1.id.ToString() equals ob2.id_PhieuBaoHanh into chiTietGroup // Nhóm dữ liệu
-                                join tk in db.taikhoan_tbs
-                                on ob1.nguoitao equals tk.taikhoan into TaiKhoanGroup
+                var base_phieu = db.HangBaoHanh_tbs
+                                   .Where(p => p.trangthai != "Đã trả")
+                                   .OrderBy(p => p.NgayHenKhachTra)
+                                   .Take(50)
+                                   .ToList();
+
+                var phieu_ids = base_phieu.Select(p => p.id.ToString()).ToList();
+                var chitiet = new List<HangBaoHanh_ChiTiet_tb>();
+                if (phieu_ids.Count > 0)
+                {
+                    chitiet = db.HangBaoHanh_ChiTiet_tbs
+                                    .Where(c => phieu_ids.Contains(c.id_PhieuBaoHanh))
+                                    .ToList();
+                }
+                var taikhoans = db.taikhoan_tbs.ToList();
+
+                var list_all = (from ob1 in base_phieu
+                                join tk in taikhoans on ob1.nguoitao equals tk.taikhoan into TaiKhoanGroup
                                 from tk in TaiKhoanGroup.DefaultIfEmpty()
+                                let chiTietGroup = chitiet.Where(c => c.id_PhieuBaoHanh == ob1.id.ToString())
                                 select new
                                 {
                                     ob1.id,
@@ -484,10 +498,7 @@ public partial class admin_Default : System.Web.UI.Page
                                     ob1.NgayTra_ThucTe,
                                     ob1.trangthai,
                                     ob1.trehen
-                                }).Distinct().AsQueryable();
-
-                //sắp xếp
-                list_all = list_all.OrderBy(p => p.NgayHenKhachTra);
+                                }).ToList();
 
                 #endregion
 

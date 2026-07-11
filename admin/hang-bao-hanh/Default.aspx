@@ -155,10 +155,40 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="cell-lg-4  pl-2-lg pr-2-lg">
+                                <div class="cell-lg-4 pl-2-lg pr-2-lg">
+                                    <div class="mt-2">
+                                        <small class="fg-red fw-600">Trạng thái phiếu</small>
+                                        <asp:DropDownList ID="ddl_trangthai" runat="server" data-role="select">
+                                            <asp:ListItem Value="Đang xử lý">Đang xử lý</asp:ListItem>
+                                            <asp:ListItem Value="Đã nhận">Đã nhận</asp:ListItem>
+                                            <asp:ListItem Value="Đã trả">Đã trả</asp:ListItem>
+                                            <asp:ListItem Value="Đã hủy">Đã hủy</asp:ListItem>
+                                        </asp:DropDownList>
+                                    </div>
+                                </div>
+                                <div class="cell-lg-4 pl-2-lg pr-2-lg">
+                                    <div class="mt-2">
+                                        <small class="fw-600">Ngày trả thực tế</small>
+                                        <div>
+                                            <asp:TextBox ID="txt_ngaytrathucte" runat="server" MaxLength="10" data-role="calendar-picker" data-outside="true" data-dialog-mode="true" data-week-start="1" data-locale="vi-VN" data-format="DD/MM/YYYY" data-input-format="DD/MM/YYYY" data-clear-button="false"></asp:TextBox>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="cell-lg-4 pl-2-lg pr-2-lg">
+                                    <div class="mt-2">
+                                        <small class="fw-600">Công nợ khách</small>
+                                        <asp:TextBox ID="txt_congno" Text="0" CssClass="input-small" onfocus="AutoSelect(this)" MaxLength="14" oninput="format_sotien_new(this)" runat="server" data-role="input"></asp:TextBox>
+                                    </div>
+                                </div>
+                                <div class="cell-lg-4 pl-2-lg pr-2-lg">
                                     <div class="mt-2">
                                         <small class="fw-600">Ghi chú</small>
                                         <asp:TextBox ID="txt_ghichu" CssClass="" runat="server" data-role="input"></asp:TextBox>
+                                    </div>
+                                </div>
+                                <div class="cell-lg-4 pl-2-lg pr-2-lg">
+                                    <div class="mt-4 pt-1">
+                                        <asp:CheckBox ID="chk_trehen" runat="server" Text="Trễ hẹn" CssClass="fg-red text-bold" />
                                     </div>
                                 </div>
                                 <div class="cell-lg-4  pl-2-lg pr-2-lg">
@@ -218,14 +248,14 @@
                                                     <div class="mt-2">
                                                         <small class="fw-600 fg-red">Hãng sản phẩm</small>
                                                         <div>
-                                                            <asp:TextBox ID="TextBox1" runat="server" data-role="input" MaxLength="100"></asp:TextBox>
+                                                            <asp:DropDownList ID="ddl_hang_add" runat="server" data-role="select" data-filter="true"></asp:DropDownList>
                                                         </div>
                                                     </div>
    
                                                     <div class="mt-2">
                                                         <small class="fw-600 fg-red">Đơn vị tính</small>
                                                         <div>
-                                                            <asp:TextBox ID="TextBox2" runat="server" data-role="input" MaxLength="100"></asp:TextBox>
+                                                            <asp:DropDownList ID="ddl_dvt_add" runat="server" data-role="select" data-filter="true"></asp:DropDownList>
                                                         </div>
                                                     </div>
                                                     <div class="mt-2">
@@ -250,8 +280,16 @@
                                                 </div>
                                                 <div class="cell-lg-3 pl-2-lg pr-2-lg">
                                                     <div class="mt-2">
-                                                        <small class="fg-red fw-600">Giảm giá (%)</small>
+                                                        <small class="fw-600">Giảm giá (%)</small>
                                                         <asp:TextBox ID="txt_giamgia_phantram" Text="0" onfocus="AutoSelect(this)" MaxLength="4" runat="server" data-role="input"></asp:TextBox>
+                                                    </div>
+                                                    <div class="mt-2">
+                                                        <small class="fw-600">Seri</small>
+                                                        <asp:TextBox ID="txt_seri_add" runat="server" data-role="input"></asp:TextBox>
+                                                    </div>
+                                                    <div class="mt-2">
+                                                        <small class="fw-600">Thời hạn BH</small>
+                                                        <asp:TextBox ID="txt_thoihan_baohanh_add" runat="server" data-role="input"></asp:TextBox>
                                                     </div>
                                                 </div>
                                                 <div class="cell-lg-12 text-right pr-2-lg mt-3 mb-3">
@@ -263,156 +301,206 @@
 
                                     <div class="cell-lg-12">
                                         <div style="overflow: auto" class=" mt-3">
-                                            <table class="bcorn-fix-title-table">
-                                                <thead>
-                                                    <tr class="">
-                                                        <th style="width: 1px;">TT</th>
-                                                        <%--<th style="width: 1px;">
-                                                            <input data-role="hint" data-hint-position="top" data-hint-text="Chọn/Bỏ chọn" type="checkbox" onkeypress="if (event.keyCode==13) return false;" onclick="$('.checkbox-table2 input[type=checkbox]').prop('checked', this.checked)">
-                                                        </th>--%>
-                                                        <th style="width: 50px; min-width: 50px;">Ảnh</th>
-                                                        <th style="width: 160px; min-width: 160px;">Sản phẩm</th>
-                                                        <th style="width: 1px; min-width: 1px;">Hãng</th>
-                                                        <th style="min-width: 200px;">Thông số kỹ thuật</th>
-                                                        <th style="width: 1px; min-width: 1px;">Giá</th>
-                                                        <th style="width: 1px; min-width: 1px;">ĐVT</th>
-                                                        <th style="width: 1px; min-width: 1px;">SL</th>
-                                                        <th style="width: 100px; min-width: 100px;">Thành tiền</th>
-                                                        <th style="width: 110px; min-width: 110px;">Tổng sau giảm</th>
-                                                        <th style="width: 1px; min-width: 1px;"></th>
-                                                    </tr>
-                                                </thead>
+                                            <div class="row">
+                                                <asp:Repeater ID="Repeater2" runat="server">
+                                                    <ItemTemplate>
+                                                        <span style="display: none">
+                                                            <asp:Label ID="lbID_chitiet" runat="server" Text='<%#Eval("id") %>'></asp:Label>
+                                                        </span>
+                                                        <div class="cell-lg-12 mb-4">
+                                                            <div class="border bd-gray p-4 bg-white" style="box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-radius: 4px;">
+                                                                <div class="row">
+                                                                    <!-- Cột 1: Thông tin Sản phẩm -->
+                                                                    <div class="cell-lg-4 border-right bd-lightGray pr-4">
+                                                                        <div class="d-flex flex-align-center mb-3">
+                                                                            <div class="mr-3" data-role="lightbox" class="c-pointer">
+                                                                                <img src='<%#Eval("anh") %>' class="img-cover-vuong border" width="60" height="60" onerror="this.src='/uploads/images/no-image.png'" />
+                                                                            </div>
+                                                                            <div>
+                                                                                <div class="text-bold text-leader"><%#Eval("ten") %></div>
 
-                                                <tbody>
-                                                    <asp:Repeater ID="Repeater2" runat="server">
-                                                        <ItemTemplate>
-                                                            <span style="display: none">
-                                                                <asp:Label ID="lbID_chitiet" runat="server" Text='<%#Eval("id") %>'></asp:Label>
-                                                            </span>
-                                                            <tr>
-                                                                <td class="text-center"><%# Container.ItemIndex + 1 %></td>
-                                                                <%--<td class="checkbox-table2">
-                                                                    <asp:CheckBox ID="checkID2" runat="server" onkeypress="if (event.keyCode==13) return false;" />
-                                                                </td>--%>
-                                                                <td>
-                                                                    <div data-role="lightbox" class="c-pointer">
-                                                                        <img src='<%#Eval("anh") %>' class="img-cover-vuong" width="50" height="50" />
+                                                                            </div>
+                                                                        </div>
+                                                                        
+                                                                        <div class="row">
+                                                                            <div class="cell-6 mt-2">
+                                                                                <small class="fw-600 fg-red">Số lượng nhận</small>
+                                                                                <asp:TextBox data-role="input" CssClass="input-small" ID="txt_sl_chitiet" MaxLength="4" runat="server" Text='<%#Eval("soluong","{0:#,##0}") %>'></asp:TextBox>
+                                                                            </div>
+                                                                            <div class="cell-6 mt-2">
+                                                                                <small class="fw-600 fg-red">Giá tiền</small>
+                                                                                <asp:TextBox data-role="input" CssClass="input-small" oninput="format_sotien_new(this)" ID="txt_sotien_baohanh1" runat="server" Text='<%#Eval("sotien_baohanh","{0:#,##0}") %>'></asp:TextBox>
+                                                                            </div>
+                                                                            <div class="cell-6 mt-2">
+                                                                                <small class="fw-600 fg-red">Seri</small>
+                                                                                <asp:TextBox data-role="input" CssClass="input-small" ID="txt_seri" runat="server" Text='<%#Eval("seri") %>'></asp:TextBox>
+                                                                            </div>
+                                                                            <div class="cell-6 mt-2">
+                                                                                <small class="fw-600">Thời hạn BH</small>
+                                                                                <asp:TextBox data-role="input" CssClass="input-small" ID="txt_thoihan_baohanh" runat="server" Text='<%#Eval("thoi_han_baohanh") %>'></asp:TextBox>
+                                                                            </div>
+                                                                            <div class="cell-12 mt-2">
+                                                                                <small class="fw-600">Ghi chú SP (Tình trạng sp)</small>
+                                                                                <asp:TextBox data-role="input" CssClass="input-small" ID="txt_ghichu_sanpham" runat="server" Text='<%#Eval("ghichu_sanpham") %>'></asp:TextBox>
+                                                                            </div>
+                                                                            <div class="cell-6 mt-2">
+                                                                                <small class="fw-600">Hãng</small>
+                                                                                <asp:TextBox data-role="input" CssClass="input-small" ID="txt_hang_chitiet" runat="server" Text='<%#Eval("TenHang") %>'></asp:TextBox>
+                                                                            </div>
+                                                                            <div class="cell-6 mt-2">
+                                                                                <small class="fw-600">Đơn vị tính</small>
+                                                                                <asp:TextBox data-role="input" CssClass="input-small" ID="txt_dvt_chitiet" runat="server" Text='<%#Eval("DVT") %>'></asp:TextBox>
+                                                                            </div>
+                                                                            <div class="cell-6 mt-2">
+                                                                                <small class="fw-600">Model</small>
+                                                                                <asp:TextBox data-role="input" CssClass="input-small" ID="txt_model_chitiet" runat="server" Text='<%#Eval("model") %>'></asp:TextBox>
+                                                                            </div>
+                                                                            <div class="cell-12 mt-2">
+                                                                                <small class="fw-600">Giảm giá (%)</small>
+                                                                                <asp:TextBox data-role="input" CssClass="input-small" onfocus="AutoSelect(this)" MaxLength="4" ID="txt_giamgia_phantram_chitiet" runat="server" Text='<%#Eval("giamgia_phantram") %>'></asp:TextBox>
+                                                                            </div>
+                                                                            <div class="cell-12 mt-2">
+                                                                                <small class="fw-600">Thông số kỹ thuật</small>
+                                                                                <asp:TextBox data-role="textarea" CssClass="input-small" ID="txt_thongso_chitiet" runat="server" TextMode="MultiLine" Text='<%#Eval("thongso_kythuat") %>'></asp:TextBox>
+                                                                            </div>
+                                                                        </div>
                                                                     </div>
+                                                                    
+                                                                    <!-- Cột 2: Đối tác sửa chữa -->
+                                                                    <div class="cell-lg-4 border-right bd-lightGray pr-4 pl-4">
+                                                                        <div class="text-bold mb-2">Quy trình Sửa chữa</div>
+                                                                        <div class="row">
+                                                                            <div class="cell-6 mt-2">
+                                                                                <small class="fw-600">Nơi sửa</small>
+                                                                                <asp:TextBox data-role="input" CssClass="input-small" ID="txt_noisua" runat="server" Text='<%#Eval("noi_sua") %>'></asp:TextBox>
+                                                                            </div>
+                                                                            <div class="cell-6 mt-2">
+                                                                                <small class="fw-600">Mã ĐT Sửa</small>
+                                                                                <asp:TextBox data-role="input" CssClass="input-small" ID="txt_madoitac" runat="server" Text='<%#Eval("ma_doitac_sua") %>'></asp:TextBox>
+                                                                            </div>
+                                                                            
+                                                                            <div class="cell-6 mt-2">
+                                                                                <small class="fw-600">Ngày mang đi</small>
+                                                                                <asp:TextBox ID="txt_ngaymangsua" runat="server" CssClass="input-small" data-role="calendar-picker" data-outside="true" data-dialog-mode="true" data-week-start="1" data-locale="vi-VN" data-format="DD/MM/YYYY" data-input-format="DD/MM/YYYY" data-clear-button="true" Text='<%#Eval("ngay_mang_sua", "{0:dd/MM/yyyy}") %>'></asp:TextBox>
+                                                                            </div>
+                                                                            <div class="cell-6 mt-2">
+                                                                                <small class="fw-600">SL mang đi</small>
+                                                                                <asp:TextBox data-role="input" CssClass="input-small" ID="txt_slmangsua" runat="server" Text='<%#Eval("sl_mang_sua") %>'></asp:TextBox>
+                                                                            </div>
+                                                                            
+                                                                            <div class="cell-6 mt-2">
+                                                                                <small class="fw-600">Ngày sửa về</small>
+                                                                                <asp:TextBox ID="txt_ngaysuave" runat="server" CssClass="input-small" data-role="calendar-picker" data-outside="true" data-dialog-mode="true" data-week-start="1" data-locale="vi-VN" data-format="DD/MM/YYYY" data-input-format="DD/MM/YYYY" data-clear-button="true" Text='<%#Eval("ngay_sua_ve", "{0:dd/MM/yyyy}") %>'></asp:TextBox>
+                                                                            </div>
+                                                                            <div class="cell-6 mt-2">
+                                                                                <small class="fw-600">SL sửa về</small>
+                                                                                <asp:TextBox data-role="input" CssClass="input-small" ID="txt_slsuave" runat="server" Text='<%#Eval("sl_sua_ve") %>'></asp:TextBox>
+                                                                            </div>
+                                                                            <div class="cell-12 mt-2">
+                                                                                <small class="fw-600">Chi phí sửa chữa (Công nợ ĐT)</small>
+                                                                                <asp:TextBox data-role="input" CssClass="input-small" oninput="format_sotien_new(this)" ID="txt_congnodoitac" runat="server" Text='<%#Eval("congno_doitac","{0:#,##0}") %>'></asp:TextBox>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    
+                                                                    <!-- Cột 3: Trả khách hàng -->
+                                                                    <div class="cell-lg-4 pl-4">
+                                                                        <div class="text-bold mb-2">Bàn giao Khách hàng</div>
+                                                                        <div class="row">
+                                                                            <div class="cell-6 mt-2">
+                                                                                <small class="fw-600">Số phiếu trả</small>
+                                                                                <asp:TextBox data-role="input" CssClass="input-small" ID="txt_sophieutra" runat="server" Text='<%#Eval("so_phieu_tra") %>'></asp:TextBox>
+                                                                            </div>
+                                                                            <div class="cell-6 mt-2">
+                                                                                <small class="fw-600">SL trả khách</small>
+                                                                                <asp:TextBox data-role="input" CssClass="input-small" ID="txt_sltrakhach" runat="server" Text='<%#Eval("sl_tra_khach") %>'></asp:TextBox>
+                                                                            </div>
+                                                                            <div class="cell-12 mt-2">
+                                                                                <small class="fw-600">Công nợ khách</small>
+                                                                                <asp:TextBox data-role="input" CssClass="input-small" oninput="format_sotien_new(this)" ID="txt_congnotrakhach" runat="server" Text='<%#Eval("congno_trakhach","{0:#,##0}") %>'></asp:TextBox>
+                                                                            </div>
+                                                                            <div class="cell-12 mt-2">
+                                                                                <small class="fw-600">Ghi chú trả khách</small>
+                                                                                <asp:TextBox data-role="input" CssClass="input-small" ID="txt_ghichutrakhach" runat="server" Text='<%#Eval("ghichu_trakhach") %>'></asp:TextBox>
+                                                                            </div>
+                                                                            <div class="cell-12 mt-2 text-right">
+                                                                                <asp:Button ToolTip="Xóa SP này khỏi phiếu" ID="but_xoachitiet" OnClick="but_xoachitiet_Click" CommandArgument='<%#Eval("id") %>' runat="server" Text="Xóa Sản Phẩm Này" CssClass="button alert small outline" />
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </ItemTemplate>
+                                                </asp:Repeater>
+                                                
+                                                <!-- Bảng TỔNG CỘNG -->
+                                                <div class="cell-lg-12">
+                                                    <table class="table row-hover table-border cell-border compact striped bg-white">
+                                                        <tfoot>
+                                                            <tr class="bg-light text-bold">
+                                                                <td class="text-right">TỔNG CỘNG</td>
+                                                                <td class="text-right text-bold" style="width: 200px;"><%=ViewState["TongSauGiam_ChiTiet"] %></td>
+                                                            </tr>
+                                                            <%if ((ViewState["pt_giamgiadacbiet"] != null && ViewState["pt_giamgiadacbiet"].ToString() != "0") || (ViewState["giamgia_dacbiet"] != null && ViewState["giamgia_dacbiet"].ToString() != "0"))
+                                                                {  %>
+                                                            <%if (ViewState["pt_giamgiadacbiet"] != null && ViewState["pt_giamgiadacbiet"].ToString() != "0")
+                                                                {  %>
+                                                            <tr class="bg-yellow fg-red text-bold">
+                                                                <td class="text-right">GIẢM GIÁ ĐẶC BIỆT (%)
+                                                                    <div><small><%= ViewState["pt_giamgiadacbiet"]%>%</small></div>
                                                                 </td>
-                                                                <td class="text-left">
-                                                                    <%#Eval("ten") %>
-                                                                </td>
-                                                                <td>
-                                                                    <%#Eval("TenHang") %>
-                                                                </td>
-                                                                <td class="text-left">
-                                                                    <small><%#Eval("thongso_kythuat") %></small>
-                                                                </td>
-                                                                <td class="text-right">
-                                                                     <asp:TextBox data-role="input" CssClass="input-small" data-clear-button="false" oninput="format_sotien_new(this)" ID="txt_sotien_baohanh1" Width="100" MaxLength="11" runat="server" onfocus="AutoSelect(this)" Text='<%#Eval("sotien_baohanh","{0:#,##0}") %>' onkeypress="if (event.keyCode==13) return false;"></asp:TextBox>
-                                                                   </td>
-                                                                <td class="text-center">
-                                                                    <%#Eval("DVT") %>
-                                                                </td>
-                                                                <td class="text-center">
-                                                                    <%-- <div><%#Eval("soluong","{0:#,##0}") %></div>--%>
-                                                                    <asp:TextBox data-role="input" CssClass="input-small" data-clear-button="false" oninput="format_sotien_new(this)" ID="txt_sl_chitiet" Width="40" MaxLength="4" runat="server" onfocus="AutoSelect(this)" Text='<%#Eval("soluong","{0:#,##0}") %>' onkeypress="if (event.keyCode==13) return false;"></asp:TextBox>
-                                                                </td>
-                                                                <td class="text-right"><%#Eval("thanhtien","{0:#,##0}") %>
-                                                                    <%--<asp:PlaceHolder ID="PlaceHolder5" runat="server" Visible='<%#Eval("giamgia_phantram").ToString()!="0" %>'>
-                                                                        <div><small class="fg-orange"><span class="mif mif-arrow-drop-down"></span><span data-role="hint" data-hint-position="left" data-hint-text="Giảm giá"><%#Eval("giamgia_phantram","{0:#,##0}") %>%</span></small></div>
-                                                                    </asp:PlaceHolder>--%>
-                                                                    <div><small>Giảm giá (%)</small></div>
-                                                                    <asp:TextBox placeholder="Giảm giá (%)" data-role="input" CssClass="input-small" data-clear-button="false" ID="txt_giamgia_phantram_chitiet" Width="20" MaxLength="4" runat="server" Text='<%#Eval("giamgia_phantram") %>' onkeypress="if (event.keyCode==13) return false;"></asp:TextBox>
-
-                                                                </td>
-                                                                <td class="text-right text-bold"><%#Eval("TongSauGiam","{0:#,##0}") %></td>
-                                                                <td>
-                                                                    <asp:Button ToolTip="Xóa" ID="but_xoachitiet" OnClick="but_xoachitiet_Click" CommandArgument='<%#Eval("id") %>' runat="server" Text="Xóa" CssClass="mini rounded alert" />
-
+                                                                <td class="text-right text-bold">
+                                                                   <%= ViewState["giamgia_dacbiet"] != null ? Convert.ToInt64(ViewState["giamgia_dacbiet"]).ToString("#,##0") : "0" %>
                                                                 </td>
                                                             </tr>
-                                                        </ItemTemplate>
-                                                    </asp:Repeater>
-
-                                                </tbody>
-                                                <tfoot>
-                                                    <tr class="bg-light text-bold">
-                                                        <td></td>
-                                                        <td colspan="8" class="text-right">TỔNG CỘNG</td>
-                                                        <td class="text-right text-bold"><%=ViewState["TongSauGiam_ChiTiet"] %></td>
-                                                        <td colspan="1"></td>
-                                                    </tr>
-                                                    <%if ((ViewState["pt_giamgiadacbiet"] != null && ViewState["pt_giamgiadacbiet"].ToString() != "0") || (ViewState["giamgia_dacbiet"] != null && ViewState["giamgia_dacbiet"].ToString() != "0"))
-                                                        {  %>
-                                                    <%if (ViewState["pt_giamgiadacbiet"] != null && ViewState["pt_giamgiadacbiet"].ToString() != "0")
-                                                        {  %>
-                                                    <tr class="bg-yellow fg-red text-bold">
-                                                        <td></td>
-                                                        <td colspan="8" class="text-right">GIẢM GIÁ ĐẶC BIỆT (%)</td>
-                                                        <td class="text-right text-bold">
-                                                            <%= ViewState["pt_giamgiadacbiet"]%>%
-                                                           <div><small><%= ViewState["giamgia_dacbiet"] != null ? Convert.ToInt64(ViewState["giamgia_dacbiet"]).ToString("#,##0") : "0" %></small></div>
-                                                        </td>
-                                                        <td colspan="1"></td>
-                                                    </tr>
-                                                    <%}
-                                                    else
-                                                        {  %>
-                                                    <tr class="bg-yellow fg-red text-bold">
-                                                        <td></td>
-                                                        <td colspan="8" class="text-right">GIẢM GIÁ ĐẶC BIỆT (số tiền)</td>
-                                                        <td class="text-right text-bold">
-                                                            <%= ViewState["giamgia_dacbiet"] != null ? Convert.ToInt64(ViewState["giamgia_dacbiet"]).ToString("#,##0") : "0" %></td>
-                                                        <td colspan="1"></td>
-                                                    </tr>
-                                                    <%} %>
-                                                    <%if (ViewState["vat_chitiet"] != null && ViewState["vat_chitiet"].ToString() != "0")
-                                                        {  %>
-                                                    <tr class="text-bold">
-                                                        <td></td>
-                                                        <td colspan="8" class="text-right">VAT</td>
-                                                        <td class="text-right text-bold">
-                                                            <%= ViewState["vat_chitiet"]%>%
-                                                           <div><small><%= ViewState["thanhtien_vat_chitiet"]%></small></div>
-                                                        </td>
-                                                        <td colspan="1"></td>
-                                                    </tr>
-                                                    <%} %>
-
-                                                    <tr class="bg-cobalt fg-white text-bold">
-                                                        <td></td>
-                                                        <td colspan="8" class="text-right">GIÁ TRỊ THỰC CỦA ĐƠN HÀNG</td>
-                                                        <td class="text-right text-bold">
-                                                            <%= ViewState["donhang_saugiamgia"] != null ? Convert.ToInt64(ViewState["donhang_saugiamgia"]).ToString("#,##0") : "0" %></td>
-                                                        <td colspan="1"></td>
-                                                    </tr>
-                                                    <%}
-                                                        else
-                                                        {  %>
-                                                    <%if (ViewState["vat_chitiet"] != null && ViewState["vat_chitiet"].ToString() != "0")
-                                                        {  %>
-                                                    <tr class="text-bold">
-                                                        <td></td>
-                                                        <td colspan="8" class="text-right">VAT</td>
-                                                        <td class="text-right text-bold">
-                                                            <%= ViewState["vat_chitiet"]%>%
-                                                             <div><small><%= ViewState["thanhtien_vat_chitiet"]%></small></div>
-                                                        </td>
-                                                        <td colspan="1"></td>
-                                                    </tr>
-                                                    <%} %>
-
-                                                    <tr class="bg-cobalt fg-white text-bold">
-                                                        <td></td>
-                                                        <td colspan="8" class="text-right">GIÁ TRỊ THỰC CỦA ĐƠN HÀNG</td>
-                                                        <td class="text-right text-bold">
-                                                            <%= ViewState["donhang_saugiamgia"] != null ? Convert.ToInt64(ViewState["donhang_saugiamgia"]).ToString("#,##0") : "0" %></td>
-                                                        <td colspan="1"></td>
-                                                    </tr>
-                                                    <%} %>
-                                                </tfoot>
-                                            </table>
+                                                            <%}
+                                                            else
+                                                                {  %>
+                                                            <tr class="bg-yellow fg-red text-bold">
+                                                                <td class="text-right">GIẢM GIÁ ĐẶC BIỆT (số tiền)</td>
+                                                                <td class="text-right text-bold">
+                                                                    <%= ViewState["giamgia_dacbiet"] != null ? Convert.ToInt64(ViewState["giamgia_dacbiet"]).ToString("#,##0") : "0" %></td>
+                                                            </tr>
+                                                            <%} %>
+                                                            <%if (ViewState["vat_chitiet"] != null && ViewState["vat_chitiet"].ToString() != "0")
+                                                                {  %>
+                                                            <tr class="text-bold">
+                                                                <td class="text-right">VAT (<%= ViewState["vat_chitiet"]%>%)</td>
+                                                                <td class="text-right text-bold">
+                                                                   <%= ViewState["thanhtien_vat_chitiet"]%>
+                                                                </td>
+                                                            </tr>
+                                                            <%} %>
+        
+                                                            <tr class="bg-cobalt fg-white text-bold">
+                                                                <td class="text-right">GIÁ TRỊ THỰC CỦA ĐƠN HÀNG</td>
+                                                                <td class="text-right text-bold">
+                                                                    <%= ViewState["donhang_saugiamgia"] != null ? Convert.ToInt64(ViewState["donhang_saugiamgia"]).ToString("#,##0") : "0" %></td>
+                                                            </tr>
+                                                            <%}
+                                                                else
+                                                                {  %>
+                                                            <%if (ViewState["vat_chitiet"] != null && ViewState["vat_chitiet"].ToString() != "0")
+                                                                {  %>
+                                                            <tr class="text-bold">
+                                                                <td class="text-right">VAT (<%= ViewState["vat_chitiet"]%>%)</td>
+                                                                <td class="text-right text-bold">
+                                                                     <%= ViewState["thanhtien_vat_chitiet"]%>
+                                                                </td>
+                                                            </tr>
+                                                            <%} %>
+        
+                                                            <tr class="bg-cobalt fg-white text-bold">
+                                                                <td class="text-right">GIÁ TRỊ THỰC CỦA ĐƠN HÀNG</td>
+                                                                <td class="text-right text-bold">
+                                                                    <%= ViewState["donhang_saugiamgia"] != null ? Convert.ToInt64(ViewState["donhang_saugiamgia"]).ToString("#,##0") : "0" %></td>
+                                                            </tr>
+                                                            <%} %>
+                                                        </tfoot>
+                                                    </table>
+                                                </div>
+                                            </div>
                                         </div>
                                         <%--<div>
                                              <asp:TextBox ID="txt_ghichu_chuagiao" runat="server" data-role="input"></asp:TextBox>
@@ -631,8 +719,116 @@
         </ProgressTemplate>
     </asp:UpdateProgress>
 
+    <asp:Panel ID="pn_import" ClientIDMode="Static" runat="server" style="display:none">
+        <div style="position: fixed; width: 100%; height: 52px; background-color: none; top: 0; left: 0; z-index: 1041!important;">
+            <div style='top: 0; left: 0px; margin: 0 auto; max-width: 600px; opacity: 1;'>
+                <div style='position: absolute; right: 18px; top: 14px; z-index: 1040!important'>
+                    <a href='#' class='fg-white d-inline' onclick="document.getElementById('pn_import').style.display='none'; return false;" title='Đóng'>
+                        <span class='mif mif-cross mif-2x fg-red fg-lightRed-hover'></span>
+                    </a>
+                </div>
+                <div class="bg-white pl-4 pl-8-md pr-8-md pr-4" style="height: 52px;">
+                    <div class="pt-4 text-upper text-bold">Nhập file Excel</div>
+                    <hr />
+                </div>
+            </div>
+        </div>
+        <div style="position: fixed; width: 100%; height: 100%; top: 0; left: 0; overflow: auto; z-index: 1040!important; background-image: url('/uploads/images/bg1.png');">
+            <div style='top: 0; left: 0; margin: 0 auto; max-width: 606px; opacity: 1;'>
+                <div class="bg-white border bd-transparent pl-4 pl-8-md pr-8-md pr-4" style="padding-top: 52px; min-height: 300px;">
+                    <div class="row">
+                        <div class="cell-lg-12">
+                            <div class="mt-3">
+                                <label class="fw-600 mb-2 d-block">Chọn file Excel (.xls, .xlsx)</label>
+                                <input type="file" data-role="file" data-button-title="<span class='mif-folder'></span> Chọn File" data-prepend="<span class='mif-file-excel'></span>" id="fileUploadAjax" accept=".xls,.xlsx" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-6 mb-20 text-right">
+                        <button type="button" class="button success rounded" onclick="ajaxImportExcelFile()">
+                            Xác nhận
+                        </button>
+                    </div>
+                    
+                    <div id="import_loading" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 1050; text-align: center; padding-top: 100px;">
+                        <div class="activity-atom mx-auto color-style" data-role="activity" data-type="atom" data-style="color"></div>
+                        <div class="mt-4 fw-bold fg-dark">Đang xử lý dữ liệu, vui lòng chờ...</div>
+                    </div>
+                    
+                    <script>
+                        function ajaxImportExcelFile() {
+                            var fileInput = document.getElementById('fileUploadAjax');
+                            var files = fileInput ? fileInput.files : null;
+                            
+                            // Fallback cho file input của Metro UI nếu id='fileUploadAjax' ko lấy dc files do bị thay đổi DOM
+                            if (!files || files.length === 0) {
+                                // Tìm input type file thật trong panel này
+                                var realInput = document.querySelector('#pn_import input[type="file"]');
+                                if (realInput && realInput.files) files = realInput.files;
+                            }
+
+                            if (!files || files.length === 0) {
+                                Metro.dialog.create({
+                                    title: "<span class='mif-warning fg-red'></span> Cảnh báo",
+                                    content: "Vui lòng chọn một file Excel trước khi Xác nhận!",
+                                    clsDialog: "alert"
+                                });
+                                return;
+                            }
+                            
+                            var formData = new FormData();
+                            formData.append("file", files[0]);
+                            
+                            document.getElementById('import_loading').style.display = 'block';
+                            
+                            fetch('Default.aspx?action=importExcel', {
+                                method: 'POST',
+                                body: formData
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                document.getElementById('import_loading').style.display = 'none';
+                                
+                                if (data.success) {
+                                    Metro.dialog.create({
+                                        title: "<span class='mif-checkmark fg-green'></span> Thành công",
+                                        content: data.message,
+                                        clsDialog: "success",
+                                        onClose: function() {
+                                            // Refresh data grid
+                                            var btnRefresh = document.getElementById('<%= btnRefreshGrid.ClientID %>');
+                                            if (btnRefresh) {
+                                                btnRefresh.click();
+                                            }
+                                        }
+                                    });
+                                } else {
+                                    Metro.dialog.create({
+                                        title: "<span class='mif-cancel fg-red'></span> Lỗi",
+                                        content: data.message,
+                                        clsDialog: "alert"
+                                    });
+                                }
+                            })
+                            .catch(error => {
+                                document.getElementById('import_loading').style.display = 'none';
+                                Metro.dialog.create({
+                                    title: "Lỗi hệ thống",
+                                    content: "Đã xảy ra lỗi kết nối: " + error,
+                                    clsDialog: "alert"
+                                });
+                            });
+                        }
+                    </script>
+                </div>
+            </div>
+        </div>
+    </asp:Panel>
+
+
     <asp:UpdatePanel ID="up_main" runat="server" UpdateMode="Conditional">
         <ContentTemplate>
+            <asp:Button ID="btnRefreshGrid" runat="server" OnClick="btnRefreshGrid_Click" style="display:none;" />
 
             <div class="pos-relative pb-11">
                 <div id="menutop-tool-bc" style="position: fixed; top: 52px; width: 100%; z-index: 4">
@@ -640,6 +836,9 @@
 
                         <li data-role="hint" data-hint-position="top" data-hint-text="Tạo phiếu">
                             <asp:LinkButton ID="but_show_form_add" OnClick="but_show_form_add_Click" runat="server"><span class="mif-plus"></span></asp:LinkButton>
+                        </li>
+                        <li data-role="hint" data-hint-position="top" data-hint-text="Nhập file Excel">
+                            <asp:LinkButton ID="but_show_form_import" OnClientClick="document.getElementById('pn_import').style.display='block'; return false;" runat="server"><span class="mif-file-excel"></span></asp:LinkButton>
                         </li>
                         <%--<li data-role="hint" data-hint-position="top" data-hint-text="Lưu">
                             <asp:LinkButton ID="but_save" OnClick="but_save_Click" runat="server"><span class="mif-floppy-disk"></span></asp:LinkButton>
@@ -707,9 +906,9 @@
                                             <%--data-role="checkbox" data-style="2"--%>
                                             <input data-role="hint" data-hint-position="top" data-hint-text="Chọn/Bỏ chọn" type="checkbox" onkeypress="if (event.keyCode==13) return false;" onclick="$('.checkbox-table input[type=checkbox]').prop('checked', this.checked)">
                                         </th>
-                                        <th style="width: 108px; min-width: 108px;">Ngày tạo</th>
+                                        <th style="width: 108px; min-width: 108px;">Ngày</th>
                                         <th style="width: 150px; min-width: 150px;">Khách hàng</th>
-                                        <th style="width: 150px; min-width: 150px;">Địa chỉ</th>
+                                        <th style="width: 150px; min-width: 150px;">Sản phẩm</th>
                                         <th style="width: 1px; min-width: 1px;">Hạn trả</th>
                                         <th style="width: 1px; min-width: 1px;">Trạng thái</th>
                                         <th style="width: 1px; min-width: 1px;">Tổng tiền</th>
@@ -745,31 +944,37 @@
                                                     <asp:CheckBox ID="checkID" runat="server" onkeypress="if (event.keyCode==13) return false;" />
                                                 </td>
 
-                                                <td class="text-left"><small><%#Eval("ngaytao","{0:dd/MM/yyyy HH:mm}") %></small>
+                                                <td class="text-left">
+                                                    <div><small>Tạo: <%#Eval("ngaytao","{0:dd/MM/yy HH:mm}") %></small></div>
+                                                    <div><small class="fg-green">Nhận: <%#Eval("ngaynhan","{0:dd/MM/yy}") %></small></div>
                                                     <div class="fw-600"><%#Eval("HoTenNhanVien") %></div>
                                                 </td>
-                                                <td class="text-left"><%#Eval("ten_khachhang") %>
-                                                    <div><a class="fw-600" title="Nhấn để gọi" href="tel:<%#Eval("sdt_khachhang") %>"><span class="mif-phone pr-1"></span><%#Eval("sdt_khachhang") %></a></div>
-                                               
-                                                    </td>
-
                                                 <td class="text-left">
-                                                    <%#Eval("diachi_khachhang") %></td>
+                                                    <div class="fw-600 text-upper"><%#Eval("ten_khachhang") %></div>
+                                                    <div><a class="fw-600" title="Nhấn để gọi" href="tel:<%#Eval("sdt_khachhang") %>"><span class="mif-phone pr-1"></span><%#Eval("sdt_khachhang") %></a></div>
+                                                    <div class="text-small text-muted"><%#Eval("diachi_khachhang") %></div>
+                                                </td>
+                                                <td class="text-left">
+                                                    <%# GetChiTietSanPham(Eval("id")) %>
+                                                </td>
 
                                                 <td>
                                                     <div><%#Eval("NgayHenKhachTra","{0:dd/MM/yyyy}") %></div>
-                                                    <asp:PlaceHolder ID="PlaceHolder13" runat="server" Visible='<%#Eval("trehen").ToString()=="True" %>'>
+                                                    <asp:PlaceHolder ID="PlaceHolder13" runat="server" Visible='<%# Convert.ToBoolean(Eval("trehen")) %>'>
                                                         <div class="button mini rounded alert ani-flash">Trễ hẹn</div>
                                                     </asp:PlaceHolder>
                                                 </td>
 
                                                 <td>
-                                                    <asp:PlaceHolder ID="PlaceHolder2" runat="server" Visible='<%#Eval("trangthai").ToString().Trim()=="Đã nhận" %>'>
-                                                        <div class="button mini rounded warning">Chưa trả</div>
+                                                    <asp:PlaceHolder ID="PlaceHolder2" runat="server" Visible='<%#Convert.ToString(Eval("trangthai")).Trim()=="Đang xử lý" || Convert.ToString(Eval("trangthai")).Trim()=="Đã nhận" %>'>
+                                                        <div class="button mini rounded warning">Đang xử lý</div>
                                                     </asp:PlaceHolder>
-                                                    <asp:PlaceHolder ID="PlaceHolder4" runat="server" Visible='<%#Eval("trangthai").ToString().Trim()=="Đã trả" %>'>
+                                                    <asp:PlaceHolder ID="PlaceHolder4" runat="server" Visible='<%#Convert.ToString(Eval("trangthai")).Trim()=="Đã trả" %>'>
                                                         <div class="button mini rounded success">Đã trả</div>
                                                          <div><%#Eval("NgayTra_ThucTe","{0:dd/MM/yyyy}") %></div>
+                                                    </asp:PlaceHolder>
+                                                    <asp:PlaceHolder ID="PlaceHolderSP" runat="server" Visible='<%# !string.IsNullOrEmpty(Convert.ToString(Eval("SoPhieuTra"))) %>'>
+                                                        <div class="text-small mt-1 fg-green">Phiếu: <%#Eval("SoPhieuTra") %></div>
                                                     </asp:PlaceHolder>
                                                 </td>
 
@@ -778,7 +983,7 @@
                                                    
                                                 </td>
                                                 <td class="text-right">
-                                                    <asp:PlaceHolder ID="PlaceHolder5" runat="server" Visible='<%#Eval("TongGiam").ToString()!="0" %>'>
+                                                    <asp:PlaceHolder ID="PlaceHolder5" runat="server" Visible='<%#Convert.ToString(Eval("TongGiam"))!="0" %>'>
                                                         <div class="fg-orange"><%#Eval("TongGiam","{0:#,##0}") %></div>
                                                     </asp:PlaceHolder>
                                                 </td>
@@ -792,12 +997,12 @@
                                                     </asp:PlaceHolder>
                                                 </td>
                                                  <td class="text-center fg-green"><%#Eval("vat") %>%
-                                                      <asp:PlaceHolder ID="PlaceHolder7" runat="server" Visible='<%#Eval("vat").ToString()!="0" %>'>
+                                                      <asp:PlaceHolder ID="PlaceHolder7" runat="server" Visible='<%#Convert.ToString(Eval("vat"))!="0" %>'>
                                                           <div><small><%#Eval("TongTien_VAT","{0:#,##0}") %></small></div>
                                                       </asp:PlaceHolder>
                                                  </td>
                                                  <td class="text-right text-bold"><%#Eval("TongSauThue","{0:#,##0}") %>
-                                                     <asp:PlaceHolder ID="PlaceHolder6_new" runat="server" Visible='<%#Eval("congno").ToString()!="0" %>'>
+                                                     <asp:PlaceHolder ID="PlaceHolder6_new" runat="server" Visible='<%#Convert.ToString(Eval("congno"))!="0" %>'>
                                                          <asp:LinkButton CssClass="button mini alert rounded ani-flash" OnClick="but_show_chinhsua_Click" data-role="hint" data-hint-position="top" data-hint-text="Thanh toán công nợ" ID="LinkButton1_new" CommandArgument='<%# Eval("id") %>' runat="server">
                                                                 <%# Eval("congno","{0:#,##0}") %>
                                                          </asp:LinkButton>
@@ -832,7 +1037,7 @@
                                         <td class="text-right text-bold"><%=ViewState["TongThanhTien"] %>
                                           
                                         </td>
-                                        <td><%if (ViewState["TongGiam"].ToString() != "0")
+                                        <td><%if (Convert.ToString(ViewState["TongGiam"]) != "0")
                                                 {  %>
                                             <div class="fg-orange"><%=ViewState["TongGiam"] %></div>
                                             <%} %></td>

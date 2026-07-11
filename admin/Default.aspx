@@ -1,4 +1,4 @@
-﻿<%@ Page Title="Trang chủ" Language="C#" MasterPageFile="~/admin/MasterPageAdmin.master" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="admin_Default" %>
+<%@ Page Title="Trang chủ" Language="C#" MasterPageFile="~/admin/MasterPageAdmin.master" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="admin_Default" %>
 <%@ Register Assembly="CKEditor.NET" Namespace="CKEditor.NET" TagPrefix="CKEditor" %>
 
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="Server">
@@ -164,15 +164,15 @@
 
                                                     <td style="text-align: left!important">
                                                         <div><%#Eval("TenCongViec") %></div>
-                                                        <asp:PlaceHolder ID="PlaceHolder5" runat="server" Visible='<%#Eval("Gap_KhongGap").ToString()=="True" %>'>
-                                                            <asp:PlaceHolder ID="PlaceHolder11" runat="server" Visible='<%#Eval("trangthai").ToString()!="Hoàn thành" %>'>
+                                                        <asp:PlaceHolder ID="PlaceHolder5" runat="server" Visible='<%#Convert.ToString(Eval("Gap_KhongGap"))=="True" %>'>
+                                                            <asp:PlaceHolder ID="PlaceHolder11" runat="server" Visible='<%#Convert.ToString(Eval("trangthai"))!="Hoàn thành" %>'>
                                                                 <div class="button mini rounded alert ani-flash">Việc gấp</div>
                                                             </asp:PlaceHolder>
-                                                            <asp:PlaceHolder ID="PlaceHolder12" runat="server" Visible='<%#Eval("trangthai").ToString()=="Hoàn thành" %>'>
+                                                            <asp:PlaceHolder ID="PlaceHolder12" runat="server" Visible='<%#Convert.ToString(Eval("trangthai"))=="Hoàn thành" %>'>
                                                                 <div class="button mini rounded alert">Việc gấp</div>
                                                             </asp:PlaceHolder>
                                                         </asp:PlaceHolder>
-                                                        <asp:PlaceHolder ID="PlaceHolder2" runat="server" Visible='<%#Eval("Gap_KhongGap").ToString()=="False" %>'>
+                                                        <asp:PlaceHolder ID="PlaceHolder2" runat="server" Visible='<%#Convert.ToString(Eval("Gap_KhongGap"))=="False" %>'>
                                                             <div class="button mini rounded dark">Không gấp</div>
                                                         </asp:PlaceHolder>
                                                     </td>
@@ -182,10 +182,10 @@
                                                     </td>
                                                     <td>
                                                         <div><%#Eval("ngaygiao","{0:dd/MM/yyyy}") %></div>
-                                                        <asp:PlaceHolder ID="PlaceHolder3" runat="server" Visible='<%#Eval("tunhan_chidinh").ToString()=="True" %>'>
+                                                        <asp:PlaceHolder ID="PlaceHolder3" runat="server" Visible='<%#Convert.ToString(Eval("tunhan_chidinh"))=="True" %>'>
                                                             <div class="button mini rounded bg-lightBlue">Tự nhận</div>
                                                         </asp:PlaceHolder>
-                                                        <asp:PlaceHolder ID="PlaceHolder4" runat="server" Visible='<%#Eval("tunhan_chidinh").ToString()=="False" %>'>
+                                                        <asp:PlaceHolder ID="PlaceHolder4" runat="server" Visible='<%#Convert.ToString(Eval("tunhan_chidinh"))=="False" %>'>
                                                             <div class="button mini rounded bg-lightPink">Chỉ định</div>
                                                         </asp:PlaceHolder>
                                                     </td>
@@ -195,7 +195,7 @@
                                                     <td>
                                                         <asp:PlaceHolder ID="PlaceHolder9" runat="server" Visible='<%#Eval("ThoiHan")!=null %>'>
                                                             <div><%#Eval("ThoiHan","{0:dd/MM/yyyy}") %></div>
-                                                            <asp:PlaceHolder ID="PlaceHolder13" runat="server" Visible='<%#Eval("trehan").ToString()=="True" %>'>
+                                                            <asp:PlaceHolder ID="PlaceHolder13" runat="server" Visible='<%#Convert.ToString(Eval("trehan"))=="True" %>'>
                                                                 <div class="button mini rounded alert ani-flash">Trễ hạn</div>
                                                             </asp:PlaceHolder>
                                                         </asp:PlaceHolder>
@@ -253,15 +253,15 @@
 
                                                     <td style="text-align: left!important">
                                                         <div><%#Eval("TenCongViec") %></div>
-                                                        <asp:PlaceHolder ID="PlaceHolder5" runat="server" Visible='<%#Eval("Gap_KhongGap").ToString()=="True" %>'>
-                                                            <asp:PlaceHolder ID="PlaceHolder11" runat="server" Visible='<%#Eval("trangthai").ToString()!="Hoàn thành" %>'>
+                                                        <asp:PlaceHolder ID="PlaceHolder5" runat="server" Visible='<%#Convert.ToString(Eval("Gap_KhongGap"))=="True" %>'>
+                                                            <asp:PlaceHolder ID="PlaceHolder11" runat="server" Visible='<%#Convert.ToString(Eval("trangthai"))!="Hoàn thành" %>'>
                                                                 <div class="button mini rounded alert ani-flash">Việc gấp</div>
                                                             </asp:PlaceHolder>
-                                                            <asp:PlaceHolder ID="PlaceHolder12" runat="server" Visible='<%#Eval("trangthai").ToString()=="Hoàn thành" %>'>
+                                                            <asp:PlaceHolder ID="PlaceHolder12" runat="server" Visible='<%#Convert.ToString(Eval("trangthai"))=="Hoàn thành" %>'>
                                                                 <div class="button mini rounded alert">Việc gấp</div>
                                                             </asp:PlaceHolder>
                                                         </asp:PlaceHolder>
-                                                        <asp:PlaceHolder ID="PlaceHolder2" runat="server" Visible='<%#Eval("Gap_KhongGap").ToString()=="False" %>'>
+                                                        <asp:PlaceHolder ID="PlaceHolder2" runat="server" Visible='<%#Convert.ToString(Eval("Gap_KhongGap"))=="False" %>'>
                                                             <div class="button mini rounded dark">Không gấp</div>
                                                         </asp:PlaceHolder>
                                                     </td>
@@ -271,10 +271,10 @@
                                                     </td>
                                                     <td>
                                                         <div><%#Eval("ngaygiao","{0:dd/MM/yyyy}") %></div>
-                                                        <asp:PlaceHolder ID="PlaceHolder3" runat="server" Visible='<%#Eval("tunhan_chidinh").ToString()=="True" %>'>
+                                                        <asp:PlaceHolder ID="PlaceHolder3" runat="server" Visible='<%#Convert.ToString(Eval("tunhan_chidinh"))=="True" %>'>
                                                             <div class="button mini rounded bg-lightBlue">Tự nhận</div>
                                                         </asp:PlaceHolder>
-                                                        <asp:PlaceHolder ID="PlaceHolder4" runat="server" Visible='<%#Eval("tunhan_chidinh").ToString()=="False" %>'>
+                                                        <asp:PlaceHolder ID="PlaceHolder4" runat="server" Visible='<%#Convert.ToString(Eval("tunhan_chidinh"))=="False" %>'>
                                                             <div class="button mini rounded bg-lightPink">Chỉ định</div>
                                                         </asp:PlaceHolder>
                                                     </td>
@@ -282,7 +282,7 @@
                                                     <td>
                                                         <asp:PlaceHolder ID="PlaceHolder9" runat="server" Visible='<%#Eval("ThoiHan")!=null %>'>
                                                             <div><%#Eval("ThoiHan","{0:dd/MM/yyyy}") %></div>
-                                                            <asp:PlaceHolder ID="PlaceHolder13" runat="server" Visible='<%#Eval("trehan").ToString()=="True" %>'>
+                                                            <asp:PlaceHolder ID="PlaceHolder13" runat="server" Visible='<%#Convert.ToString(Eval("trehan"))=="True" %>'>
                                                                 <div class="button mini rounded alert ani-flash">Trễ hạn</div>
                                                             </asp:PlaceHolder>
                                                         </asp:PlaceHolder>
@@ -349,7 +349,7 @@
 
                                                     <td>
                                                         <div><%#Eval("NgayHenKhachTra","{0:dd/MM/yyyy}") %></div>
-                                                        <asp:PlaceHolder ID="PlaceHolder13" runat="server" Visible='<%#Eval("trehen").ToString()=="True" %>'>
+                                                        <asp:PlaceHolder ID="PlaceHolder13" runat="server" Visible='<%#Convert.ToString(Eval("trehen"))=="True" %>'>
                                                             <div class="button mini rounded alert ani-flash">Trễ hẹn</div>
                                                         </asp:PlaceHolder>
                                                     </td>
@@ -361,13 +361,13 @@
                                         
                                                     </td>
                                                     <td class="text-right">
-                                                        <asp:PlaceHolder ID="PlaceHolder5" runat="server" Visible='<%#Eval("TongGiam").ToString()!="0" %>'>
+                                                        <asp:PlaceHolder ID="PlaceHolder5" runat="server" Visible='<%#Convert.ToString(Eval("TongGiam"))!="0" %>'>
                                                             <div class="fg-orange"><%#Eval("TongGiam","{0:#,##0}") %></div>
                                                         </asp:PlaceHolder>
                                                     </td>
                                                     <td class="text-right">
                                                         <div><%#Eval("TongSauGiam","{0:#,##0}") %></div>
-                                                        <asp:PlaceHolder ID="PlaceHolder6" runat="server" Visible='<%#Eval("congno").ToString()!="0" %>'>
+                                                        <asp:PlaceHolder ID="PlaceHolder6" runat="server" Visible='<%#Convert.ToString(Eval("congno"))!="0" %>'>
                                                             <%# Eval("congno","{0:#,##0}") %>
                                                         </asp:PlaceHolder>
                                                     </td>
