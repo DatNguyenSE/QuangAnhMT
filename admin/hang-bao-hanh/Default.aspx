@@ -191,30 +191,8 @@
                                         <asp:CheckBox ID="chk_trehen" Visible="false" runat="server" Text="Trễ hẹn" CssClass="fg-red text-bold" />
                                     </div>
                                 </div>
-                                <div class="cell-lg-4  pl-2-lg pr-2-lg">
-                                     <div class="mt-2">
-                                         <small class="fw-600">File Excel Bảo Hành</small>
-                                         <input type="file" id="excelFileInput" onchange="uploadExcelFile()" data-role="file" data-button-title="Chọn file" />
-                                         <asp:TextBox ID="txt_excel_filepath" runat="server" style="display:none;"></asp:TextBox>
-                                         <div id="message_excel" class="fg-red"></div>
-                                         <div id="uploadedFilePath_excel" class="fg-green"></div>
-                                         <asp:PlaceHolder ID="ph_current_file" runat="server" Visible="false">
-                                             <div class="mt-2" style="display: flex; gap: 10px;">
-                                                 <asp:HyperLink ID="lnk_download_file" runat="server" Target="_blank" CssClass="button mini success rounded">
-                                                     <span class="mif-file-excel pr-1"></span> Tải file Excel hiện tại
-                                                 </asp:HyperLink>
-                                                 <asp:LinkButton ID="btn_delete_excel" runat="server" CssClass="button mini alert rounded" OnClick="btn_delete_excel_Click" OnClientClick="return confirm('Bạn có chắc chắn muốn xóa file Excel này không?');">
-                                                     <span class="mif-bin pr-1"></span> Xóa file
-                                                 </asp:LinkButton>
-                                             </div>
-                                         </asp:PlaceHolder>
-                                     </div>
-                                 </div>
-
-
                             </div>
                             <div class="mt-6 text-right">
-
                                 <asp:Button ID="but_add_edit" runat="server" Text="" CssClass="button success small" OnClick="but_add_edit_Click" />
                             </div>
                             <hr />
@@ -1120,46 +1098,7 @@
                  messageDiv.innerHTML = "Vui lòng chọn file.";
              }
          }
-         function uploadExcelFile() {
-             var fileInput = document.getElementById("excelFileInput");
-             var messageDiv = document.getElementById("message_excel");
-             var uploadedFilePathDiv = document.getElementById("uploadedFilePath_excel");
 
-             if (fileInput.files.length > 0) {
-                 var file = fileInput.files[0];
-
-                 var allowedExtensions = [".xlsx", ".xls"];
-                 var fileExtension = file.name.substr(file.name.lastIndexOf(".")).toLowerCase();
-                 if (allowedExtensions.indexOf(fileExtension) === -1) {
-                     messageDiv.innerHTML = "Định dạng file không hợp lệ. Chỉ chấp nhận .xlsx, .xls";
-                     return;
-                 }
-
-                 var maxFileSize = 100 * 1024 * 1024; // 100 MB
-                 if (file.size > maxFileSize) {
-                     messageDiv.innerHTML = "Vui lòng chọn file có kích thước nhỏ hơn 100 MB.";
-                     return;
-                 }
-
-                 var formData = new FormData();
-                 formData.append("file", file);
-
-                 var xhr = new XMLHttpRequest();
-                 xhr.open("POST", "/uploads/Upload_Handler_File1.ashx", true);
-                 xhr.onload = function () {
-                     if (xhr.status === 200) {
-                         messageDiv.innerHTML = "";
-                         uploadedFilePathDiv.innerHTML = "<div><small>Đã chọn: " + file.name + "</small></div>";
-                         document.getElementById('<%= txt_excel_filepath.ClientID %>').value = xhr.responseText;
-                     } else {
-                         messageDiv.innerHTML = xhr.responseText || "Lỗi upload.";
-                     }
-                 };
-                 xhr.send(formData);
-             } else {
-                 messageDiv.innerHTML = "Vui lòng chọn file.";
-             }
-         }
      </script>
 
 

@@ -451,8 +451,6 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
         Label1.Text = null; txt_ngaynhan.Text = ""; txt_ngayhentra.Text = "";
         txt_sdt.Text = ""; txt_ten_kh.Text = ""; txt_diachi_kh.Text = "";
         PlaceHolder1.Visible = false;
-        ph_current_file.Visible = false;
-        txt_excel_filepath.Text = "";
         Repeater2.DataSource = null;
         Repeater2.DataBind();
         ViewState["add_edit"] = null;
@@ -735,7 +733,6 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
 
 
                 load_edit(db, _id);
-                ShowCurrentFile(_id);
                 Int64 _congno = 0;
                 if (q.congno != null)
                     _congno = q.congno.Value;
@@ -883,8 +880,6 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
                 #endregion
 
                 db.SubmitChanges();
-                SaveUploadedFile(_ob.id.ToString());
-                ShowCurrentFile(_ob.id.ToString());
  
                 PlaceHolder8.Visible = false;
 
@@ -1092,8 +1087,6 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
                     #endregion
 
                     db.SubmitChanges();
-                    SaveUploadedFile(ViewState["id_edit"].ToString());
-                    ShowCurrentFile(ViewState["id_edit"].ToString());
  
                     if (ViewState["id_to_home"] != null)
                         ViewState["id_to_home"] = null;
@@ -1349,7 +1342,6 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
 
 
                             db.HangBaoHanh_tbs.DeleteOnSubmit(dm);
-                            DeleteUploadedFile(dm.id.ToString());
  
                             string _idbg = dm.id.ToString();
                             var q = db.HangBaoHanh_ChiTiet_tbs.Where(p => p.id_PhieuBaoHanh == _idbg);
@@ -1407,7 +1399,6 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
                     if (dm.trangthai != "Đã trả")
                     {
                         db.HangBaoHanh_tbs.DeleteOnSubmit(dm);
-                        DeleteUploadedFile(_idbg);
 
                         var q = db.HangBaoHanh_ChiTiet_tbs.Where(p => p.id_PhieuBaoHanh == _idbg);
                         foreach (var t in q)
@@ -1445,34 +1436,6 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
         }
     }
 
-    protected void btn_delete_excel_Click(object sender, EventArgs e)
-    {
-        try
-        {
-            check_login_cl.check_login_admin("37", "37");
-            if (ViewState["id_edit"] != null)
-            {
-                string _id = ViewState["id_edit"].ToString();
-                DeleteUploadedFile(_id);
-                ph_current_file.Visible = false;
-                show_main();
-                up_main.Update();
-                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                    thongbao_class.metro_notifi("Thông báo", "Xóa file Excel thành công.", "1000", "warning"), true);
-            }
-        }
-        catch (Exception _ex)
-        {
-            string _tk = Session["taikhoan"] as string;
-            if (!string.IsNullOrEmpty(_tk))
-            {
-                _tk = mahoa_cl.giaima_Bcorn(_tk);
-            }
-            else
-                _tk = "";
-            Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
-        }
-    }
 
     //protected void but_save_Click(object sender, EventArgs e)
     //{
@@ -2029,66 +1992,6 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
         }
     }
 
-    private void SaveUploadedFile(string ticketId)
-    {
-        if (!string.IsNullOrEmpty(txt_excel_filepath.Text))
-        {
-            string tempFilePath = Server.MapPath(txt_excel_filepath.Text);
-            if (System.IO.File.Exists(tempFilePath))
-            {
-                string ext = System.IO.Path.GetExtension(tempFilePath).ToLower();
-                string folderPath = Server.MapPath("~/uploads/excel-baohanh/");
-                if (!System.IO.Directory.Exists(folderPath))
-                {
-                    System.IO.Directory.CreateDirectory(folderPath);
-                }
-
-                string xlsPath = System.IO.Path.Combine(folderPath, ticketId + ".xls");
-                string xlsxPath = System.IO.Path.Combine(folderPath, ticketId + ".xlsx");
-                if (System.IO.File.Exists(xlsPath)) System.IO.File.Delete(xlsPath);
-                if (System.IO.File.Exists(xlsxPath)) System.IO.File.Delete(xlsxPath);
-
-                string savePath = System.IO.Path.Combine(folderPath, ticketId + ext);
-                System.IO.File.Move(tempFilePath, savePath);
-                
-                txt_excel_filepath.Text = "";
-            }
-        }
-    }
-
-    private void DeleteUploadedFile(string ticketId)
-    {
-        string folderPath = Server.MapPath("~/uploads/excel-baohanh/");
-        string xlsPath = System.IO.Path.Combine(folderPath, ticketId + ".xls");
-        string xlsxPath = System.IO.Path.Combine(folderPath, ticketId + ".xlsx");
-        if (System.IO.File.Exists(xlsPath)) System.IO.File.Delete(xlsPath);
-        if (System.IO.File.Exists(xlsxPath)) System.IO.File.Delete(xlsxPath);
-    }
-
-    private void ShowCurrentFile(string ticketId)
-    {
-        string relativePath = "/uploads/excel-baohanh/" + ticketId + ".xlsx";
-        string absolutePath = Server.MapPath("~" + relativePath);
-        if (System.IO.File.Exists(absolutePath))
-        {
-            ph_current_file.Visible = true;
-            lnk_download_file.NavigateUrl = relativePath;
-        }
-        else
-        {
-            string relativePathXls = "/uploads/excel-baohanh/" + ticketId + ".xls";
-            string absolutePathXls = Server.MapPath("~" + relativePathXls);
-            if (System.IO.File.Exists(absolutePathXls))
-            {
-                ph_current_file.Visible = true;
-                lnk_download_file.NavigateUrl = relativePathXls;
-            }
-            else
-            {
-                ph_current_file.Visible = false;
-            }
-        }
-    }
     public string GetChiTietSanPham(object id_phieu)
     {
         if (id_phieu == null) return "";
