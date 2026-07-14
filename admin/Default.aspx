@@ -75,6 +75,7 @@
                 </div>
                 <div class="">
                     <asp:Button ID="but_diemdanh" runat="server" Text="Báo vào ca" CssClass="button success rounded" style="padding: 8px 18px; font-size: 15px;" OnClick="but_diemdanh_Click" OnClientClick="getLocationAndSubmit(); return false;" />
+                    <div style="clear: both;"></div>
                 </div>
 
                 <div style="overflow: auto;" class="mt-2 mb-3">

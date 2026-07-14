@@ -179,13 +179,13 @@ public partial class admin_Default : System.Web.UI.Page
                         {
                             but_diemdanh.CssClass = "button warning rounded";
                             but_diemdanh.Enabled = true;
-                            but_diemdanh.Attributes.Add("style", "padding: 8px 18px; font-size: 15px;");
+                            but_diemdanh.Attributes.Add("style", "padding: 8px 18px; font-size: 15px; float: right;");
                         }
                         else
                         {
                             but_diemdanh.CssClass = "button rounded disabled";
                             but_diemdanh.Enabled = false;
-                            but_diemdanh.Attributes.Add("style", "padding: 8px 18px; font-size: 15px; background-color: #e4e4e4 !important; color: #999 !important; border-color: #d4d4d4 !important; cursor: not-allowed;");
+                            but_diemdanh.Attributes.Add("style", "padding: 8px 18px; font-size: 15px; background-color: #e4e4e4 !important; color: #999 !important; border-color: #d4d4d4 !important; cursor: not-allowed; float: right;");
                         }
                         Label1.Text = "<div class='fg-green'><small>Vào ca: " + q_check.ngaychamcong.Value.ToString("HH:mm") + "'.</small></div>";
                     }
