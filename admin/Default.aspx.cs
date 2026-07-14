@@ -61,6 +61,7 @@ public partial class admin_Default : System.Web.UI.Page
                         }
                         _khoangcach = ViTri_cl.TinhKhoanCach(lat, lon, _vido_congty, _kinhdo_congty);
                         _ob.khoangcach = _khoangcach;
+                        _ob.xacnhan_vaoca = false;
 
                         Int64 _LCB_hientai = 0, _LuongNgay = 0;
                         var q_tk = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == ViewState["taikhoan"].ToString());
@@ -79,6 +80,13 @@ public partial class admin_Default : System.Web.UI.Page
                     }
                     else if (ViewState["check_diemdanh"].ToString() == "1")//chưa chấm công thì thêm mới và báo vào ca
                     {
+                        if (q_check.xacnhan_vaoca != true)
+                        {
+                            Session["thongbao"] = thongbao_class.metro_notifi_onload("Thông báo", "Admin chưa xác nhận vào ca, bạn không thể báo ra ca.", "2000", "warning");
+                            Response.Redirect(Request.Url.AbsoluteUri);
+                            return;
+                        }
+
                         q_check.baoraca = _dt;
                         q_check.vido_raca = lat;
                         q_check.kinhdo_raca = lon;
@@ -122,6 +130,23 @@ public partial class admin_Default : System.Web.UI.Page
     {
 
     }
+
+    protected void btn_xacnhan_vaoca_Click(object sender, EventArgs e)
+    {
+        using (dbDataContext db = new dbDataContext())
+        {
+            Button button = (Button)sender;
+            string tk = button.CommandArgument;
+            var q = db.ChamCong_tbs.FirstOrDefault(p => p.taikhoan == tk && p.ngaychamcong.Value.Date == DateTime.Now.Date);
+            if (q != null)
+            {
+                q.xacnhan_vaoca = true;
+                db.SubmitChanges();
+                Session["thongbao"] = thongbao_class.metro_notifi_onload("Thông báo", "Xác nhận thành công.", "1000", "success");
+                Response.Redirect(Request.Url.AbsoluteUri);
+            }
+        }
+    }
     protected void Page_Load(object sender, EventArgs e)
     {
         //Response.Write(Session["a"]);
@@ -149,7 +174,19 @@ public partial class admin_Default : System.Web.UI.Page
                     if (q_check.baoraca == null)//đã báo vào nhưng chưa báo ra
                     {
                         ViewState["check_diemdanh"] = "1"; // Đã báo vào nhưng CHƯA BÁO RA
-                        but_diemdanh.Text = "Báo ra ca"; but_diemdanh.CssClass = "small warning rounded ml-20";
+                        but_diemdanh.Text = "Báo ra ca"; 
+                        if (q_check.xacnhan_vaoca == true)
+                        {
+                            but_diemdanh.CssClass = "button warning rounded";
+                            but_diemdanh.Enabled = true;
+                            but_diemdanh.Attributes.Add("style", "padding: 8px 18px; font-size: 15px;");
+                        }
+                        else
+                        {
+                            but_diemdanh.CssClass = "button rounded disabled";
+                            but_diemdanh.Enabled = false;
+                            but_diemdanh.Attributes.Add("style", "padding: 8px 18px; font-size: 15px; background-color: #e4e4e4 !important; color: #999 !important; border-color: #d4d4d4 !important; cursor: not-allowed;");
+                        }
                         Label1.Text = "<div class='fg-green'><small>Vào ca: " + q_check.ngaychamcong.Value.ToString("HH:mm") + "'.</small></div>";
                     }
                     else//đã báo ra ca
@@ -182,6 +219,7 @@ public partial class admin_Default : System.Web.UI.Page
                                    cc.vido_raca,
                                    cc.kinhdo_raca,
                                    cc.khoangcach_raca,
+                                   cc.xacnhan_vaoca
                                };
 
                 Repeater1.DataSource = q_homnay.OrderBy(p => p.ngaychamcong).ToList();

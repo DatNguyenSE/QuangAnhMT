@@ -68,13 +68,13 @@
 
     <div class=" p-3">
         <div class="row">
-            <div class="bg-white cell-lg-5 p-3">
+            <div class="bg-white cell-lg-7 p-3">
                 <div><b>Chấm công ngày <%=DateTime.Now.ToShortDateString() %></b></div>
                 <div>
                     <asp:Label ID="Label1" runat="server" Text=""></asp:Label>
                 </div>
                 <div class="">
-                    <asp:Button ID="but_diemdanh" runat="server" Text="Báo vào ca" CssClass="small success rounded" OnClick="but_diemdanh_Click" OnClientClick="getLocationAndSubmit(); return false;" />
+                    <asp:Button ID="but_diemdanh" runat="server" Text="Báo vào ca" CssClass="button success rounded" style="padding: 8px 18px; font-size: 15px;" OnClick="but_diemdanh_Click" OnClientClick="getLocationAndSubmit(); return false;" />
                 </div>
 
                 <div style="overflow: auto;" class="mt-2 mb-3">
@@ -86,6 +86,9 @@
                                 <td class="fw-600 bg-white " style="min-width: 130px">Nhân viên</td>
                                 <td class="fw-600 bg-white text-center" style="width: 60px; min-width: 60px">Vào ca</td>
                                 <td class="fw-600 bg-white  text-center" style="width: 60px; min-width: 60px">Ra ca</td>
+                                <% if (ViewState["taikhoan"] != null && ViewState["taikhoan"].ToString() == "admin") { %>
+                                <td class="fw-600 bg-white text-center" style="width: 80px; min-width: 80px">Xác nhận vào ca</td>
+                                <% } %>
                             </tr>
                         </thead>
                         <tbody>
@@ -115,6 +118,14 @@
                                                 <div><small><a data-role="hint" data-hint-position="top" data-hint-text="Xem vị trí" target="_blank" href="https://google.com/maps?q=<%#Eval("vido_raca") %>,<%#Eval("kinhdo_raca") %>" class="fg-cobalt"><%# Eval("khoangcach_raca", "{0:#,##0}") %>m</a></small></div>
                                             </asp:PlaceHolder>
                                         </td>
+                                        <% if (ViewState["taikhoan"] != null && ViewState["taikhoan"].ToString() == "admin") { %>
+                                        <td class="text-center" style="vertical-align: middle;">
+                                            <asp:Button ID="btn_xacnhan_vaoca" runat="server" CommandArgument='<%#Eval("taikhoan") %>' OnClick="btn_xacnhan_vaoca_Click" CssClass="button small info rounded" Visible='<%# Eval("xacnhan_vaoca") == null || !(bool)Eval("xacnhan_vaoca") %>' Text="Xác nhận" />
+                                            <asp:PlaceHolder runat="server" Visible='<%# Eval("xacnhan_vaoca") != null && (bool)Eval("xacnhan_vaoca") == true %>'>
+                                                <div class="fg-green fw-bold" style="font-size: 13px;" title="Đã xác nhận">✓ Đã duyệt</div>
+                                            </asp:PlaceHolder>
+                                        </td>
+                                        <% } %>
                                     </tr>
                                 </ItemTemplate>
                             </asp:Repeater>
