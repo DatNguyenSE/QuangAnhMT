@@ -4,6 +4,61 @@
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="Server">
 </asp:Content>
 <asp:Content ID="Content2" ContentPlaceHolderID="main" runat="Server">
+    <div id="full_page_loading" class="bg-dark fixed-top h-100 w-100" style="opacity: 0.9; z-index: 99999!important; display: none;">
+        <div style="padding-top: 45vh;">
+            <div class="mx-auto color-style activity-atom" data-role="activity" data-type="atom" data-style="color" data-role-activity="true"><span class="electron"></span><span class="electron"></span><span class="electron"></span></div>
+            <div class="text-center fg-white mt-4 text-bold" style="font-size: 1.2rem;">Đang xử lý dữ liệu... Vui lòng không đóng trang.</div>
+        </div>
+    </div>
+    
+    <asp:UpdatePanel ID="up_import" runat="server" UpdateMode="Conditional">
+        <Triggers>
+            <asp:PostBackTrigger ControlID="but_import_excel" />
+        </Triggers>
+        <ContentTemplate>
+            <asp:Panel ID="pn_import" runat="server" Visible="false" DefaultButton="but_import_excel">
+                <div style="position: fixed; width: 100%; height: 52px; background-color: none; top: 0; left: 0; z-index: 1041!important;">
+                    <div style='top: 0; left: 0px; margin: 0 auto; max-width: 600px; opacity: 1;'>
+                        <div style='position: absolute; right: 18px; top: 14px; z-index: 1040!important'>
+                            <a href='#' class='fg-white d-inline' runat="server" id="close_import" onserverclick="but_show_form_import_Click" title='Đóng'>
+                                <span class='mif mif-cross mif-2x fg-red fg-lightRed-hover'></span>
+                            </a>
+                        </div>
+                        <div class="bg-white pl-4 pl-8-md pr-8-md pr-4" style="height: 52px;">
+                            <div class="pt-4 text-upper text-bold">
+                                NHẬP DỮ LIỆU TỪ EXCEL
+                            </div>
+                            <hr />
+                        </div>
+                    </div>
+                </div>
+                <div style="position: fixed; width: 100%; height: 100%; top: 0; left: 0; overflow: auto; z-index: 1040!important; background-image: url('/uploads/images/bg1.png');">
+                    <div style='top: 0; left: 0; margin: 0 auto; max-width: 606px; opacity: 1;'>
+                        <div class="bg-white border bd-transparent pl-4 pl-8-md pr-8-md pr-4" style="padding-top: 52px">
+                            <div class="row">
+                                <div class="cell-12">
+                                    <div class="mt-3">
+                                        <div class="fw-600">Chọn file Excel</div>
+                                        <div class="mt-2">
+                                            <asp:FileUpload ID="file_import" runat="server" data-role="file" data-button-title="<span class='mif-folder'></span>" />
+                                        </div>
+                                    </div>
+                                    <div class="mt-3">
+                                        <small><b>Lưu ý:</b> Nhấn nút <b class="fg-green">"Xác nhận nhập"</b> 1 lần và vui lòng không đóng trang cho đến khi hoàn tất.</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-6 mb-20 text-right">
+                                <asp:Button ID="but_import_excel" runat="server" CssClass="button success" Text="Xác nhận nhập" OnClick="but_import_excel_Click" OnClientClick="return showLoadingForImport();" />
+                            </div>
+                            <div class="mb-20"></div>
+                        </div>
+                    </div>
+                </div>
+            </asp:Panel>
+        </ContentTemplate>
+    </asp:UpdatePanel>
+
     <asp:UpdatePanel ID="up_xuat" runat="server" UpdateMode="Conditional">
         <%--<Triggers>
          <asp:AsyncPostBackTrigger ControlID="but_show_form_xuat" EventName="Click" />
@@ -660,6 +715,9 @@
                         <li data-role="hint" data-hint-position="top" data-hint-text="Tạo báo giá">
                             <asp:LinkButton ID="but_show_form_add" OnClick="but_show_form_add_Click" runat="server"><span class="mif-plus"></span></asp:LinkButton>
                         </li>
+                        <li data-role="hint" data-hint-position="top" data-hint-text="Nhập từ Excel" style="display:none;">
+                            <asp:LinkButton ID="but_show_form_import" OnClick="but_show_form_import_Click" runat="server"><span class="mif-file-excel fg-green"></span></asp:LinkButton>
+                        </li>
                         <%--<li data-role="hint" data-hint-position="top" data-hint-text="Lưu">
                             <asp:LinkButton ID="but_save" OnClick="but_save_Click" runat="server"><span class="mif-floppy-disk"></span></asp:LinkButton>
                         </li>--%>
@@ -671,7 +729,7 @@
                         <li data-role="hint" data-hint-position="top" data-hint-text="Lọc">
                             <asp:LinkButton ID="but_show_form_loc" runat="server" OnClick="but_show_form_loc_Click"><span class="mif-filter"></span></asp:LinkButton>
                         </li>
-                        <li data-role="hint" data-hint-position="top" data-hint-text="Xuất excel">
+                        <li data-role="hint" data-hint-position="top" data-hint-text="Xuất excel" style="display:none;">
                             <asp:LinkButton ID="but_show_form_xuat" runat="server" OnClick="but_show_form_xuat_Click"><span class="mif-file-excel"></span></asp:LinkButton>
                         </li>
 
@@ -726,11 +784,12 @@
                                             <%--data-role="checkbox" data-style="2"--%>
                                             <input data-role="hint" data-hint-position="top" data-hint-text="Chọn/Bỏ chọn" type="checkbox" onkeypress="if (event.keyCode==13) return false;" onclick="$('.checkbox-table input[type=checkbox]').prop('checked', this.checked)">
                                         </th>
-                                        <th style="width: 108px; min-width: 108px;">Ngày báo giá</th>
+                                        <th style="width: 120px; min-width: 120px;">Số seri</th>
+                                        <th style="width: 80px; min-width: 80px;">Ngày báo giá</th>
                                         <th style="width: 150px; min-width: 150px;">Khách hàng</th>
-                                        <th style="width: 150px; min-width: 150px;">Địa chỉ</th>
+                                        <th style="width: 150px; min-width: 150px;">Tên mặt hàng</th>
+                                        <th style="width: 150px; min-width: 150px;">Bảo Hành</th>
                                         <th style="width: 1px; min-width: 1px;">Hạn BG</th>
-                                        <th style="width: 110px; min-width: 110px;">Đã bán</th>
                                         <th style="width: 1px; min-width: 1px;">Tổng tiền</th>
                                         <th style="width: 1px; min-width: 1px;">Tổng giảm</th>
                                         <th style="width: 1px; min-width: 1px;">Tổng sau giảm</th>
@@ -756,15 +815,24 @@
                                                     <asp:CheckBox ID="checkID" runat="server" onkeypress="if (event.keyCode==13) return false;" />
                                                 </td>
 
-                                                <td class="text-left"><small><%#Eval("ngaybaogia","{0:dd/MM/yyyy HH:mm}") %></small>
-                                                    <div class="fw-600"><%#Eval("HoTenNhanVien") %></div>
+                                                <td class="text-left">
+                                                    <div class="fw-600 fg-dark"><%#Eval("So_Seri") %></div>
+                                                </td>
+                                                <td class="text-left">
+                                                    <%#Eval("ngaybaogia","{0:dd/MM/yyyy}") %>
                                                 </td>
                                                 <td class="text-left"><%#Eval("ten_khachhang") %>
-                                                    <div><a class="fw-600" title="Nhấn để gọi" href="tel:<%#Eval("sdt_khachhang") %>"><span class="mif-phone pr-1"></span><%#Eval("sdt_khachhang") %></a></div>
+                                                    <asp:PlaceHolder runat="server" Visible='<%# !string.IsNullOrEmpty(Eval("sdt_khachhang") as string) %>'>
+                                                        <div><a class="fw-600" title="Nhấn để gọi" href="tel:<%#Eval("sdt_khachhang") %>"><span class="mif-phone pr-1"></span><%#Eval("sdt_khachhang") %></a></div>
+                                                    </asp:PlaceHolder>
                                                 </td>
 
                                                 <td class="text-left">
-                                                    <%#Eval("diachi_khachhang") %></td>
+                                                    <%#Eval("tenMatHang") %></td>
+                                                <td class="text-left">
+                                                    <div class="mb-2"><small>Bảo hành/ tháng: <strong><%#Eval("Thang_BaoHanh") %></strong></small></div>
+                                                    <div><small>Ngày hết hạn: <strong><%#Eval("ThoiHan_BaoGia") %></strong></small></div>
+                                                </td>
                                                 <td><%#Eval("ngayhethan","{0:dd/MM/yyyy}") %>
 
                                                     <asp:PlaceHolder ID="PlaceHolder3" runat="server" Visible='<%#Eval("trangthai").ToString()=="Còn hiệu lực" %>'>
@@ -774,24 +842,7 @@
                                                         <div class="button mini rounded alert">Hết hiệu lực</div>
                                                     </asp:PlaceHolder>
                                                 </td>
-                                                <td>
-                                                    <asp:PlaceHolder ID="PlaceHolder2" runat="server" Visible='<%#Eval("trangthai").ToString()=="Đã ký HĐ" %>'>
-                                                        <div class="button mini rounded success"><%#Eval("ngayban_kyhopdong","{0:dd/MM/yyyy}") %></div>
-                                                        <div><a href="<%#Eval("file_hopdong")%>"><span data-role="hint" data-hint-position="top" data-hint-text="Tải file" class="mif-download mif-lg"></span></a></div>
-                                                        <asp:PlaceHolder ID="PlaceHolder9" runat="server" Visible='<%#Eval("ghichu_chuagiao").ToString()!="" %>'>
-                                                            <asp:LinkButton CssClass="button mini warning rounded ani-flash" OnClick="but_show_chinhsua_Click" data-role="hint" data-hint-position="top" data-hint-text="Sửa ghi chú" ID="LinkButton2" CommandArgument='<%# Eval("id") %>' runat="server">
-                                            <%# Eval("ghichu_chuagiao") %>
-                                                            </asp:LinkButton>
-                                                        </asp:PlaceHolder>
-                                                        <asp:PlaceHolder ID="PlaceHolder12" runat="server" Visible='<%#Eval("thuongdoanhso").ToString()!="0" %>'>
-                                                            <div>
-                                                                <small class="fw-500 fg-green">Thưởng <%# Eval("phantram_doanhso_now") %>% DS<br />
-                                                                    = <%#Eval("thuongdoanhso","{0:#,##0}") %></small>
-                                                            </div>
-                                                        </asp:PlaceHolder>
-                                                    </asp:PlaceHolder>
-
-                                                </td>
+                                                
 
                                                 <td class="text-right"><%#Eval("TongTien","{0:#,##0}") %>
 
@@ -834,6 +885,11 @@
          
                                                                 <a href='<%# "/admin/quan-ly-bao-gia/Export.aspx?id=" + Eval("id") %>' target="_blank">Xuất Excel</a>
 
+                                                            </li>
+                                                            <li>
+                                                                <asp:LinkButton ID="lnkDelete" OnClick="lnk_xoadong_Click" CommandArgument='<%# Eval("id") %>' OnClientClick="return confirm('Bạn có chắc chắn muốn xóa phiếu báo giá này?');" runat="server">
+                                                                    <span class="fg-red">Xóa</span>
+                                                                </asp:LinkButton>
                                                             </li>
 
                                                             <%--<li class="divider"></li>--%>
@@ -991,6 +1047,20 @@
 
         function show_saochep() {
             Metro.notify.create("Đã sao chép.", "Thông báo", {});
+        }
+
+        function showLoadingForImport() {
+            var fileInput = document.getElementById('<%= file_import.ClientID %>');
+            if(fileInput.files.length === 0) {
+                Metro.dialog.create({
+                    title: "Lỗi",
+                    content: "Vui lòng chọn file Excel trước khi import.",
+                    closeButton: true
+                });
+                return false;
+            }
+            document.getElementById('full_page_loading').style.display = 'block';
+            return true;
         }
     </script>
 </asp:Content>

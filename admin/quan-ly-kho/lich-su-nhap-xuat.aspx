@@ -1,4 +1,4 @@
-﻿<%@ Page Title="Lịch sử nhập xuất" Language="C#" MasterPageFile="~/admin/MasterPageAdmin.master" AutoEventWireup="true" CodeFile="lich-su-nhap-xuat.aspx.cs" Inherits="admin_quan_ly_kho_lich_su_nhap_xuat" %>
+<%@ Page Title="Lịch sử nhập xuất" Language="C#" MasterPageFile="~/admin/MasterPageAdmin.master" AutoEventWireup="true" CodeFile="lich-su-nhap-xuat.aspx.cs" Inherits="admin_quan_ly_kho_lich_su_nhap_xuat" %>
 
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="Server">
 </asp:Content>
@@ -214,13 +214,13 @@
                                                 <td style="text-align: left!important">
                                                     <%#Eval("TenSP") %>
                                                     <div>
-                                                        <asp:PlaceHolder ID="PlaceHolder3" runat="server" Visible='<%#Eval("hangthanhly").ToString()=="True" %>'>
+                                                        <asp:PlaceHolder ID="PlaceHolder3" runat="server" Visible='<%# Convert.ToBoolean(Eval("hangthanhly")) %>'>
                                                             <span class="button mini warning rounded">Hàng thanh lý</span>
                                                         </asp:PlaceHolder>
                                                     </div>
                                                 </td>
                                                 <td>
-                                                    <asp:PlaceHolder ID="PlaceHolder2" runat="server" Visible='<%#Eval("cohoadon").ToString()=="True" %>'>
+                                                    <asp:PlaceHolder ID="PlaceHolder2" runat="server" Visible='<%# Convert.ToBoolean(Eval("cohoadon")) %>'>
                                                         <span class="mif mif-checkmark fg-green"></span>
                                                     </asp:PlaceHolder>
                                                 </td>

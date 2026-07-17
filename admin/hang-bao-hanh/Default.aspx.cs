@@ -1584,11 +1584,6 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
         string _thongso = txt_thongso.Text;
 
 
-        if (_soluong_xuat <= 0)
-        {
-            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Số lượng không hợp lệ.", "false", "false", "OK", "alert", ""), true);
-            return;
-        }
         if (_giamgia_phantram < 0 || _giamgia_phantram > 100)
         {
             ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Giảm giá phần trăm không hợp lệ. (Từ 0-100)", "false", "false", "OK", "alert", ""), true);
@@ -1597,27 +1592,6 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
         if (_tensp == "")
         {
             ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng nhập tên sản phẩm.", "false", "false", "OK", "alert", ""), true);
-            return;
-        }
-        if (_anh == "")
-        {
-            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng chọn ảnh sản phẩm.", "false", "false", "OK", "alert", ""), true);
-            return;
-        }
-        if (_ten_hang == "")
-        {
-            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng chọn hãng sản phẩm.", "false", "false", "OK", "alert", ""), true);
-            return;
-        }
-
-        if (_ten_donvitinh == "")
-        {
-            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng chọn đơn vị tính.", "false", "false", "OK", "alert", ""), true);
-            return;
-        }
-        if (_model == "")
-        {
-            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng nhập Model sản phẩm.", "false", "false", "OK", "alert", ""), true);
             return;
         }
         using (dbDataContext db = new dbDataContext())

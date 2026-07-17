@@ -531,14 +531,14 @@
                                                     </asp:LinkButton>
 
                                                     <div>
-                                                        <asp:PlaceHolder ID="PlaceHolder3" runat="server" Visible='<%#Eval("hangthanhly").ToString()=="True" %>'>
+                                                        <asp:PlaceHolder ID="PlaceHolder3" runat="server" Visible='<%# Convert.ToBoolean(Eval("hangthanhly")) %>'>
                                                             <span class="button mini warning rounded">Hàng thanh lý</span>
                                                         </asp:PlaceHolder>
                                                     </div>
                                                 </td>
                                                 
                                                 <td>
-                                                    <asp:PlaceHolder ID="PlaceHolder2" runat="server" Visible='<%#Eval("cohoadon").ToString()=="True" %>'>
+                                                    <asp:PlaceHolder ID="PlaceHolder2" runat="server" Visible='<%# Convert.ToBoolean(Eval("cohoadon")) %>'>
                                                         <span class="mif mif-checkmark fg-green"></span>
                                                     </asp:PlaceHolder>
                                                 </td>

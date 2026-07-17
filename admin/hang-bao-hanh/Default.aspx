@@ -209,7 +209,7 @@
                                                         <asp:TextBox ID="txt_name" runat="server" data-role="input" MaxLength="100"></asp:TextBox>
                                                     </div>
                                                     <div class="mt-2">
-                                                        <small class="fw-600 fg-red">Ảnh sản phẩm</small>
+                                                        <small class="fw-600">Ảnh sản phẩm</small>
                                                         <input type="file" id="fileInput" onchange="uploadFile()" data-role="file" data-button-title="<span class='mif-file-upload'></span>" />
                                                         <div id="message" runat="server"></div>
                                                         <div id="uploadedFilePath"></div>
@@ -224,20 +224,20 @@
 </div>--%>
                                                     </div>
                                                     <div class="mt-2">
-                                                        <small class="fw-600 fg-red">Hãng sản phẩm</small>
+                                                        <small class="fw-600">Hãng sản phẩm</small>
                                                         <div>
                                                             <asp:DropDownList ID="ddl_hang_add" runat="server" data-role="select" data-filter="true"></asp:DropDownList>
                                                         </div>
                                                     </div>
    
                                                     <div class="mt-2">
-                                                        <small class="fw-600 fg-red">Đơn vị tính</small>
+                                                        <small class="fw-600">Đơn vị tính</small>
                                                         <div>
                                                             <asp:DropDownList ID="ddl_dvt_add" runat="server" data-role="select" data-filter="true"></asp:DropDownList>
                                                         </div>
                                                     </div>
                                                     <div class="mt-2">
-                                                        <small class="fg-red fw-600">Model</small>
+                                                        <small class="fw-600">Model</small>
                                                         <asp:TextBox ID="txt_model" runat="server" data-role="input" MaxLength="100"></asp:TextBox>
                                                     </div>
                                                     <div class="mt-2">
@@ -248,11 +248,11 @@
                                                 </div>
                                                 <div class="cell-lg-3 pl-2-lg pr-2-lg">
                                                     <div class="mt-2">
-                                                        <small class="fg-red fw-600">Số lượng</small>
+                                                        <small class="fw-600">Số lượng</small>
                                                         <asp:TextBox ID="txt_soluong" data-role="spinner" data-buttons-position="right" Text="1" data-min-value="1" data-max-value="999" onfocus="AutoSelect(this)" oninput="format_sotien_new(this)" runat="server"></asp:TextBox>
                                                     </div>
                                                     <div class="mt-2">
-                                                        <small class="fg-red fw-600">Số tiền bảo hành</small>
+                                                        <small class="fw-600">Số tiền bảo hành</small>
                                                         <asp:TextBox ID="txt_sotien_baohanhg" onfocus="AutoSelect(this)" MaxLength="14" oninput="format_sotien_new(this)" runat="server" data-role="input" Text="0"></asp:TextBox>
                                                     </div>
                                                 </div>
@@ -1001,9 +1001,11 @@
                                                             <li>
                                                                 <asp:LinkButton ID="lnkEdit" OnClick="but_show_chinhsua_Click" CommandArgument='<%# Eval("id") %>' runat="server">Chỉnh sửa</asp:LinkButton>
                                                             </li>
-                                                            <li>
-                                                                <asp:LinkButton ID="lnkDelete" OnClick="lnk_xoadong_Click" CommandArgument='<%# Eval("id") %>' OnClientClick="return confirm('Bạn có chắc chắn muốn xóa phiếu bảo hành này?');" runat="server">Xóa</asp:LinkButton>
-                                                            </li>
+                                                          <li>
+    <asp:LinkButton ID="lnkDelete" OnClick="lnk_xoadong_Click" CommandArgument='<%# Eval("id") %>' OnClientClick="return confirm('Bạn có chắc chắn muốn xóa phiếu bảo hành này?');" runat="server">
+        <span class="fg-red">Xóa</span>
+    </asp:LinkButton>
+</li>
                                                         </ul>
                                                     </div>
                                                 </td>
