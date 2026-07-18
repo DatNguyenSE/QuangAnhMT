@@ -58,6 +58,12 @@
             font-size: 13px;
             color: #000;
         }
+        .warranty-filter-button {
+            margin: 2px 3px;
+            padding: 8px 12px;
+            font-size: 14px;
+            font-weight: 600;
+        }
     </style>
 </asp:Content>
 
@@ -308,10 +314,16 @@
                         <li style="display:none;">
                             <div class="p-2 d-flex flex-align-center">
                                 <small class="pr-2">Hiển thị:</small>
-                                <asp:TextBox ID="txt_show" Width="50" MaxLength="5" runat="server" data-role="input" AutoPostBack="true" OnTextChanged="txt_show_TextChanged" Text="10" style="display:inline-block; height: 32px;"></asp:TextBox>
+                                <asp:TextBox ID="txt_show" Width="50" MaxLength="5" runat="server" data-role="input" AutoPostBack="true" OnTextChanged="txt_show_TextChanged" Text="30" style="display:inline-block; height: 32px;"></asp:TextBox>
                             </div>
                         </li>
                         <li class="bd-gray border bd-default mt-2" style="height: 24px; display:none;"></li>
+                        <li>
+                            <asp:LinkButton ID="btn_warranty" runat="server" CssClass="button success warranty-filter-button" OnClick="btn_warranty_Click">Hàng còn bảo hành</asp:LinkButton>
+                        </li>
+                        <li>
+                            <asp:LinkButton ID="btn_all" runat="server" CssClass="button secondary warranty-filter-button" OnClick="btn_all_Click">Tất cả</asp:LinkButton>
+                        </li>
                         <li>
                             <a>
                                 <small>
@@ -352,6 +364,7 @@
                                             <th style="width: 120px;">Giá bán</th>
                                             <th style="width: 120px;">Tổng tiền cuối</th>
                                             <th style="width: 150px;">Khách hàng</th>
+                                            <th style="width: 70px;">ID<br />Báo giá</th>
                                             <th style="width: 150px;">Bảo hành</th>
                                             <th style="width: 100px; text-align: center;">Hành động</th>
                                         </tr>
@@ -375,7 +388,8 @@
                                                      <td style="min-width: 260px;">
                                                         <div class="fw-600"><%# Eval("tenKhachHang") %></div>
                                                         <small class="text-muted"><%# Eval("sdtKhachHang") %></small>
-                                                    </td>
+                                                     </td>
+                                                     <td class="text-center"><%# Eval("baogiaId") %></td>
                                                      <td class="warranty-cell">
                                                          <asp:Label ID="lbl_warranty_unknown" runat="server" CssClass="warranty-unknown" Text="Không rõ" Visible='<%# string.IsNullOrWhiteSpace(Convert.ToString(Eval("thangBaoHanh"))) %>'></asp:Label>
                                                          <asp:Panel ID="pn_warranty_details" runat="server" Visible='<%# !string.IsNullOrWhiteSpace(Convert.ToString(Eval("thangBaoHanh"))) %>'>
@@ -393,7 +407,7 @@
                                             </ItemTemplate>
                                         </asp:Repeater>
                                         <tr ID="tr_empty" runat="server" visible="false">
-                                            <td colspan="10" class="text-center p-4 fg-gray">
+                                            <td colspan="11" class="text-center p-4 fg-gray">
                                                 Không tìm thấy sản phẩm đã bán nào.
                                             </td>
                                         </tr>

@@ -369,9 +369,11 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
             
             // Lấy chi tiết bằng pagedIds
             var list_split = (from ob1 in db.BaoGia_tbs
-                              where pagedIds.Contains(ob1.id)
-                              join ob2 in db.BaoGia_ChiTiet_tbs on ob1.id.ToString() equals ob2.id_baogia into chiTietGroup
-                              join tk in db.taikhoan_tbs on ob1.nguoibaogia equals tk.taikhoan into TaiKhoanGroup
+                               where pagedIds.Contains(ob1.id)
+                               join ob2 in db.BaoGia_ChiTiet_tbs on ob1.id.ToString() equals ob2.id_baogia into chiTietGroup
+                               join kh in db.Data_KhachHang_tbs on ob1.sdt_khachhang equals kh.sdt into KhachHangGroup
+                               from kh in KhachHangGroup.DefaultIfEmpty()
+                               join tk in db.taikhoan_tbs on ob1.nguoibaogia equals tk.taikhoan into TaiKhoanGroup
                               from tk in TaiKhoanGroup.DefaultIfEmpty()
                               let tongTien = chiTietGroup.Sum(ct => (long?)ct.thanhtien) ?? 0
                               let tongGiamCT = chiTietGroup.Sum(ct => (long?)ct.giamgia_thanhtien) ?? 0
@@ -393,9 +395,9 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                                   ob1.vat,
                                   ob1.id_guide,
                                   ghichu_chuagiao = ob1.ghichu_chuagiao ?? "",
-                                  ob1.sdt_khachhang,
-                                  ob1.ten_khachhang,
-                                  ob1.diachi_khachhang,
+                                   ob1.sdt_khachhang,
+                                   ob1.ten_khachhang,
+                                   diachiKhachHang = kh != null ? kh.diachi : "",
                                   ob1.ngayhethan,
                                   ob1.ngaybaogia,
                                   ob1.nguoibaogia,
@@ -407,9 +409,10 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                                   TongGiam = tongGiam,
                                   TongSauGiam = tongSauGiam,
                                   HoTenNhanVien = tk != null ? tk.hoten : "",
-                                  TongTien_VAT = tienVAT,
-                                  TongSauThue = tongSauThue,
-                                  tenMatHang = tenMatHang
+                                   TongTien_VAT = tienVAT,
+                                   TongSauThue = tongSauThue,
+                                   tenMatHang = tenMatHang,
+                                   baoGiaQuaHan = ob1.ngayban_kyhopdong == null && ob1.ngayhethan < DateTime.Now
                               }).AsEnumerable().OrderByDescending(p => p.ngaybaogia).ToList();
 
             //xử lý thanh thông báo phân trang
@@ -3121,7 +3124,7 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                             .ToDictionary(g => g.Key, g => g.First());
                             
                         var dictSanPham = db.KhoSanPham_tbs.AsEnumerable()
-                            .GroupBy(s => ((s.model ?? "").ToUpper() + "|" + (s.ten ?? "").ToUpper()))
+                            .GroupBy(s => ((s.model ?? "").ToUpper() + "|" + (s.ten ?? "").ToUpper() + "|" + (s.so_seri ?? "").ToUpper()))
                             .ToDictionary(g => g.Key, g => g.First());
                         
                         Func<string, DateTime?> parseDate = (str) =>
@@ -3220,7 +3223,7 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                                 bg.ThoiHan_BaoGia = strTH;
                                 
                                 bg.nguoibaogia = ViewState["taikhoan"] != null ? ViewState["taikhoan"].ToString() : "";
-                                bg.trangthai = "Đã hoàn thành";
+                                bg.trangthai = "Đã ký HĐ";
                                 bg.tongtien = 0;
                                 bg.giatri_thuc_donhang = 0;
                                 bg.congno = 0;

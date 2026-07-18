@@ -2,6 +2,30 @@
 
 <%@ Register Assembly="AjaxControlToolkit" Namespace="AjaxControlToolkit" TagPrefix="ajaxToolkit" %>
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="Server">
+    <style>
+        .quote-expiry-cell {
+            white-space: nowrap;
+        }
+        .quote-expired {
+            display: inline-block;
+            margin-top: 3px;
+            padding: 1px 4px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #dc2626;
+            background-color: #fee2e2;
+            border: 1px solid #fecaca;
+            border-radius: 2px;
+        }
+        .quote-date {
+            line-height: 1.45;
+            white-space: nowrap;
+        }
+        .quote-date-user {
+            font-weight: 600;
+            color: #333;
+        }
+    </style>
 </asp:Content>
 <asp:Content ID="Content2" ContentPlaceHolderID="main" runat="Server">
     <div id="full_page_loading" class="bg-dark fixed-top h-100 w-100" style="opacity: 0.9; z-index: 99999!important; display: none;">
@@ -945,14 +969,16 @@
                             <table class="bcorn-fix-title-table">
                                 <thead>
                                     <tr class="">
-                                        <th style="width: 80px; min-width: 80px;">Ngày báo giá</th>
+                                        <th style="width: 60px; min-width: 60px;">ID</th>
                                         <th style="width: 1px;">
                                             <%--data-role="checkbox" data-style="2"--%>
                                             <input data-role="hint" data-hint-position="top" data-hint-text="Chọn/Bỏ chọn" type="checkbox" onkeypress="if (event.keyCode==13) return false;" onclick="$('.checkbox-table input[type=checkbox]').prop('checked', this.checked)">
                                         </th>
+                                        <th style="width: 130px; min-width: 130px;">Ngày báo giá</th>
                                         <th style="width: 150px; min-width: 150px;">Khách hàng</th>
-                                        <th style="width: 150px; min-width: 150px;">Bảo Hành</th>
-                                        <th style="width: 80px; min-width: 80px;">Đã bán</th>
+                                        <th style="width: 220px; min-width: 220px;">Địa chỉ</th>
+                                        <th style="width: 150px; min-width: 150px;">Hạn BG</th>
+                                        <th style="width: 110px; min-width: 110px;">Đã bán</th>
                                         <th style="width: 1px; min-width: 1px;">Tổng tiền</th>
                                         <th style="width: 1px; min-width: 1px;">Tổng giảm</th>
                                         <th style="width: 1px; min-width: 1px;">Tổng sau giảm</th>
@@ -969,12 +995,15 @@
                                                 <asp:Label ID="lbID" runat="server" Text='<%#Eval("id") %>'></asp:Label>
                                             </span>
                                             <tr>
-                                                <td class="text-left">
-                                                    <%#Eval("ngaybaogia","{0:dd/MM/yyyy}") %>
-                                                </td>
+                                                <td class="text-center"><%# Eval("id") %></td>
 
                                                 <td class="checkbox-table">
                                                     <asp:CheckBox ID="checkID" runat="server" onkeypress="if (event.keyCode==13) return false;" />
+                                                </td>
+
+                                                <td class="text-left quote-date">
+                                                    <div><%# Eval("ngaybaogia", "{0:dd/MM/yyyy}") %></div>
+                                                    <div class="quote-date-user"><%# Eval("HoTenNhanVien") %></div>
                                                 </td>
 
 
@@ -988,15 +1017,29 @@
                                                     </asp:PlaceHolder>
                                                 </td>
 
-                                                <td class="text-left">
-                                                    <div><small>Ngày hết hạn: <strong><%# string.IsNullOrEmpty(Convert.ToString(Eval("ThoiHan_BaoGia"))) ? "chưa rõ" : Eval("ThoiHan_BaoGia") %></strong></small></div>
+                                                <td class="text-left" style="max-width: 220px;">
+                                                    <%# Eval("diachiKhachHang") %>
+                                                </td>
+                                                <td class="text-left quote-expiry-cell">
+                                                    <div><%# Eval("ngayhethan") == null ? "Không rõ" : Convert.ToDateTime(Eval("ngayhethan")).ToString("dd/MM/yyyy") %></div>
+                                                    <asp:Label ID="lbl_quote_expired" runat="server" CssClass="quote-expired" Text="Đã quá hạn" Visible='<%# Convert.ToBoolean(Eval("baoGiaQuaHan")) %>'></asp:Label>
                                                 </td>
                                                 
-                                                <td class="text-center">
-                                                    <asp:PlaceHolder ID="PlaceHolder_DaBan" runat="server" Visible='<%# Eval("ngayban_kyhopdong") != null && Eval("ngayban_kyhopdong").ToString() != "" %>'>
-                                                        <span class="mif-checkmark fg-green text-bold"></span>
-                                                        <br />
-                                                        <small><%#Eval("ngayban_kyhopdong","{0:dd/MM/yyyy}") %></small>
+                                                <td>
+                                                    <asp:PlaceHolder ID="PlaceHolder2" runat="server" Visible='<%# Eval("trangthai").ToString() == "Đã ký HĐ" %>'>
+                                                        <div class="button mini rounded success"><%# Eval("ngayban_kyhopdong", "{0:dd/MM/yyyy}") %></div>
+                                                        <div><a href="<%# Eval("file_hopdong") %>"><span data-role="hint" data-hint-position="top" data-hint-text="Tải file" class="mif-download mif-lg"></span></a></div>
+                                                        <asp:PlaceHolder ID="PlaceHolder9" runat="server" Visible='<%# Eval("ghichu_chuagiao").ToString() != "" %>'>
+                                                            <asp:LinkButton CssClass="button mini warning rounded ani-flash" OnClick="but_show_chinhsua_Click" data-role="hint" data-hint-position="top" data-hint-text="Sửa ghi chú" ID="LinkButton2" CommandArgument='<%# Eval("id") %>' runat="server">
+                                                                <%# Eval("ghichu_chuagiao") %>
+                                                            </asp:LinkButton>
+                                                        </asp:PlaceHolder>
+                                                        <asp:PlaceHolder ID="PlaceHolder12" runat="server" Visible='<%# Eval("thuongdoanhso").ToString() != "0" %>'>
+                                                            <div>
+                                                                <small class="fw-500 fg-green">Thưởng <%# Eval("phantram_doanhso_now") %>% DS<br />
+                                                                    = <%# Eval("thuongdoanhso", "{0:#,##0}") %></small>
+                                                            </div>
+                                                        </asp:PlaceHolder>
                                                     </asp:PlaceHolder>
                                                 </td>
 

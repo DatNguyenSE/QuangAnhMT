@@ -44,9 +44,9 @@ public partial class admin_theo_doi_hang_da_ban_Default : System.Web.UI.Page
                                 ngayban = bg.ngayban_kyhopdong,
                                 tenKhachHang = bg.ten_khachhang,
                                 sdtKhachHang = bg.sdt_khachhang,
-                                diachiKhachHang = bg.diachi_khachhang,
-                                thangBaoHanh = ct.Thang_BaoHanh,
-                                vat = bg.vat ?? 0,
+                                 diachiKhachHang = bg.diachi_khachhang,
+                                 thangBaoHanh = ct.Thang_BaoHanh,
+                                 vat = bg.vat ?? 0,
                                 giamgiadacbiet = bg.giamgiadacbiet ?? 0
                            };
 
@@ -111,15 +111,22 @@ public partial class admin_theo_doi_hang_da_ban_Default : System.Web.UI.Page
                     x.itemTongSauGiam,
                     totalPrice = itemFinalPrice, // final total price after discount and tax!
                     x.baogiaId,
-                    x.ngayban,
-                    x.tenKhachHang,
+                     x.ngayban,
+                     x.tenKhachHang,
                      x.sdtKhachHang,
                      x.diachiKhachHang,
                      x.thangBaoHanh,
                      warrantyExpiry,
                      warrantyExpired = warrantyExpiry.HasValue && warrantyExpiry.Value < DateTime.Now
                  };
-            }).ToList();
+             }).ToList();
+
+             if (ViewState["warranty_filter"] as string == "valid")
+             {
+                 processedList = processedList
+                     .Where(x => x.warrantyExpiry.HasValue && x.warrantyExpiry.Value >= DateTime.Now)
+                     .ToList();
+             }
 
             int totalRecords = processedList.Count();
             int pageSize = Number_cl.Check_Int(txt_show.Text.Trim());
@@ -167,6 +174,20 @@ public partial class admin_theo_doi_hang_da_ban_Default : System.Web.UI.Page
 
     protected void txt_show_TextChanged(object sender, EventArgs e)
     {
+        ViewState["current_page"] = "1";
+        show_main();
+    }
+
+    protected void btn_warranty_Click(object sender, EventArgs e)
+    {
+        ViewState["warranty_filter"] = "valid";
+        ViewState["current_page"] = "1";
+        show_main();
+    }
+
+    protected void btn_all_Click(object sender, EventArgs e)
+    {
+        ViewState["warranty_filter"] = "";
         ViewState["current_page"] = "1";
         show_main();
     }
