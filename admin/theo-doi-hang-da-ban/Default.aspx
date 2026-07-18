@@ -32,6 +32,32 @@
             border-left: 4px solid #1d4ed8;
             padding-left: 8px;
         }
+        .warranty-cell {
+            line-height: 1.5;
+            white-space: nowrap;
+        }
+        .warranty-months {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1d4ed8;
+        }
+        .warranty-expiry {
+            display: block;
+            margin-top: 3px;
+            font-size: 13px;
+            color: #555;
+        }
+        .warranty-status {
+            display: block;
+            margin-top: 3px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #dc2626;
+        }
+        .warranty-unknown {
+            font-size: 13px;
+            color: #000;
+        }
     </style>
 </asp:Content>
 
@@ -319,14 +345,14 @@
                                         <tr>
                                             <th style="width: 120px;">Ngày bán</th>
                                             <th style="width: 80px;">Ảnh</th>
-                                            <th>Sản phẩm</th>
+                                            <th style="width: 260px; min-width: 260px;">Sản phẩm</th>
 
                                             <th style="width: 120px;">Số Seri</th>
                                             <th style="width: 90px; text-align: center;">SL Bán</th>
                                             <th style="width: 120px;">Giá bán</th>
                                             <th style="width: 120px;">Tổng tiền cuối</th>
                                             <th style="width: 150px;">Khách hàng</th>
-                                            <th style="width: 120px;">Bảo hành / tháng</th>
+                                            <th style="width: 150px;">Bảo hành</th>
                                             <th style="width: 100px; text-align: center;">Hành động</th>
                                         </tr>
                                     </thead>
@@ -346,11 +372,18 @@
                                                     <td class="text-center font-bold"><%# Eval("quantity") %></td>
                                                     <td><%# Convert.ToInt64(Eval("price")).ToString("#,##0") %></td>
                                                     <td class="font-bold fg-red"><%# Convert.ToInt64(Eval("totalPrice")).ToString("#,##0") %></td>
-                                                     <td>
+                                                     <td style="min-width: 260px;">
                                                         <div class="fw-600"><%# Eval("tenKhachHang") %></div>
                                                         <small class="text-muted"><%# Eval("sdtKhachHang") %></small>
                                                     </td>
-                                                    <td><%# Eval("thangBaoHanh") %></td>
+                                                     <td class="warranty-cell">
+                                                         <asp:Label ID="lbl_warranty_unknown" runat="server" CssClass="warranty-unknown" Text="Không rõ" Visible='<%# string.IsNullOrWhiteSpace(Convert.ToString(Eval("thangBaoHanh"))) %>'></asp:Label>
+                                                         <asp:Panel ID="pn_warranty_details" runat="server" Visible='<%# !string.IsNullOrWhiteSpace(Convert.ToString(Eval("thangBaoHanh"))) %>'>
+                                                             <div class="warranty-months"><%# Eval("thangBaoHanh") + " tháng" %></div>
+                                                             <div class="warranty-expiry">Hạn ngày: <%# Eval("warrantyExpiry") == null ? "Không rõ" : Convert.ToDateTime(Eval("warrantyExpiry")).ToString("dd/MM/yyyy") %></div>
+                                                             <asp:Label ID="lbl_warranty_expired" runat="server" CssClass="warranty-status" Text="Hết hạn bảo hành" Visible='<%# Convert.ToBoolean(Eval("warrantyExpired")) %>'></asp:Label>
+                                                         </asp:Panel>
+                                                     </td>
                                                     <td class="text-center">
                                                         <asp:LinkButton ID="btn_view" runat="server" CssClass="button mini primary rounded" CommandArgument='<%# Eval("baogiaId") + "|" + Eval("productId") %>' OnClick="btn_view_Click">
                                                             Xem chi tiết

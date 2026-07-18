@@ -34,7 +34,8 @@ public partial class admin_theo_doi_hang_da_ban_Default : System.Web.UI.Page
                                productId = sp != null ? sp.id.ToString() : "",
                                productName = sp != null ? sp.ten : "Sản phẩm tự chọn",
                                productModel = sp != null ? sp.model : "",
-                               productSerial = ct.So_Seri,
+                                productSerial = sp != null ? sp.so_seri : "",
+                                soSeriKho = sp != null ? sp.so_seri : "",
                                productImage = sp != null ? sp.anh : "",
                                quantity = ct.soluong ?? 0,
                                price = ct.giaban_taithoidiemnay ?? 0,
@@ -59,7 +60,7 @@ public partial class admin_theo_doi_hang_da_ban_Default : System.Web.UI.Page
             {
                 rawQuery = rawQuery.Where(p => p.productName.Contains(key) || 
                                                p.productModel.Contains(key) || 
-                                               p.productSerial.Contains(key) || 
+                                               p.soSeriKho.Contains(key) ||
                                                p.tenKhachHang.Contains(key) || 
                                                p.sdtKhachHang.Contains(key) ||
                                                p.baogiaId.ToString() == key);
@@ -72,11 +73,18 @@ public partial class admin_theo_doi_hang_da_ban_Default : System.Web.UI.Page
                 .GroupBy(x => x.baogiaId)
                 .ToDictionary(g => g.Key, g => g.Sum(x => x.itemTongSauGiam));
 
-            // 3. Project in memory to calculate proportional discount and VAT for each item
-            var processedList = rawList.Select(x =>
-            {
-                long totalSauGiamAll = totalsByBaoGia[x.baogiaId];
-                long itemFinalPrice = 0;
+             // 3. Project in memory to calculate proportional discount and VAT for each item
+             var processedList = rawList.Select(x =>
+             {
+                 DateTime? warrantyExpiry = null;
+                 int warrantyMonths;
+                 if (x.ngayban.HasValue && int.TryParse(x.thangBaoHanh, out warrantyMonths))
+                 {
+                     warrantyExpiry = x.ngayban.Value.AddMonths(warrantyMonths);
+                 }
+
+                 long totalSauGiamAll = totalsByBaoGia[x.baogiaId];
+                 long itemFinalPrice = 0;
 
                 if (totalSauGiamAll > 0)
                 {
@@ -105,10 +113,12 @@ public partial class admin_theo_doi_hang_da_ban_Default : System.Web.UI.Page
                     x.baogiaId,
                     x.ngayban,
                     x.tenKhachHang,
-                    x.sdtKhachHang,
-                    x.diachiKhachHang,
-                    x.thangBaoHanh
-                };
+                     x.sdtKhachHang,
+                     x.diachiKhachHang,
+                     x.thangBaoHanh,
+                     warrantyExpiry,
+                     warrantyExpired = warrantyExpiry.HasValue && warrantyExpiry.Value < DateTime.Now
+                 };
             }).ToList();
 
             int totalRecords = processedList.Count();
@@ -209,7 +219,7 @@ public partial class admin_theo_doi_hang_da_ban_Default : System.Web.UI.Page
                         img_detail_sp.ImageUrl = string.IsNullOrEmpty(sp.anh) ? "/uploads/images/no-image.png" : sp.anh;
                         lbl_detail_tensp.Text = sp.ten;
                         lbl_detail_model.Text = sp.model;
-                        lbl_detail_seri.Text = string.IsNullOrEmpty(ct.So_Seri) ? "N/A" : ct.So_Seri;
+                        lbl_detail_seri.Text = string.IsNullOrEmpty(sp.so_seri) ? "N/A" : sp.so_seri;
                         lbl_detail_thongso.Text = string.IsNullOrEmpty(sp.thongso_kythuat) ? "N/A" : sp.thongso_kythuat;
                     }
                     else
@@ -217,7 +227,7 @@ public partial class admin_theo_doi_hang_da_ban_Default : System.Web.UI.Page
                         img_detail_sp.ImageUrl = "/uploads/images/no-image.png";
                         lbl_detail_tensp.Text = "Sản phẩm tự chọn";
                         lbl_detail_model.Text = "N/A";
-                        lbl_detail_seri.Text = string.IsNullOrEmpty(ct.So_Seri) ? "N/A" : ct.So_Seri;
+                        lbl_detail_seri.Text = "N/A";
                         lbl_detail_thongso.Text = "N/A";
                     }
 

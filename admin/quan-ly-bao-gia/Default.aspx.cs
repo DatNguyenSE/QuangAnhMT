@@ -156,18 +156,11 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
             string _key = string.IsNullOrWhiteSpace(txt_timkiem.Text) ? txt_timkiem1.Text.Trim() : txt_timkiem.Text.Trim();
             if (!string.IsNullOrEmpty(_key))
             {
-                var matchedBaogiaIds = (from ct in db.BaoGia_ChiTiet_tbs
-                                        where ct.So_Seri != null && ct.So_Seri.Contains(_key)
-                                        select ct.id_baogia).Distinct().Take(2000).ToList()
-                                        .Where(x => long.TryParse(x, out _))
-                                        .Select(long.Parse).ToList();
-
                 query = query.Where(p =>
                     p.ten_khachhang.Contains(_key) ||
                     p.diachi_khachhang.Contains(_key) ||
                     p.sdt_khachhang == _key ||
-                    p.id.ToString() == _key ||
-                    matchedBaogiaIds.Contains(p.id));
+                    p.id.ToString() == _key);
             }
 
             if (string.IsNullOrEmpty(_key))
@@ -177,16 +170,28 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                 if (_id_locthoigian == "1")
                 {
                     if (DateTime.TryParse(txt_tungay.Text, out var tungay1))
-                        query = query.Where(p => p.ngaybaogia.HasValue && p.ngaybaogia.Value.Date >= tungay1.Date);
+                    {
+                        DateTime fromDate = tungay1.Date;
+                        query = query.Where(p => p.ngaybaogia >= fromDate);
+                    }
                     if (DateTime.TryParse(txt_denngay.Text, out var denngay1))
-                        query = query.Where(p => p.ngaybaogia.HasValue && p.ngaybaogia.Value.Date <= denngay1.Date);
+                    {
+                        DateTime toDateExclusive = denngay1.Date.AddDays(1);
+                        query = query.Where(p => p.ngaybaogia < toDateExclusive);
+                    }
                 }
                 else if (_id_locthoigian == "2")
                 {
                     if (DateTime.TryParse(txt_tungay.Text, out var tungay2))
-                        query = query.Where(p => p.ngayban_kyhopdong.HasValue && p.ngayban_kyhopdong.Value.Date >= tungay2.Date);
+                    {
+                        DateTime fromDate = tungay2.Date;
+                        query = query.Where(p => p.ngayban_kyhopdong >= fromDate);
+                    }
                     if (DateTime.TryParse(txt_denngay.Text, out var denngay2))
-                        query = query.Where(p => p.ngayban_kyhopdong.HasValue && p.ngayban_kyhopdong.Value.Date <= denngay2.Date);
+                    {
+                        DateTime toDateExclusive = denngay2.Date.AddDays(1);
+                        query = query.Where(p => p.ngayban_kyhopdong < toDateExclusive);
+                    }
                 }
 
                 // Lọc theo trạng thái: Đã bán / Chưa bán
@@ -232,28 +237,30 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                     query = query.Where(p => list_taikhoan.Contains(p.nguoibaogia));
             }
 
-            // Sắp xếp và đếm tổng
-            query = query.OrderByDescending(p => p.ngaybaogia);
-            int _Tong_Record = query.Count();
+            // Giữ truy vấn đã lọc chưa sắp xếp để các phép thống kê không phải sort toàn bộ dữ liệu.
+            var filteredQuery = query;
+            int _Tong_Record = filteredQuery.Count();
 
             if (_Tong_Record != 0)
             {
                 // Đơn đã bán
-                var tongDonBan = query.Count(p => p.ngayban_kyhopdong != null);
+                var tongDonBan = filteredQuery.Count(p => p.ngayban_kyhopdong != null);
 
-                var q_daban = query.Where(p => p.ngayban_kyhopdong != null);
+                var q_daban = filteredQuery.Where(p => p.ngayban_kyhopdong != null);
                 
                 // Kéo dữ liệu Báo giá đã bán về RAM (chỉ lấy các cột cần thiết để tính toán)
                 var dabanList = q_daban.Select(p => new { p.id, p.vat, p.giamgiadacbiet, p.congno }).ToList();
 
                 // Group-by bảng Chi tiết trước bằng SQL Server (chỉ tính những đơn đã bán để tối ưu)
-                var dabanIds = dabanList.Select(x => x.id.ToString()).ToList();
-                
-                // Do giới hạn parameter của SQL (2100), ta chia nhỏ hoặc chỉ đơn giản lấy Group By của toàn bộ
-                // Group by toàn bộ bảng Chi Tiết cực kỳ nhanh trên SQL Server
-                var chiTietSums = db.BaoGia_ChiTiet_tbs
-                                    .GroupBy(ct => ct.id_baogia)
-                                    .Select(g => new { id_baogia = g.Key, sum = g.Sum(x => (long?)x.TongSauGiam) ?? 0 })
+                // Chỉ group các chi tiết thuộc báo giá đã lọc, không quét toàn bộ bảng chi tiết.
+                var chiTietSums = (from ct in db.BaoGia_ChiTiet_tbs
+                                   join bg in q_daban on ct.id_baogia equals bg.id.ToString()
+                                   group ct by ct.id_baogia into g
+                                   select new
+                                   {
+                                       id_baogia = g.Key,
+                                       sum = g.Sum(x => (long?)x.TongSauGiam) ?? 0
+                                   })
                                     .ToList();
 
                 // Join in-memory để tính Tổng doanh thu
@@ -290,24 +297,25 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                 #region tính lợi nhuận
                 DateTime? tuNgayHD = DateTime.TryParse(txt_tungay.Text, out var _tu) ? _tu.Date : (DateTime?)null;
                 DateTime? denNgayHD = DateTime.TryParse(txt_denngay.Text, out var _den) ? _den.Date : (DateTime?)null;
+                DateTime? denNgayHDExclusive = denNgayHD.HasValue ? denNgayHD.Value.AddDays(1) : (DateTime?)null;
 
                 var list_sanpham_ban =
-                    (from ob1 in query
+                     (from ob1 in filteredQuery
                      join ob2 in db.BaoGia_ChiTiet_tbs
                          on ob1.id.ToString() equals ob2.id_baogia
                      where ob1.trangthai == "Đã ký HĐ"
                            && ob1.ngayban_kyhopdong.HasValue
-                           && (!tuNgayHD.HasValue || ob1.ngayban_kyhopdong.Value.Date >= tuNgayHD.Value)
-                           && (!denNgayHD.HasValue || ob1.ngayban_kyhopdong.Value.Date <= denNgayHD.Value)
-                     group ob2 by ob2.id_sanpham into g
-                     join kho in db.KhoSanPham_tbs on g.Key equals kho.id.ToString()
-                     select new
-                     {
-                         id_sanpham = g.Key,
-                         tong_so_luong = g.Sum(x => x.soluong),
-                         gianhap = kho.gianhap,
-                         tong_gia_von = g.Sum(x => x.soluong) * kho.gianhap
-                     }).ToList();
+                           && (!tuNgayHD.HasValue || ob1.ngayban_kyhopdong >= tuNgayHD)
+                           && (!denNgayHDExclusive.HasValue || ob1.ngayban_kyhopdong < denNgayHDExclusive)
+                      group new { soluong = ob2.soluong ?? 0 } by ob2.id_sanpham into g
+                      join kho in db.KhoSanPham_tbs on g.Key equals kho.id.ToString()
+                      select new
+                      {
+                          id_sanpham = g.Key,
+                          tong_so_luong = g.Sum(x => x.soluong),
+                          gianhap = kho.gianhap ?? 0,
+                          tong_gia_von = (long)g.Sum(x => x.soluong) * (kho.gianhap ?? 0)
+                      }).ToList();
 
                 if (list_sanpham_ban.Any())
                 {
@@ -351,8 +359,13 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                 but_quaylai1.Enabled = true;
             }
             
-            // Lấy ID của trang hiện tại
-            var pagedIds = query.Skip(current_page * show - show).Take(show).Select(p => p.id).ToList();
+            // Chỉ sắp xếp và lấy ID của trang hiện tại.
+            var pagedIds = filteredQuery
+                .OrderByDescending(p => p.ngaybaogia)
+                .Skip(current_page * show - show)
+                .Take(show)
+                .Select(p => p.id)
+                .ToList();
             
             // Lấy chi tiết bằng pagedIds
             var list_split = (from ob1 in db.BaoGia_tbs
@@ -622,26 +635,14 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                 string _key = txt_timkiem.Text.Trim();
                 if (!string.IsNullOrEmpty(_key))
                 {
-                    var matchedBaogiaIds = (from ct in db.BaoGia_ChiTiet_tbs
-                                            where ct.So_Seri != null && ct.So_Seri.Contains(_key)
-                                            select ct.id_baogia).Distinct().Take(2000).ToList()
-                                            .Where(x => long.TryParse(x, out _))
-                                            .Select(long.Parse).ToList();
-
-                    list_all = list_all.Where(p => p.ten_khachhang.Contains(_key) || p.diachi_khachhang.Contains(_key) || p.sdt_khachhang == _key || p.id.ToString() == _key || matchedBaogiaIds.Contains(p.id));
+                    list_all = list_all.Where(p => p.ten_khachhang.Contains(_key) || p.diachi_khachhang.Contains(_key) || p.sdt_khachhang == _key || p.id.ToString() == _key);
                 }
                 else
                 {
                     string _key1 = txt_timkiem1.Text.Trim();
                     if (!string.IsNullOrEmpty(_key1))
                     {
-                        var matchedBaogiaIds1 = (from ct in db.BaoGia_ChiTiet_tbs
-                                                 where ct.So_Seri != null && ct.So_Seri.Contains(_key1)
-                                                 select ct.id_baogia).Distinct().Take(2000).ToList()
-                                                 .Where(x => long.TryParse(x, out _))
-                                                 .Select(long.Parse).ToList();
-
-                        list_all = list_all.Where(p => p.ten_khachhang.Contains(_key1) || p.diachi_khachhang.Contains(_key1) || p.sdt_khachhang == _key1 || p.id.ToString() == _key1 || matchedBaogiaIds1.Contains(p.id));
+                        list_all = list_all.Where(p => p.ten_khachhang.Contains(_key1) || p.diachi_khachhang.Contains(_key1) || p.sdt_khachhang == _key1 || p.id.ToString() == _key1);
                     }
                 }
 
@@ -1203,13 +1204,19 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
 
         var q = db.KhoSanPham_tbs
       .OrderBy(p => p.ten)
-      .Select(p => new { p.id, DisplayText = p.ten + " <span class='fg-red'>(" + p.soluong_hientai + ")</span>" }); // Chọn trường id và tạo chuỗi kết hợp ten và soluongHientai
+      .Select(p => new { p.id, p.so_seri, DisplayText = p.ten + " <span class='fg-red'>(" + (p.soluong_hientai != null ? p.soluong_hientai : 0) + ")</span>" });
 
-        DropDownList1.DataSource = q.ToList();
-        DropDownList1.DataTextField = "DisplayText"; // Hiển thị chuỗi kết hợp trong DataTextField
-        DropDownList1.DataValueField = "id"; // Lấy giá trị id cho DataValueField
-        DropDownList1.DataBind();
-        DropDownList1.Items.Insert(0, new ListItem("Chọn", ""));
+        DropDownList1.Items.Clear();
+        DropDownList1.Items.Add(new ListItem("Chọn", ""));
+        foreach(var item in q.ToList())
+        {
+            ListItem li = new ListItem(item.DisplayText, item.id.ToString());
+            if (!string.IsNullOrEmpty(item.so_seri))
+            {
+                li.Attributes.Add("data-seri", item.so_seri);
+            }
+            DropDownList1.Items.Add(li);
+        }
 
         // Lấy danh sách chi tiết bao giá cùng thông tin sản phẩm
         var q_chitiet = from chitiet in db.BaoGia_ChiTiet_tbs
@@ -2406,7 +2413,6 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                 _ob.TongSauGiam = _ob.thanhtien - _ob.giamgia_thanhtien;
                 
                 // Lấy thông tin Seri, Bảo hành, Diễn giải
-                _ob.So_Seri = txt_so_seri.Text.Trim();
                 _ob.Thang_BaoHanh = txt_baohanh_thang.Text.Trim();
                 _ob.Mota = txt_diengiai.Text.Trim();
 
@@ -3108,6 +3114,7 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
 
                         int rowCount = worksheet.Dimension.Rows;
                         int importedCount = 0;
+                        int errorCount = 0;
                         
                         var dictKhachHang = db.Data_KhachHang_tbs.AsEnumerable()
                             .GroupBy(k => (k.ten ?? "").ToUpper())
@@ -3180,13 +3187,22 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                                     string keySP = strModel.ToUpper() + "|" + strTenMatHang.ToUpper();
                                     if (dictSanPham.ContainsKey(keySP))
                                     {
-                                        idSanPham = dictSanPham[keySP].id.ToString();
+                                        var existingSP = dictSanPham[keySP];
+                                        // Cập nhật lại seri nếu có thay đổi
+                                        if (!string.IsNullOrEmpty(strSeri) && existingSP.so_seri != strSeri)
+                                        {
+                                            existingSP.so_seri = strSeri;
+                                            db.SubmitChanges();
+                                        }
+                                        idSanPham = existingSP.id.ToString();
                                     }
                                     else
                                     {
                                         KhoSanPham_tb newSP = new KhoSanPham_tb();
                                         newSP.model = strModel;
-                                        newSP.ten = strTenMatHang;
+                                        newSP.ten = !string.IsNullOrEmpty(strTenMatHang) ? strTenMatHang : (strModel != "" ? strModel : "Không rõ");
+                                        newSP.so_seri = strSeri; // G2 -> so_seri bảng KhoSanPham_tb
+                                        newSP.donvitinh = "45";
                                         db.KhoSanPham_tbs.InsertOnSubmit(newSP);
                                         db.SubmitChanges();
                                         idSanPham = newSP.id.ToString();
@@ -3200,7 +3216,7 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                                 bg.ngayban_kyhopdong = parseDate(strNgay) ?? DateTime.Now;
                                 bg.Id_KhachHnag = idKhachHang;
                                 bg.ten_khachhang = strTenKH;
-                                bg.ghichu_chuagiao = strMaKH;
+                                bg.ghichu_chuagiao = ""; // H2 bị bỏ qua
                                 bg.ThoiHan_BaoGia = strTH;
                                 
                                 bg.nguoibaogia = ViewState["taikhoan"] != null ? ViewState["taikhoan"].ToString() : "";
@@ -3228,7 +3244,6 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                                 
                                 // Fields moved to BaoGia_ChiTiet_tb
                                 bgct.Mota = strDienGiai; // E2
-                                bgct.So_Seri = strSeri; // G2
                                 bgct.NgayDo_L1 = parseDate(strK2); // K2
                                 bgct.Thang_BaoHanh = strL2; // L2
                                 bgct.Seri_Do_L1 = strM2; // M2
@@ -3243,7 +3258,15 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                             }
                             catch (Exception innerEx)
                             {
-                                throw new Exception("Lỗi ở dòng Excel " + row + ": " + innerEx.Message);
+                                errorCount++;
+                                try {
+                                    System.IO.File.AppendAllText(Server.MapPath("~/admin/quan-ly-bao-gia/import_error_log.txt"), "Lỗi ở dòng Excel " + row + ": " + innerEx.Message + "\r\n");
+                                 } catch {}
+
+                                // Reset context để bỏ qua các thay đổi lỗi
+                                db.Dispose();
+                                db = new dbDataContext();
+                                db.CommandTimeout = 3600;
                             }
                         }
                         
@@ -3252,7 +3275,9 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                         pn_import.Visible = false;
                         up_import.Update();
 
-                        ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Import thành công " + importedCount + " báo giá.", "false", "false", "OK", "success", ""), true);
+                        string msg = "Import thành công " + importedCount + " báo giá.";
+                        if (errorCount > 0) msg += " Có " + errorCount + " dòng bị lỗi (đã ghi vào file import_error_log.txt).";
+                        ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", msg, "false", "false", "OK", "success", ""), true);
                         
                         show_main();
                         up_main.Update();
@@ -3261,7 +3286,8 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
             }
             catch (Exception ex)
             {
-                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Lỗi", "Lỗi: " + ex.Message, "false", "false", "OK", "alert", ""), true);
+                string safeMsg = ex.Message.Replace("'", "\\'").Replace("\r", " ").Replace("\n", " ");
+                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Lỗi", "Lỗi: " + safeMsg, "false", "false", "OK", "alert", ""), true);
             }
         }
         else
@@ -3320,7 +3346,7 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                                         c.giamgia_phantram,
                                         c.giamgia_thanhtien,
                                         c.TongSauGiam,
-                                        c.So_Seri,
+                                        So_Seri = s != null ? s.so_seri : "",
                                         c.Thang_BaoHanh,
                                         c.Mota,
                                         c.Seri_Do_L1,

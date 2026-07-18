@@ -255,28 +255,6 @@
       <Column Name="PhuCap_DienThoai" Type="System.Decimal" DbType="Decimal(18,0)" CanBeNull="true" />
     </Type>
   </Table>
-  <Table Name="let99665_thaianaudio.KhoSanPham_tb" Member="KhoSanPham_tbs">
-    <Type Name="KhoSanPham_tb">
-      <Column Name="id" Type="System.Int64" DbType="BigInt NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
-      <Column Name="id_nhom" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
-      <Column Name="id_hang" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
-      <Column Name="ten" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
-      <Column Name="donvitinh" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
-      <Column Name="anh" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
-      <Column Name="model" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
-      <Column Name="thongso_kythuat" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
-      <Column Name="gianhap" Type="System.Int64" DbType="BigInt" CanBeNull="true" />
-      <Column Name="giabanle" Type="System.Int64" DbType="BigInt" CanBeNull="true" />
-      <Column Name="cohoadon" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
-      <Column Name="hangthanhly" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
-      <Column Name="ghichu" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
-      <Column Name="ngaytao" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
-      <Column Name="nguoitao" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
-      <Column Name="soluong_hientai" Type="System.Int32" DbType="Int" CanBeNull="true" />
-      <Column Name="sanpham_tuychon" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
-      <Column Name="so_seri" Type="System.String" DbType="VarChar(50)" CanBeNull="true" />
-    </Type>
-  </Table>
   <Table Name="let99665_thaianaudio.Data_KhachHang_tb" Member="Data_KhachHang_tbs">
     <Type Name="Data_KhachHang_tb">
       <Column Name="id" Type="System.Int64" DbType="BigInt NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
@@ -404,7 +382,6 @@
       <Column Name="giamgia_thanhtien" Type="System.Int64" DbType="BigInt" CanBeNull="true" />
       <Column Name="TongSauGiam" Type="System.Int64" DbType="BigInt" CanBeNull="true" />
       <Column Name="Mota" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
-      <Column Name="So_Seri" Type="System.String" DbType="NVarChar(255)" CanBeNull="true" />
       <Column Name="Thang_BaoHanh" Type="System.String" DbType="NVarChar(255)" CanBeNull="true" />
       <Column Name="Seri_Do_L1" Type="System.String" DbType="NVarChar(255)" CanBeNull="true" />
       <Column Name="Id_khacHang_do_L1" Type="System.String" DbType="NVarChar(255)" CanBeNull="true" />
@@ -412,6 +389,28 @@
       <Column Name="Seri_Do_L2" Type="System.String" DbType="NVarChar(255)" CanBeNull="true" />
       <Column Name="Id_khacHang_do_L2" Type="System.String" DbType="NVarChar(255)" CanBeNull="true" />
       <Column Name="NgayDo_L2" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="let99665_thaianaudio.KhoSanPham_tb" Member="KhoSanPham_tbs">
+    <Type Name="KhoSanPham_tb">
+      <Column Name="id" Type="System.Int64" DbType="BigInt NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="id_nhom" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="id_hang" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="ten" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="donvitinh" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="anh" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="model" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="thongso_kythuat" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="gianhap" Type="System.Int64" DbType="BigInt" CanBeNull="true" />
+      <Column Name="giabanle" Type="System.Int64" DbType="BigInt" CanBeNull="true" />
+      <Column Name="cohoadon" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
+      <Column Name="hangthanhly" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
+      <Column Name="ghichu" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="ngaytao" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Column Name="nguoitao" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="soluong_hientai" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="sanpham_tuychon" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
+      <Column Name="so_seri" Type="System.String" DbType="VarChar(50)" CanBeNull="true" />
     </Type>
   </Table>
   <Function Name="let99665_thaianaudio.spLoad_ExportPhieuMuonHang" Method="spLoad_ExportPhieuMuonHang">

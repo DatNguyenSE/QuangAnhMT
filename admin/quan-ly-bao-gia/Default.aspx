@@ -24,6 +24,17 @@
             var seri = dd + mm + yy + hh + min + ss;
             document.getElementById('<%= txt_so_seri.ClientID %>').value = seri;
         }
+
+        function autoFillSeri(dropdown) {
+            var selectedOption = dropdown.options[dropdown.selectedIndex];
+            if (selectedOption) {
+                var seri = selectedOption.getAttribute('data-seri');
+                var txtSoSeri = document.getElementById('<%= txt_so_seri.ClientID %>');
+                if (txtSoSeri) {
+                    txtSoSeri.value = (seri != null) ? seri : "";
+                }
+            }
+        }
     </script>
     
     <asp:UpdatePanel ID="up_import" runat="server" UpdateMode="Conditional">
@@ -455,7 +466,7 @@
                                                 <div class="cell-lg-6 pl-2-lg pr-2-lg">
                                                     <div class="mt-2">
                                                         <small class="fg-red fw-600">Sản phẩm</small>
-                                                        <asp:DropDownList ID="DropDownList1" runat="server" data-role="select"></asp:DropDownList>
+                                                        <asp:DropDownList ID="DropDownList1" runat="server" data-role="select" onchange="autoFillSeri(this)"></asp:DropDownList>
                                                     </div>
                                                 </div>
                                                 <div class="cell-lg-3 pl-2-lg pr-2-lg">
@@ -475,9 +486,6 @@
                                                         <small class="fg-red fw-600">Số seri</small>
                                                         <div class="d-flex">
                                                             <asp:TextBox ID="txt_so_seri" runat="server" data-role="input" CssClass="w-100"></asp:TextBox>
-                                                            <button type="button" class="button light ml-1" onclick="generateRandomSerial()" title="Random Seri">
-                                                                <span class="mif-loop2"></span>
-                                                            </button>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -873,7 +881,7 @@
                         <li data-role="hint" data-hint-position="top" data-hint-text="Tạo báo giá">
                             <asp:LinkButton ID="but_show_form_add" OnClick="but_show_form_add_Click" runat="server"><span class="mif-plus"></span></asp:LinkButton>
                         </li>
-                        <li style="display: none;" data-role="hint" data-hint-position="top" data-hint-text="Nhập từ Excel">
+                        <li data-role="hint" data-hint-position="top" data-hint-text="Nhập từ Excel">
                             <asp:LinkButton ID="but_show_form_import" OnClick="but_show_form_import_Click" runat="server"><span class="mif-file-excel fg-green"></span></asp:LinkButton>
                         </li>
                         <%--<li data-role="hint" data-hint-position="top" data-hint-text="Lưu">
@@ -1022,7 +1030,7 @@
                                                             <span class="mif mif-more-horiz"></span>
                                                         </button>
                                                         <ul class="d-menu place-right" data-role="dropdown">
-                                                            <li>
+                                                            <li style="display: none;">
                                                                 <asp:LinkButton ID="but_xem_chitiet_baogia" OnClick="but_xem_chitiet_baogia_Click" CommandArgument='<%# Eval("id") %>' runat="server">Chi tiết</asp:LinkButton>
                                                             </li>
                                                             <li>

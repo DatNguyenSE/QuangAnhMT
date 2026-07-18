@@ -197,15 +197,24 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
 
 
 
-                // Kiểm tra xem textbox có dữ liệu tìm kiếm không
-                string _key = txt_timkiem.Text.Trim();
-                if (!string.IsNullOrEmpty(_key))
-                    list_all = list_all.Where(p => p.TenSP.Contains(_key) || p.Hang.Contains(_key) || p.Nhom.Contains(_key) || p.model == _key || p.id.ToString() == _key || p.so_seri.ToString() == _key);
-                else
+                // Lấy từ khóa từ ô đã phát sinh sự kiện, tránh dùng nhầm giá trị cũ
+                // của ô tìm kiếm desktop/mobile còn lại.
+                string _key = ViewState["search_key"] as string;
+                if (_key == null)
                 {
-                    string _key1 = txt_timkiem1.Text.Trim();
-                    if (!string.IsNullOrEmpty(_key1))
-                        list_all = list_all.Where(p => p.TenSP.Contains(_key1) || p.Hang.Contains(_key1) || p.Nhom.Contains(_key1) || p.model == _key1 || p.id.ToString() == _key1 || p.so_seri.ToString() == _key1);
+                    _key = !string.IsNullOrWhiteSpace(txt_timkiem1.Text)
+                        ? txt_timkiem1.Text.Trim()
+                        : txt_timkiem.Text.Trim();
+                }
+
+                if (!string.IsNullOrEmpty(_key))
+                {
+                    list_all = list_all.Where(p => p.TenSP.Contains(_key) ||
+                                                   p.Hang.Contains(_key) ||
+                                                   p.Nhom.Contains(_key) ||
+                                                   p.model.Contains(_key) ||
+                                                   p.id.ToString() == _key ||
+                                                   p.so_seri.Contains(_key));
                 }
 
                 ////xử lý theo thời gian
@@ -228,13 +237,18 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                 //if (!list_phanloai_baiviet.Contains(""))//nếu tồn tại "": tất cả thì k lọc
                 //    list_all = list_all.Where(tk => list_phanloai_baiviet.Contains(tk.phanloai));
 
-                //sắp xếp
-                list_all = list_all.OrderBy(p => p.Nhom).ThenBy(p => p.TenSP);
-                int _Tong_Record = list_all.Count();
+                var stats = list_all.GroupBy(p => 1).Select(g => new
+                {
+                    Count = g.Count(),
+                    TongBanLe = g.Sum(p => p.TongBanLe ?? 0),
+                    TongGiaNhap = g.Sum(p => p.TongGiaNhap ?? 0),
+                    TongTon = g.Sum(p => p.soluong_hientai ?? 0)
+                }).FirstOrDefault();
 
-                Int64 _tongbanle = _Tong_Record > 0 ? list_all.Sum(p => p.TongBanLe.Value) : 0;
-                Int64 _tonggianhap = _Tong_Record > 0 ? list_all.Sum(p => p.TongGiaNhap.Value) : 0;
-                Int64 _tong_ton = _Tong_Record > 0 ? list_all.Sum(p => p.soluong_hientai.Value) : 0;
+                int _Tong_Record = stats?.Count ?? 0;
+                Int64 _tongbanle = stats?.TongBanLe ?? 0;
+                Int64 _tonggianhap = stats?.TongGiaNhap ?? 0;
+                Int64 _tong_ton = stats?.TongTon ?? 0;
                 ViewState["tong_ton"] = _tong_ton.ToString("#,##0");
                 ViewState["tong_giale"] = _tongbanle.ToString("#,##0");
                 ViewState["tong_gianhap"] = _tonggianhap.ToString("#,##0");
@@ -242,6 +256,8 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                 #endregion
 
                 #region phân trang OK, k sửa
+                // Chỉ sắp xếp ở truy vấn lấy dữ liệu trang hiện tại.
+                list_all = list_all.OrderBy(p => p.Nhom).ThenBy(p => p.TenSP);
                 // Xử lý số record mỗi trang
                 int show = Number_cl.Check_Int(txt_show.Text.Trim()); if (show <= 0) show = 30;
                 //xử lý trang hiện tại. Đảm bảo current_page không nhỏ hơn 1 và không lớn hơn total_page
@@ -269,7 +285,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                     but_quaylai1.Enabled = true;
                 }
                 //PHÂN TRANG****PHÂN TRANG
-                var list_split = list_all.Skip(current_page * show - show).Take(show);
+                var list_split = list_all.Skip(current_page * show - show).Take(show).ToList();
                 //xử lý thanh thông báo phân trang
                 int stt = (show * current_page) - show + 1; int _s1 = stt + list_split.Count() - 1;
                 if (_Tong_Record != 0) lb_show.Text = stt + "-" + _s1 + " trong số " + _Tong_Record.ToString("#,##0"); else lb_show.Text = "0-0/0"; lb_show_md.Text = stt + "-" + _s1 + " trong số " + _Tong_Record.ToString("#,##0");
@@ -360,6 +376,8 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
         {
             check_login_cl.check_login_admin("none", "none");
             ViewState["current_page_qlkho"] = 1;
+            TextBox searchBox = sender as TextBox;
+            ViewState["search_key"] = searchBox == null ? "" : searchBox.Text.Trim();
             show_main();
         }
         catch (Exception _ex)
@@ -570,8 +588,8 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                 txt_link_fileupload.Text = q.anh;
                 txt_model.Text = q.model;
                 txt_thongso.Text = q.thongso_kythuat;
-                txt_gianhap.Text = q.gianhap.Value.ToString("#,##0").Replace(",", ".");
-                txt_giaban.Text = q.giabanle.Value.ToString("#,##0").Replace(",", ".");
+                txt_gianhap.Text = (q.gianhap ?? 0).ToString("#,##0").Replace(",", ".");
+                txt_giaban.Text = (q.giabanle ?? 0).ToString("#,##0").Replace(",", ".");
 
                 if (q.anh != "")
                 {

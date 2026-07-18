@@ -109,7 +109,7 @@
 <body class="m4-cloak ">
     <form id="form1" runat="server">
 
-        <asp:ScriptManager ID="ScriptManager1" runat="server" EnableScriptGlobalization="True"></asp:ScriptManager>
+        <asp:ScriptManager ID="ScriptManager1" runat="server" EnableScriptGlobalization="True" AsyncPostBackTimeout="3600"></asp:ScriptManager>
 
         <asp:HiddenField ID="latitude" runat="server" />
         <asp:HiddenField ID="longitude" runat="server" />

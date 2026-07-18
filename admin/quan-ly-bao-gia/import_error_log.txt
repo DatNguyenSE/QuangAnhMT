@@ -1,0 +1,26 @@
+Lỗi ở dòng Excel 23462: String or binary data would be truncated in table 'bco86512_quanganh_db.let99665_thaianaudio.KhoSanPham_tb', column 'so_seri'. Truncated value: '23339,23340,23341,23349,23350,23254,23255,23284,23'.
+The statement has been terminated.
+Lỗi ở dòng Excel 23528: String or binary data would be truncated in table 'bco86512_quanganh_db.let99665_thaianaudio.KhoSanPham_tb', column 'so_seri'. Truncated value: '25583(25613),25599(25629),25586(25616),25578(29608'.
+The statement has been terminated.
+Lỗi ở dòng Excel 23728: String or binary data would be truncated in table 'bco86512_quanganh_db.let99665_thaianaudio.KhoSanPham_tb', column 'so_seri'. Truncated value: '23339,23340,23341,23349,23350,23254,23255,23284,23'.
+The statement has been terminated.
+Lỗi ở dòng Excel 23734: String or binary data would be truncated in table 'bco86512_quanganh_db.let99665_thaianaudio.KhoSanPham_tb', column 'so_seri'. Truncated value: '25583(25613),25599(25629),25586(25616),25578(29608'.
+The statement has been terminated.
+Lỗi ở dòng Excel 23768: String or binary data would be truncated in table 'bco86512_quanganh_db.let99665_thaianaudio.KhoSanPham_tb', column 'so_seri'. Truncated value: '25583(25613),25599(25629),25586(25616),25578(29608'.
+The statement has been terminated.
+Lỗi ở dòng Excel 23777: String or binary data would be truncated in table 'bco86512_quanganh_db.let99665_thaianaudio.KhoSanPham_tb', column 'so_seri'. Truncated value: '23339,23340,23341,23349,23350,23254,23255,23284,23'.
+The statement has been terminated.
+Lỗi ở dòng Excel 23943: String or binary data would be truncated in table 'bco86512_quanganh_db.let99665_thaianaudio.KhoSanPham_tb', column 'so_seri'. Truncated value: '52525927 - 52525928 
+52525947 - 52525948  52525949'.
+The statement has been terminated.
+Lỗi ở dòng Excel 23944: String or binary data would be truncated in table 'bco86512_quanganh_db.let99665_thaianaudio.KhoSanPham_tb', column 'so_seri'. Truncated value: '52525936 - 52525937
+ 52525940 - 52525941 52525942 '.
+The statement has been terminated.
+Lỗi ở dòng Excel 23962: String or binary data would be truncated in table 'bco86512_quanganh_db.let99665_thaianaudio.KhoSanPham_tb', column 'so_seri'. Truncated value: '25583(25613),25599(25629),25586(25616),25578(29608'.
+The statement has been terminated.
+Lỗi ở dòng Excel 23978: String or binary data would be truncated in table 'bco86512_quanganh_db.let99665_thaianaudio.KhoSanPham_tb', column 'so_seri'. Truncated value: '23339,23340,23341,23349,23350,23254,23255,23284,23'.
+The statement has been terminated.
+Lỗi ở dòng Excel 24268: String or binary data would be truncated in table 'bco86512_quanganh_db.let99665_thaianaudio.KhoSanPham_tb', column 'so_seri'. Truncated value: '23339,23340,23341,23349,23350,23254,23255,23284,23'.
+The statement has been terminated.
+Lỗi ở dòng Excel 24340: String or binary data would be truncated in table 'bco86512_quanganh_db.let99665_thaianaudio.KhoSanPham_tb', column 'so_seri'. Truncated value: '25583(25613),25599(25629),25586(25616),25578(29608'.
+The statement has been terminated.
