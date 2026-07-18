@@ -161,7 +161,33 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                 #endregion
 
                 #region lấy dữ liệu
-                var list_all = (from ob1 in db.KhoSanPham_tbs
+                string _key = ViewState["search_key"] as string;
+                if (_key == null)
+                {
+                    _key = !string.IsNullOrWhiteSpace(txt_timkiem1.Text)
+                        ? txt_timkiem1.Text.Trim()
+                        : txt_timkiem.Text.Trim();
+                }
+
+                var products = db.KhoSanPham_tbs.AsQueryable();
+                if (!string.IsNullOrEmpty(_key))
+                {
+                    long searchId;
+                    bool hasSearchId = long.TryParse(_key, out searchId);
+                    var categoryIds = db.DuLieuNguon_tbs
+                        .Where(p => (p.kyhieu == "hangsanpham" || p.kyhieu == "nhomsanpham") && p.ten.Contains(_key))
+                        .Select(p => p.id.ToString());
+
+                    products = products.Where(p =>
+                        p.ten.Contains(_key) ||
+                        p.model.Contains(_key) ||
+                        p.so_seri.Contains(_key) ||
+                        (hasSearchId && p.id == searchId) ||
+                        categoryIds.Contains(p.id_hang) ||
+                        categoryIds.Contains(p.id_nhom));
+                }
+
+                var list_all = (from ob1 in products
                                 join ob2 in db.DuLieuNguon_tbs
                                     .Where(p => p.kyhieu == "hangsanpham") on ob1.id_hang equals ob2.id.ToString() into HangGroup
                                 from ob2 in HangGroup.DefaultIfEmpty()
@@ -192,30 +218,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                                     ob1.ghichu,
                                     ob1.ngaytao,
                                     ob1.nguoitao,
-                                }).AsQueryable();
-
-
-
-
-                // Lấy từ khóa từ ô đã phát sinh sự kiện, tránh dùng nhầm giá trị cũ
-                // của ô tìm kiếm desktop/mobile còn lại.
-                string _key = ViewState["search_key"] as string;
-                if (_key == null)
-                {
-                    _key = !string.IsNullOrWhiteSpace(txt_timkiem1.Text)
-                        ? txt_timkiem1.Text.Trim()
-                        : txt_timkiem.Text.Trim();
-                }
-
-                if (!string.IsNullOrEmpty(_key))
-                {
-                    list_all = list_all.Where(p => p.TenSP.Contains(_key) ||
-                                                   p.Hang.Contains(_key) ||
-                                                   p.Nhom.Contains(_key) ||
-                                                   p.model.Contains(_key) ||
-                                                   p.id.ToString() == _key ||
-                                                   p.so_seri.Contains(_key));
-                }
+                                 }).AsQueryable();
 
                 ////xử lý theo thời gian
                 //string _id_locthoigian = ddl_thoigian.SelectedValue;
@@ -237,11 +240,11 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                 //if (!list_phanloai_baiviet.Contains(""))//nếu tồn tại "": tất cả thì k lọc
                 //    list_all = list_all.Where(tk => list_phanloai_baiviet.Contains(tk.phanloai));
 
-                var stats = list_all.GroupBy(p => 1).Select(g => new
+                var stats = products.GroupBy(p => 1).Select(g => new
                 {
                     Count = g.Count(),
-                    TongBanLe = g.Sum(p => p.TongBanLe ?? 0),
-                    TongGiaNhap = g.Sum(p => p.TongGiaNhap ?? 0),
+                    TongBanLe = g.Sum(p => (p.giabanle ?? 0) * (p.soluong_hientai ?? 0)),
+                    TongGiaNhap = g.Sum(p => (p.gianhap ?? 0) * (p.soluong_hientai ?? 0)),
                     TongTon = g.Sum(p => p.soluong_hientai ?? 0)
                 }).FirstOrDefault();
 
