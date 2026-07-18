@@ -134,19 +134,6 @@
       <Column Name="kyhieu_nguon" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
     </Type>
   </Table>
-  <Table Name="let99665_thaianaudio.BaoGia_ChiTiet_tb" Member="BaoGia_ChiTiet_tbs">
-    <Type Name="BaoGia_ChiTiet_tb">
-      <Column Name="id" Type="System.Int64" DbType="BigInt NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
-      <Column Name="id_baogia" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
-      <Column Name="id_sanpham" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
-      <Column Name="soluong" Type="System.Int32" DbType="Int" CanBeNull="true" />
-      <Column Name="giaban_taithoidiemnay" Type="System.Int64" DbType="BigInt" CanBeNull="true" />
-      <Column Name="thanhtien" Type="System.Int64" DbType="BigInt" CanBeNull="true" />
-      <Column Name="giamgia_phantram" Type="System.Decimal" DbType="Decimal(5,1)" CanBeNull="true" />
-      <Column Name="giamgia_thanhtien" Type="System.Int64" DbType="BigInt" CanBeNull="true" />
-      <Column Name="TongSauGiam" Type="System.Int64" DbType="BigInt" CanBeNull="true" />
-    </Type>
-  </Table>
   <Table Name="let99665_thaianaudio.CheckAll_tb" Member="CheckAll_tbs">
     <Type Name="CheckAll_tb">
       <Column Name="id" Type="System.Int64" DbType="BigInt NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
@@ -401,11 +388,24 @@
       <Column Name="thuongdoanhso" Type="System.Int64" DbType="BigInt" CanBeNull="true" />
       <Column Name="phantram_doanhso_now" Type="System.Int32" DbType="Int" CanBeNull="true" />
       <Column Name="pt_giamgiadacbiet" Type="System.Int64" DbType="BigInt" CanBeNull="true" />
+      <Column Name="ThoiHan_BaoGia" Type="System.String" DbType="NVarChar(255)" CanBeNull="true" />
+      <Column Name="Id_KhachHnag" Type="System.String" DbType="NVarChar(255)" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="let99665_thaianaudio.BaoGia_ChiTiet_tb" Member="BaoGia_ChiTiet_tbs">
+    <Type Name="BaoGia_ChiTiet_tb">
+      <Column Name="id" Type="System.Int64" DbType="BigInt NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="id_baogia" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="id_sanpham" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="soluong" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="giaban_taithoidiemnay" Type="System.Int64" DbType="BigInt" CanBeNull="true" />
+      <Column Name="thanhtien" Type="System.Int64" DbType="BigInt" CanBeNull="true" />
+      <Column Name="giamgia_phantram" Type="System.Decimal" DbType="Decimal(5,1)" CanBeNull="true" />
+      <Column Name="giamgia_thanhtien" Type="System.Int64" DbType="BigInt" CanBeNull="true" />
+      <Column Name="TongSauGiam" Type="System.Int64" DbType="BigInt" CanBeNull="true" />
       <Column Name="Mota" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
       <Column Name="So_Seri" Type="System.String" DbType="NVarChar(255)" CanBeNull="true" />
-      <Column Name="ThoiHan_BaoGia" Type="System.String" DbType="NVarChar(255)" CanBeNull="true" />
       <Column Name="Thang_BaoHanh" Type="System.String" DbType="NVarChar(255)" CanBeNull="true" />
-      <Column Name="Id_KhachHnag" Type="System.String" DbType="NVarChar(255)" CanBeNull="true" />
       <Column Name="Seri_Do_L1" Type="System.String" DbType="NVarChar(255)" CanBeNull="true" />
       <Column Name="Id_khacHang_do_L1" Type="System.String" DbType="NVarChar(255)" CanBeNull="true" />
       <Column Name="NgayDo_L1" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />

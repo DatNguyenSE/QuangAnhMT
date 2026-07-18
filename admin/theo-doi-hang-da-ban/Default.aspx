@@ -41,7 +41,7 @@
             <!-- Detail Modal Popup -->
             <asp:Panel ID="pn_detail" runat="server" Visible="false">
                 <div style="position: fixed; width: 100%; height: 52px; background-color: none; top: 0; left: 0; z-index: 1041!important;">
-                    <div style='top: 0; left: 0px; margin: 0 auto; max-width: 1000px; opacity: 1;'>
+                    <div style='top: 0; left: 0px; margin: 0 auto; max-width: 1150px; opacity: 1;'>
                         <div style='position: absolute; right: 18px; top: 14px; z-index: 1040!important'>
                             <a href='#' class='fg-white d-inline' runat="server" id="close_detail" onserverclick="but_close_detail_Click" title='Đóng'>
                                 <span class='mif mif-cross mif-2x fg-red fg-lightRed-hover'></span>
@@ -56,7 +56,7 @@
                     </div>
                 </div>
                 <div style="position: fixed; width: 100%; height: 100%; top: 0; left: 0; overflow: auto; z-index: 1040!important; background-image: url('/uploads/images/bg1.png');">
-                    <div style='top: 0; left: 0; margin: 0 auto; max-width: 1006px; opacity: 1;'>
+                    <div style='top: 0; left: 0; margin: 0 auto; max-width: 1156px; opacity: 1;'>
                         <div class="bg-white border bd-transparent pl-4 pl-8-md pr-8-md pr-4" style="padding-top: 52px">
                             <div class="row">
                                 <!-- Left side: Product & Salesperson Info -->
@@ -77,13 +77,45 @@
                                             <small class="modal-label">Model</small>
                                             <div class="modal-value"><asp:Label ID="lbl_detail_model" runat="server"></asp:Label></div>
                                         </div>
-                                        <div class="mt-2">
-                                            <small class="modal-label">Số Seri (Serial)</small>
-                                            <div class="modal-value"><asp:Label ID="lbl_detail_seri" runat="server"></asp:Label></div>
-                                        </div>
-                                        <div class="mt-2">
-                                            <small class="modal-label">Thông số kỹ thuật</small>
-                                            <div class="modal-value text-muted" style="font-size: 12px; border-bottom: none;"><asp:Label ID="lbl_detail_thongso" runat="server"></asp:Label></div>
+                                         <div class="mt-2">
+                                             <small class="modal-label">Số Seri (Serial)</small>
+                                             <div class="modal-value"><asp:Label ID="lbl_detail_seri" runat="server"></asp:Label></div>
+                                         </div>
+                                         <div class="mt-2">
+                                             <small class="modal-label">Bảo hành (tháng)</small>
+                                             <div class="modal-value"><asp:Label ID="lbl_detail_thangbaohanh" runat="server"></asp:Label></div>
+                                         </div>
+                                         <div class="mt-2">
+                                             <small class="modal-label">Seri đo L1</small>
+                                             <div class="modal-value"><asp:Label ID="lbl_detail_seri_do_l1" runat="server"></asp:Label></div>
+                                         </div>
+                                         <div class="mt-2">
+                                             <small class="modal-label">ID khách hàng đo L1</small>
+                                             <div class="modal-value"><asp:Label ID="lbl_detail_id_khachhang_do_l1" runat="server"></asp:Label></div>
+                                         </div>
+                                         <div class="mt-2">
+                                             <small class="modal-label">Ngày đo L1</small>
+                                             <div class="modal-value"><asp:Label ID="lbl_detail_ngaydo_l1" runat="server"></asp:Label></div>
+                                         </div>
+                                         <div class="mt-2">
+                                             <small class="modal-label">Seri đo L2</small>
+                                             <div class="modal-value"><asp:Label ID="lbl_detail_seri_do_l2" runat="server"></asp:Label></div>
+                                         </div>
+                                         <div class="mt-2">
+                                             <small class="modal-label">ID khách hàng đo L2</small>
+                                             <div class="modal-value"><asp:Label ID="lbl_detail_id_khachhang_do_l2" runat="server"></asp:Label></div>
+                                         </div>
+                                         <div class="mt-2">
+                                             <small class="modal-label">Ngày đo L2</small>
+                                             <div class="modal-value"><asp:Label ID="lbl_detail_ngaydo_l2" runat="server"></asp:Label></div>
+                                         </div>
+                                         <div class="mt-2">
+                                             <small class="modal-label">Mô tả</small>
+                                             <div class="modal-value text-muted" style="font-size: 12px;"><asp:Label ID="lbl_detail_mota" runat="server"></asp:Label></div>
+                                         </div>
+                                         <div class="mt-2">
+                                             <small class="modal-label">Thông số kỹ thuật</small>
+                                             <div class="modal-value text-muted" style="font-size: 12px; border-bottom: none;"><asp:Label ID="lbl_detail_thongso" runat="server"></asp:Label></div>
                                         </div>
                                     </div>
 
@@ -208,7 +240,7 @@
                                             </table>
                                             
                                             <div class="text-bold fg-dark mb-1 mt-3" style="font-size: 12px; border-top: 1px dashed #ccc; padding-top: 10px;">
-                                                <span class="mif-list mr-1"></span> Các sản phẩm trong đơn hàng này:
+                                                 <span class="mif-list mr-1"></span> Các sản phẩm trong báo giá:
                                             </div>
                                             <table class="table table-border cell-border compact mb-0" style="font-size: 12px; width: 100%;">
                                                 <thead>
@@ -285,17 +317,16 @@
                                 <table class="bcorn-fix-title-table">
                                     <thead>
                                         <tr>
-                                            <th style="width: 60px;">STT</th>
+                                            <th style="width: 120px;">Ngày bán</th>
                                             <th style="width: 80px;">Ảnh</th>
                                             <th>Sản phẩm</th>
-                                            <th style="width: 120px;">Model</th>
+
                                             <th style="width: 120px;">Số Seri</th>
                                             <th style="width: 90px; text-align: center;">SL Bán</th>
                                             <th style="width: 120px;">Giá bán</th>
                                             <th style="width: 120px;">Tổng tiền cuối</th>
-                                            <th style="width: 120px;">Ngày bán</th>
                                             <th style="width: 150px;">Khách hàng</th>
-                                            <th style="width: 120px;">Người bán</th>
+                                            <th style="width: 120px;">Bảo hành / tháng</th>
                                             <th style="width: 100px; text-align: center;">Hành động</th>
                                         </tr>
                                     </thead>
@@ -303,26 +334,23 @@
                                         <asp:Repeater ID="Repeater1" runat="server" OnItemDataBound="Repeater1_ItemDataBound">
                                             <ItemTemplate>
                                                 <tr>
+                                                    <td><%# Eval("ngayban", "{0:dd/MM/yyyy}") %></td>
                                                     <td class="text-center">
-                                                        <%# Container.ItemIndex + 1 + (int.Parse(ViewState["current_page"].ToString()) - 1) * int.Parse(txt_show.Text) %>
-                                                    </td>
-                                                    <td class="text-center">
-                                                        <img src='<%# string.IsNullOrEmpty(Eval("productImage").ToString()) ? "/uploads/images/no-image.png" : Eval("productImage") %>' class="product-img" />
+                                                        <img src='<%# string.IsNullOrEmpty(Convert.ToString(Eval("productImage"))) ? "/uploads/images/no-image.png" : Eval("productImage") %>' class="product-img" />
                                                     </td>
                                                     <td>
                                                         <div class="fw-600"><%# Eval("productName") %></div>
                                                     </td>
-                                                    <td><%# Eval("productModel") %></td>
+
                                                     <td><%# Eval("productSerial") %></td>
                                                     <td class="text-center font-bold"><%# Eval("quantity") %></td>
                                                     <td><%# Convert.ToInt64(Eval("price")).ToString("#,##0") %></td>
                                                     <td class="font-bold fg-red"><%# Convert.ToInt64(Eval("totalPrice")).ToString("#,##0") %></td>
-                                                    <td><%# Eval("ngayban", "{0:dd/MM/yyyy}") %></td>
-                                                    <td>
+                                                     <td>
                                                         <div class="fw-600"><%# Eval("tenKhachHang") %></div>
                                                         <small class="text-muted"><%# Eval("sdtKhachHang") %></small>
                                                     </td>
-                                                    <td><%# Eval("nguoiBan") %></td>
+                                                    <td><%# Eval("thangBaoHanh") %></td>
                                                     <td class="text-center">
                                                         <asp:LinkButton ID="btn_view" runat="server" CssClass="button mini primary rounded" CommandArgument='<%# Eval("baogiaId") + "|" + Eval("productId") %>' OnClick="btn_view_Click">
                                                             Xem chi tiết
@@ -332,7 +360,7 @@
                                             </ItemTemplate>
                                         </asp:Repeater>
                                         <tr ID="tr_empty" runat="server" visible="false">
-                                            <td colspan="12" class="text-center p-4 fg-gray">
+                                            <td colspan="10" class="text-center p-4 fg-gray">
                                                 Không tìm thấy sản phẩm đã bán nào.
                                             </td>
                                         </tr>

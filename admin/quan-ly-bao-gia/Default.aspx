@@ -11,6 +11,21 @@
         </div>
     </div>
     
+    <script type="text/javascript">
+        function generateRandomSerial() {
+            var now = new Date();
+            var yy = now.getFullYear().toString().substring(2);
+            var mm = (now.getMonth() + 1).toString().padStart(2, '0');
+            var dd = now.getDate().toString().padStart(2, '0');
+            var hh = now.getHours().toString().padStart(2, '0');
+            var min = now.getMinutes().toString().padStart(2, '0');
+            var ss = now.getSeconds().toString().padStart(2, '0');
+            
+            var seri = dd + mm + yy + hh + min + ss;
+            document.getElementById('<%= txt_so_seri.ClientID %>').value = seri;
+        }
+    </script>
+    
     <asp:UpdatePanel ID="up_import" runat="server" UpdateMode="Conditional">
         <Triggers>
             <asp:PostBackTrigger ControlID="but_import_excel" />
@@ -210,6 +225,126 @@
         </ProgressTemplate>
     </asp:UpdateProgress>
 
+    <asp:UpdatePanel ID="up_xem_chitiet" runat="server" UpdateMode="Conditional">
+        <ContentTemplate>
+            <asp:Panel ID="pn_xem_chitiet" runat="server" Visible="false">
+                <div style="position: fixed; width: 100%; height: 52px; background-color: none; top: 0; left: 0; z-index: 1041!important;">
+                    <div style='top: 0; left: 0px; margin: 0 auto; max-width: 1200px; opacity: 1;'>
+                        <div style='position: absolute; right: 18px; top: 14px; z-index: 1040!important'>
+                            <a href='#' class='fg-white d-inline' id="close_xem_chitiet" runat="server" onserverclick="but_close_xem_chitiet_Click" title='Đóng'>
+                                <span class='mif mif-cross mif-2x fg-red fg-lightRed-hover'></span>
+                            </a>
+                        </div>
+                        <div class="bg-white pl-4 pl-8-md pr-8-md pr-4" style="height: 52px;">
+                            <div class="pt-4 text-upper text-bold">
+                                CHI TIẾT BÁO GIÁ
+                            </div>
+                            <hr />
+                        </div>
+                    </div>
+                </div>
+                <div style="position: fixed; width: 100%; height: 100%; top: 0; left: 0; overflow: auto; z-index: 1040!important; background-image: url('/uploads/images/bg1.png');">
+                    <div style='top: 0; left: 0; margin: 0 auto; max-width: 1206px; opacity: 1;'>
+                        <div class="bg-white border bd-transparent pl-4 pl-8-md pr-8-md pr-4" style="padding-top: 52px; min-height: 100vh;">
+                            <div class="row">
+                                <div class="cell-lg-6">
+                                    <div class="mt-3">
+                                        <b>Khách hàng:</b> <asp:Label ID="lbl_xc_khachhang" runat="server" CssClass="fg-blue fw-600"></asp:Label>
+                                    </div>
+                                    <div class="mt-1">
+                                        <b>SĐT:</b> <asp:Label ID="lbl_xc_sdt" runat="server"></asp:Label>
+                                    </div>
+                                    <div class="mt-1">
+                                        <b>Địa chỉ:</b> <asp:Label ID="lbl_xc_diachi" runat="server"></asp:Label>
+                                    </div>
+                                </div>
+                                <div class="cell-lg-6">
+                                    <div class="mt-3">
+                                        <b>Ngày báo giá:</b> <asp:Label ID="lbl_xc_ngaybaogia" runat="server"></asp:Label>
+                                    </div>
+                                    <div class="mt-1">
+                                        <b>Ngày hết hạn:</b> <asp:Label ID="lbl_xc_ngayhethan" runat="server"></asp:Label>
+                                    </div>
+                                    <div class="mt-1">
+                                        <b>Trạng thái:</b> <asp:Label ID="lbl_xc_trangthai" runat="server" CssClass="fw-600"></asp:Label>
+                                    </div>
+                                </div>
+                                
+                                <div class="cell-lg-12">
+                                    <hr />
+                                    <div class="fw-600 fg-red mb-2">DANH SÁCH SẢN PHẨM</div>
+                                    <div style="overflow: auto">
+                                        <table class="bcorn-fix-title-table">
+                                            <thead>
+                                                <tr>
+                                                    <th class="text-left" style="min-width: 250px;">Sản phẩm</th>
+                                                    <th class="text-center" style="width: 80px;">SL</th>
+                                                    <th class="text-right" style="min-width: 100px;">Đơn giá</th>
+                                                    <th class="text-right" style="min-width: 100px;">Giảm giá</th>
+                                                    <th class="text-right" style="min-width: 120px;">Thành tiền</th>
+                                                    <th class="text-left" style="min-width: 120px;">Số seri</th>
+                                                    <th class="text-left" style="min-width: 100px;">Bảo hành</th>
+                                                    <th class="text-left" style="min-width: 150px;">Diễn giải</th>
+                                                    <th class="text-left" style="min-width: 120px;">Seri Đổ L1</th>
+                                                    <th class="text-left" style="min-width: 120px;">KH Đổ L1</th>
+                                                    <th class="text-left" style="min-width: 120px;">Ngày Đổ L1</th>
+                                                    <th class="text-left" style="min-width: 120px;">Seri Đổ L2</th>
+                                                    <th class="text-left" style="min-width: 120px;">KH Đổ L2</th>
+                                                    <th class="text-left" style="min-width: 120px;">Ngày Đổ L2</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <asp:Repeater ID="Repeater_ChiTietBaoGia" runat="server">
+                                                    <ItemTemplate>
+                                                        <tr>
+                                                            <td class="text-left"><%# Eval("TenSanPham") %></td>
+                                                            <td class="text-center"><%# Eval("soluong") %></td>
+                                                            <td class="text-right"><%# Eval("giaban_taithoidiemnay", "{0:#,##0}") %></td>
+                                                            <td class="text-right"><%# Eval("GiamGiaHienThi") %></td>
+                                                            <td class="text-right fw-600 fg-red"><%# Eval("TongSauGiam", "{0:#,##0}") %></td>
+                                                            <td class="text-left"><%# Eval("So_Seri") %></td>
+                                                            <td class="text-left"><%# Eval("Thang_BaoHanh") %></td>
+                                                            <td class="text-left"><%# Eval("Mota") %></td>
+                                                            <td class="text-left"><%# Eval("Seri_Do_L1") %></td>
+                                                            <td class="text-left"><%# Eval("Id_khacHang_do_L1") %></td>
+                                                            <td class="text-left"><%# Eval("NgayDo_L1", "{0:dd/MM/yyyy}") %></td>
+                                                            <td class="text-left"><%# Eval("Seri_Do_L2") %></td>
+                                                            <td class="text-left"><%# Eval("Id_khacHang_do_L2") %></td>
+                                                            <td class="text-left"><%# Eval("NgayDo_L2", "{0:dd/MM/yyyy}") %></td>
+                                                        </tr>
+                                                    </ItemTemplate>
+                                                </asp:Repeater>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                
+                                <div class="cell-lg-12">
+                                    <hr />
+                                    <div class="row mb-5">
+                                        <div class="cell-lg-8"></div>
+                                        <div class="cell-lg-4 text-right">
+                                            <div class="mb-1">
+                                                <b>Tổng tiền:</b> <asp:Label ID="lbl_xc_tongtien" runat="server"></asp:Label>
+                                            </div>
+                                            <div class="mb-1">
+                                                <b>Giảm giá khách hàng:</b> <asp:Label ID="lbl_xc_tonggiam" runat="server" CssClass="fg-orange"></asp:Label>
+                                            </div>
+                                            <div class="mb-1 text-bold" style="font-size: 1.2rem;">
+                                                <b>Tổng sau giảm:</b> <asp:Label ID="lbl_xc_tongsaugiam" runat="server" CssClass="fg-red"></asp:Label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-20"></div>
+                        </div>
+                    </div>
+                </div>
+            </asp:Panel>
+        </ContentTemplate>
+    </asp:UpdatePanel>
+
     <asp:UpdatePanel ID="up_add" runat="server" UpdateMode="Conditional">
         <ContentTemplate>
             <asp:Panel ID="pn_add" runat="server" Visible="false" DefaultButton="but_add_edit">
@@ -333,6 +468,29 @@
                                                     <div class="mt-2">
                                                         <small class="fg-red fw-600">Giảm giá (%)</small>
                                                         <asp:TextBox ID="txt_giamgia_phantram" Text="0" onfocus="AutoSelect(this)" MaxLength="4" runat="server" data-role="input"></asp:TextBox>
+                                                    </div>
+                                                </div>
+                                                <div class="cell-lg-4 pl-2-lg pr-2-lg">
+                                                    <div class="mt-2">
+                                                        <small class="fg-red fw-600">Số seri</small>
+                                                        <div class="d-flex">
+                                                            <asp:TextBox ID="txt_so_seri" runat="server" data-role="input" CssClass="w-100"></asp:TextBox>
+                                                            <button type="button" class="button light ml-1" onclick="generateRandomSerial()" title="Random Seri">
+                                                                <span class="mif-loop2"></span>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="cell-lg-3 pl-2-lg pr-2-lg">
+                                                    <div class="mt-2">
+                                                        <small class="fg-red fw-600">Bảo hành / tháng</small>
+                                                        <asp:TextBox ID="txt_baohanh_thang" runat="server" data-role="input"></asp:TextBox>
+                                                    </div>
+                                                </div>
+                                                <div class="cell-lg-5 pl-2-lg pr-2-lg">
+                                                    <div class="mt-2">
+                                                        <small class="fg-red fw-600">Diễn giải</small>
+                                                        <asp:TextBox ID="txt_diengiai" runat="server" data-role="input"></asp:TextBox>
                                                     </div>
                                                 </div>
                                                 <div class="cell-lg-12 text-right pr-2-lg mt-3 mb-3">
@@ -715,7 +873,7 @@
                         <li data-role="hint" data-hint-position="top" data-hint-text="Tạo báo giá">
                             <asp:LinkButton ID="but_show_form_add" OnClick="but_show_form_add_Click" runat="server"><span class="mif-plus"></span></asp:LinkButton>
                         </li>
-                        <li data-role="hint" data-hint-position="top" data-hint-text="Nhập từ Excel" style="display:none;">
+                        <li style="display: none;" data-role="hint" data-hint-position="top" data-hint-text="Nhập từ Excel">
                             <asp:LinkButton ID="but_show_form_import" OnClick="but_show_form_import_Click" runat="server"><span class="mif-file-excel fg-green"></span></asp:LinkButton>
                         </li>
                         <%--<li data-role="hint" data-hint-position="top" data-hint-text="Lưu">
@@ -729,7 +887,7 @@
                         <li data-role="hint" data-hint-position="top" data-hint-text="Lọc">
                             <asp:LinkButton ID="but_show_form_loc" runat="server" OnClick="but_show_form_loc_Click"><span class="mif-filter"></span></asp:LinkButton>
                         </li>
-                        <li data-role="hint" data-hint-position="top" data-hint-text="Xuất excel" style="display:none;">
+                        <li data-role="hint" data-hint-position="top" data-hint-text="Xuất excel">
                             <asp:LinkButton ID="but_show_form_xuat" runat="server" OnClick="but_show_form_xuat_Click"><span class="mif-file-excel"></span></asp:LinkButton>
                         </li>
 
@@ -779,17 +937,14 @@
                             <table class="bcorn-fix-title-table">
                                 <thead>
                                     <tr class="">
-                                        <th style="width: 1px;">ID</th>
+                                        <th style="width: 80px; min-width: 80px;">Ngày báo giá</th>
                                         <th style="width: 1px;">
                                             <%--data-role="checkbox" data-style="2"--%>
                                             <input data-role="hint" data-hint-position="top" data-hint-text="Chọn/Bỏ chọn" type="checkbox" onkeypress="if (event.keyCode==13) return false;" onclick="$('.checkbox-table input[type=checkbox]').prop('checked', this.checked)">
                                         </th>
-                                        <th style="width: 120px; min-width: 120px;">Số seri</th>
-                                        <th style="width: 80px; min-width: 80px;">Ngày báo giá</th>
                                         <th style="width: 150px; min-width: 150px;">Khách hàng</th>
-                                        <th style="width: 150px; min-width: 150px;">Tên mặt hàng</th>
                                         <th style="width: 150px; min-width: 150px;">Bảo Hành</th>
-                                        <th style="width: 1px; min-width: 1px;">Hạn BG</th>
+                                        <th style="width: 80px; min-width: 80px;">Đã bán</th>
                                         <th style="width: 1px; min-width: 1px;">Tổng tiền</th>
                                         <th style="width: 1px; min-width: 1px;">Tổng giảm</th>
                                         <th style="width: 1px; min-width: 1px;">Tổng sau giảm</th>
@@ -806,43 +961,36 @@
                                                 <asp:Label ID="lbID" runat="server" Text='<%#Eval("id") %>'></asp:Label>
                                             </span>
                                             <tr>
-                                                <td class="text-center">
-                                                    <asp:LinkButton CssClass="fg-white" OnClick="but_show_chinhsua_Click" data-role="hint" data-hint-position="top" data-hint-text="Chi tiết" ID="but_name_1" CommandArgument='<%# Eval("id") %>' runat="server">
-                                                        <%#Eval("id") %>
-                                                    </asp:LinkButton>
+                                                <td class="text-left">
+                                                    <%#Eval("ngaybaogia","{0:dd/MM/yyyy}") %>
                                                 </td>
+
                                                 <td class="checkbox-table">
                                                     <asp:CheckBox ID="checkID" runat="server" onkeypress="if (event.keyCode==13) return false;" />
                                                 </td>
 
+
+
                                                 <td class="text-left">
-                                                    <div class="fw-600 fg-dark"><%#Eval("So_Seri") %></div>
-                                                </td>
-                                                <td class="text-left">
-                                                    <%#Eval("ngaybaogia","{0:dd/MM/yyyy}") %>
-                                                </td>
-                                                <td class="text-left"><%#Eval("ten_khachhang") %>
+                                                    <asp:LinkButton CssClass="fg-black fw-600" OnClick="but_show_chinhsua_Click" data-role="hint" data-hint-position="top" data-hint-text="Chi tiết báo giá" ID="but_name_1" CommandArgument='<%# Eval("id") %>' runat="server">
+                                                        <%#Eval("ten_khachhang") %>
+                                                    </asp:LinkButton>
                                                     <asp:PlaceHolder runat="server" Visible='<%# !string.IsNullOrEmpty(Eval("sdt_khachhang") as string) %>'>
                                                         <div><a class="fw-600" title="Nhấn để gọi" href="tel:<%#Eval("sdt_khachhang") %>"><span class="mif-phone pr-1"></span><%#Eval("sdt_khachhang") %></a></div>
                                                     </asp:PlaceHolder>
                                                 </td>
 
                                                 <td class="text-left">
-                                                    <%#Eval("tenMatHang") %></td>
-                                                <td class="text-left">
-                                                    <div class="mb-2"><small>Bảo hành/ tháng: <strong><%#Eval("Thang_BaoHanh") %></strong></small></div>
-                                                    <div><small>Ngày hết hạn: <strong><%#Eval("ThoiHan_BaoGia") %></strong></small></div>
-                                                </td>
-                                                <td><%#Eval("ngayhethan","{0:dd/MM/yyyy}") %>
-
-                                                    <asp:PlaceHolder ID="PlaceHolder3" runat="server" Visible='<%#Eval("trangthai").ToString()=="Còn hiệu lực" %>'>
-                                                        <div class="button mini rounded info">Còn hiệu lực</div>
-                                                    </asp:PlaceHolder>
-                                                    <asp:PlaceHolder ID="PlaceHolder4" runat="server" Visible='<%#Eval("trangthai").ToString()=="Hết hiệu lực" %>'>
-                                                        <div class="button mini rounded alert">Hết hiệu lực</div>
-                                                    </asp:PlaceHolder>
+                                                    <div><small>Ngày hết hạn: <strong><%# string.IsNullOrEmpty(Convert.ToString(Eval("ThoiHan_BaoGia"))) ? "chưa rõ" : Eval("ThoiHan_BaoGia") %></strong></small></div>
                                                 </td>
                                                 
+                                                <td class="text-center">
+                                                    <asp:PlaceHolder ID="PlaceHolder_DaBan" runat="server" Visible='<%# Eval("ngayban_kyhopdong") != null && Eval("ngayban_kyhopdong").ToString() != "" %>'>
+                                                        <span class="mif-checkmark fg-green text-bold"></span>
+                                                        <br />
+                                                        <small><%#Eval("ngayban_kyhopdong","{0:dd/MM/yyyy}") %></small>
+                                                    </asp:PlaceHolder>
+                                                </td>
 
                                                 <td class="text-right"><%#Eval("TongTien","{0:#,##0}") %>
 
@@ -874,14 +1022,19 @@
                                                             <span class="mif mif-more-horiz"></span>
                                                         </button>
                                                         <ul class="d-menu place-right" data-role="dropdown">
-
+                                                            <li>
+                                                                <asp:LinkButton ID="but_xem_chitiet_baogia" OnClick="but_xem_chitiet_baogia_Click" CommandArgument='<%# Eval("id") %>' runat="server">Chi tiết</asp:LinkButton>
+                                                            </li>
+                                                            <li>
+                                                                <asp:LinkButton ID="but_show_chinhsua_dropdown" OnClick="but_show_chinhsua_Click" CommandArgument='<%# Eval("id") %>' runat="server">Chỉnh sửa</asp:LinkButton>
+                                                            </li>
                                                             <li>
                                                                 <asp:LinkButton ID="but_show_form_daban" OnClick="but_show_form_daban_Click" CommandArgument='<%# Eval("id") + "|" + Eval("TongSauThue","{0:#,##0}") %>' runat="server">Xác nhận đã bán</asp:LinkButton></li>
                                                             <li>
                                                                 <a class="btn-copy" onclick="copyToClipboard('https://thaianaudio.vn/bao-gia.aspx?id=<%# Eval("id_guide") %>')">Copy Link
                                                                 </a>
                                                             </li>
-                                                            <li>
+                                                            <li style="display: none;">
          
                                                                 <a href='<%# "/admin/quan-ly-bao-gia/Export.aspx?id=" + Eval("id") %>' target="_blank">Xuất Excel</a>
 
