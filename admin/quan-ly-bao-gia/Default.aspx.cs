@@ -2806,6 +2806,8 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
         }
     }
 
+
+
     void XuatExcelbyID(string id_BG)
     {
         //LinkButton button = (LinkButton)sender;
@@ -3187,17 +3189,10 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                                 string idSanPham = null;
                                 if (!string.IsNullOrEmpty(strModel) || !string.IsNullOrEmpty(strTenMatHang))
                                 {
-                                    string keySP = strModel.ToUpper() + "|" + strTenMatHang.ToUpper();
+                                    string keySP = strModel.ToUpper() + "|" + strTenMatHang.ToUpper() + "|" + strSeri.ToUpper();
                                     if (dictSanPham.ContainsKey(keySP))
                                     {
-                                        var existingSP = dictSanPham[keySP];
-                                        // Cập nhật lại seri nếu có thay đổi
-                                        if (!string.IsNullOrEmpty(strSeri) && existingSP.so_seri != strSeri)
-                                        {
-                                            existingSP.so_seri = strSeri;
-                                            db.SubmitChanges();
-                                        }
-                                        idSanPham = existingSP.id.ToString();
+                                        idSanPham = dictSanPham[keySP].id.ToString();
                                     }
                                     else
                                     {
