@@ -905,7 +905,7 @@
                         <li data-role="hint" data-hint-position="top" data-hint-text="Tạo báo giá">
                             <asp:LinkButton ID="but_show_form_add" OnClick="but_show_form_add_Click" runat="server"><span class="mif-plus"></span></asp:LinkButton>
                         </li>
-                        <li data-role="hint" data-hint-position="top" data-hint-text="Nhập từ Excel">
+                        <li style="display: none;" data-role="hint" data-hint-position="top" data-hint-text="Nhập từ Excel">
                             <asp:LinkButton ID="but_show_form_import" OnClick="but_show_form_import_Click" runat="server"><span class="mif-file-excel fg-green"></span></asp:LinkButton>
                         </li>
                         <%--<li data-role="hint" data-hint-position="top" data-hint-text="Lưu">
