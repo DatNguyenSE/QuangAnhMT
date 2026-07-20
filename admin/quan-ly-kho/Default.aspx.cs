@@ -604,7 +604,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                     Button2.Visible = false;
                     Label2.Text = "";
                 }
-                bool _cohoadon = q.cohoadon.Value;
+                bool _cohoadon = q.cohoadon ?? false;
                 if (_cohoadon == true)
                 {
                     rbCoHoaDon.Checked = true; rbKhongCoHoaDon.Checked = false;
@@ -613,7 +613,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                 {
                     rbCoHoaDon.Checked = false; rbKhongCoHoaDon.Checked = true;
                 }
-                bool _hangthanhly = q.hangthanhly.Value;
+                bool _hangthanhly = q.hangthanhly ?? false;
                 if (_hangthanhly == true)
                     check_hangthanhly.Checked = true;
                 else

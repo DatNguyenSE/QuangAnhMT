@@ -492,7 +492,7 @@
                                                 <div class="cell-lg-6 pl-2-lg pr-2-lg">
                                                     <div class="mt-2">
                                                         <small class="fg-red fw-600">Sản phẩm</small>
-                                                        <asp:DropDownList ID="DropDownList1" runat="server" data-role="select" onchange="autoFillSeri(this)"></asp:DropDownList>
+                                                        <asp:DropDownList ID="DropDownList1" runat="server" data-role="select" data-filter-placeholder="Tìm theo tên, số seri" onchange="autoFillSeri(this)"></asp:DropDownList>
                                                     </div>
                                                 </div>
                                                 <div class="cell-lg-3 pl-2-lg pr-2-lg">

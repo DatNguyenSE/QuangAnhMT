@@ -1207,7 +1207,7 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
 
         var q = db.KhoSanPham_tbs
       .OrderBy(p => p.ten)
-      .Select(p => new { p.id, p.so_seri, DisplayText = p.ten + " <span class='fg-red'>(" + (p.soluong_hientai != null ? p.soluong_hientai : 0) + ")</span>" });
+      .Select(p => new { p.id, p.so_seri, DisplayText = p.ten + (p.so_seri != null && p.so_seri != "" ? " - " + p.so_seri : "") + " <span class='fg-red'>(" + (p.soluong_hientai != null ? p.soluong_hientai : 0) + ")</span>" });
 
         DropDownList1.Items.Clear();
         DropDownList1.Items.Add(new ListItem("Chọn", ""));
@@ -1243,7 +1243,7 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                             chitiet.TongSauGiam,
                             chitiet.giamgia_phantram,
                             chitiet.giamgia_thanhtien,
-                            ten_sanpham = sanpham == null ? "" : sanpham.ten,
+                            ten_sanpham = sanpham == null ? "" : (sanpham.ten + (sanpham.so_seri != null && sanpham.so_seri != "" ? " - " + sanpham.so_seri : "")),
                             anh = sanpham == null ? "" : sanpham.anh,
                             DVT = ob4.ten,
                             sanpham.thongso_kythuat,
@@ -3338,7 +3338,7 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                                     where c.id_baogia == id_baogia
                                     select new
                                     {
-                                        TenSanPham = s != null ? s.ten : "Không rõ",
+                                        TenSanPham = s != null ? (s.ten + (s.so_seri != null && s.so_seri != "" ? " - " + s.so_seri : "")) : "Không rõ",
                                         c.soluong,
                                         c.giaban_taithoidiemnay,
                                         c.giamgia_phantram,
