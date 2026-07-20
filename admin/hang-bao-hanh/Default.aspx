@@ -3,6 +3,17 @@
 <%@ Register Assembly="AjaxControlToolkit" Namespace="AjaxControlToolkit" TagPrefix="ajaxToolkit" %>
 <%@ Register Assembly="CKEditor.NET" Namespace="CKEditor.NET" TagPrefix="CKEditor" %>
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="Server">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <style>
+        .select2-container .select2-selection--single {
+            height: 36px !important;
+            padding: 4px;
+            border-color: #d9d9d9;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 34px !important;
+        }
+    </style>
 </asp:Content>
 <asp:Content ID="Content2" ContentPlaceHolderID="main" runat="Server">
     <%--<asp:UpdatePanel ID="up_daban" runat="server" UpdateMode="Conditional">
@@ -81,48 +92,60 @@
                     <div style='top: 0; left: 0; margin: 0 auto; max-width: 1206px; opacity: 1;'>
                         <div class="bg-white border bd-transparent pl-4 pl-8-md pr-8-md pr-4" style="padding-top: 52px">
                             <%--pl-4 pl-8-md pr-8-md pr-4--%>
-                            <div class="row">
-                                <asp:PlaceHolder ID="PlaceHolder8" runat="server" Visible="false">
-                                    <div class="cell-lg-8 pr-2-lg mb-3 mt-3">
-                                        <div class="d-flex">
-                                            <asp:DropDownList ID="DropDownList2" runat="server" data-role="select"></asp:DropDownList>
-                                            <asp:Button ID="but_check" OnClick="but_check_Click" runat="server" Text="Check" />
+                            <div class="row pb-2 mb-4 border-bottom bd-lightGray">
+                                <div class="cell-lg-4 cell-md-4 mt-2">
+                                    <small class="fw-600 fg-red">Mã phiếu</small>
+                                    <asp:TextBox ID="txt_maphieu_header" runat="server" data-role="input" ReadOnly="true" placeholder="Tạo tự động"></asp:TextBox>
+                                </div>
+                                <div class="cell-lg-4 cell-md-4 mt-2">
+                                    <small class="fw-600 fg-red">Ngày tiếp nhận</small>
+                                    <div>
+                                        <asp:TextBox ID="txt_ngaynhan" runat="server" MaxLength="10" data-role="calendar-picker" data-outside="true" data-dialog-mode="true" data-week-start="1" data-locale="vi-VN" data-format="DD/MM/YYYY" data-input-format="DD/MM/YYYY" data-clear-button="false"></asp:TextBox>
+                                    </div>
+                                </div>
+                                <div class="cell-lg-4 cell-md-4 mt-2">
+                                    <small class="fw-600 fg-red">Ngày hẹn trả</small>
+                                    <div>
+                                        <asp:TextBox ID="txt_ngayhentra" runat="server" MaxLength="10" data-role="calendar-picker" data-outside="true" data-dialog-mode="true" data-week-start="1" data-locale="vi-VN" data-format="DD/MM/YYYY" data-input-format="DD/MM/YYYY" data-clear-button="false"></asp:TextBox>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row pb-4 mb-4 border-bottom bd-lightGray">
+                                <div class="cell-lg-12 mb-2">
+                                    <div class="text-bold" style="font-size: 18px; color: #d32f2f; text-transform: uppercase;">1. Thông tin Khách hàng</div>
+                                </div>
+                                <asp:PlaceHolder ID="PlaceHolder8" runat="server" Visible="true">
+                                    <div class="cell-lg-12 pl-2-lg pr-2-lg">
+                                        <div class="mt-2">
+                                            <small class="fg-red fw-600">Chọn khách hàng</small>
+                                            <div class="d-flex">
+                                                <asp:DropDownList ID="DropDownList2" runat="server" CssClass="select2-dropdown"></asp:DropDownList>
+                                                <asp:Button ID="but_check" OnClick="but_check_Click" runat="server" Text="Check" />
+                                            </div>
                                         </div>
                                     </div>
                                 </asp:PlaceHolder>
 
-                                <div class="cell-lg-12">
-                                    <b>Thông tin khách hàng</b>
-                                </div>
-
-                                <div class="cell-lg-4  pl-2-lg pr-2-lg">
-                                    <div class="mt-2">
-                                        <small class="fg-red fw-600">SĐT khách hàng</small>
-                                        <asp:TextBox ID="txt_sdt" CssClass="input-small" runat="server" data-role="input"></asp:TextBox>
-                                        <%-- <ajaxToolkit:AutoCompleteExtender
-                                            ID="AutoCompleteExtender1"
-                                            runat="server"
-                                            TargetControlID="txt_sdt"
-                                            ServiceMethod="GetPhoneNumbers"
-                                            MinimumPrefixLength="3"
-                                            CompletionSetCount="10"
-                                            EnableCaching="true">
-                                        </ajaxToolkit:AutoCompleteExtender>--%>
-                                    </div>
-                                </div>
-                                <div class="cell-lg-4  pl-2-lg pr-2-lg">
+                                <div class="cell-lg-5 pl-2-lg pr-2-lg">
                                     <div class="mt-2">
                                         <small class="fg-red fw-600">Tên khách hàng</small>
                                         <asp:TextBox ID="txt_ten_kh" CssClass="input-small" runat="server" data-role="input"></asp:TextBox>
                                     </div>
                                 </div>
-                                <div class="cell-lg-4  pl-2-lg pr-2-lg">
+                                <div class="cell-lg-5 pl-2-lg pr-2-lg">
+                                    <div class="mt-2">
+                                        <small class="fg-red fw-600">Số điện thoại</small>
+                                        <asp:TextBox ID="txt_sdt" CssClass="input-small" runat="server" data-role="input"></asp:TextBox>
+                                    </div>
+                                </div>
+                                <div class="cell-lg-4  pl-2-lg pr-2-lg" style="display:none;">
                                     <div class="mt-2">
                                         <small class="fg-red fw-600">Địa chỉ khách hàng</small>
                                         <asp:TextBox ID="txt_diachi_kh" CssClass="input-small" runat="server" data-role="input"></asp:TextBox>
                                     </div>
                                 </div>
-                                <div class="cell-lg-4  pl-2-lg pr-2-lg">
+                                <div class="cell-lg-4  pl-2-lg pr-2-lg" style="display:none;">
                                     <div class="mt-2">
                                         <small class="fg-red fw-600">Giảm giá khách hàng</small>
                                         <asp:TextBox ID="txt_giamgia_kh" CssClass="input-small" Text="0" placeholder="Nhập số tiền hoặc %" onfocus="AutoSelect(this)" runat="server" data-role="input"></asp:TextBox>
@@ -133,29 +156,13 @@
                                     </div>
                                 </div>
 
-                                <div class="cell-lg-4  pl-2-lg pr-2-lg">
+                                <div class="cell-lg-4  pl-2-lg pr-2-lg" style="display:none;">
                                     <div class="mt-2">
                                         <small class="fg-red fw-600">VAT (%)</small>
                                         <asp:TextBox ID="txt_vat" Text="0" CssClass="input-small" onfocus="AutoSelect(this)" MaxLength="3" oninput="format_sotien_new(this)" runat="server" data-role="input"></asp:TextBox>
                                     </div>
                                 </div>
-                                <div class="cell-lg-4  pl-2-lg pr-2-lg">
-                                    <div class="mt-2">
-                                        <small class="fg-red fw-600">Ngày nhận</small>
-                                        <div>
-                                            <asp:TextBox ID="txt_ngaynhan" runat="server" MaxLength="10" data-role="calendar-picker" data-outside="true" data-dialog-mode="true" data-week-start="1" data-locale="vi-VN" data-format="DD/MM/YYYY" data-input-format="DD/MM/YYYY" data-clear-button="false"></asp:TextBox>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="cell-lg-4  pl-2-lg pr-2-lg">
-                                    <div class="mt-2">
-                                        <small class="fg-red fw-600">Ngày hẹn trả</small>
-                                        <div>
-                                            <asp:TextBox ID="txt_ngayhentra" runat="server" MaxLength="10" data-role="calendar-picker" data-outside="true" data-dialog-mode="true" data-week-start="1" data-locale="vi-VN" data-format="DD/MM/YYYY" data-input-format="DD/MM/YYYY" data-clear-button="false"></asp:TextBox>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="cell-lg-4 pl-2-lg pr-2-lg">
+                                <div class="cell-lg-4 pl-2-lg pr-2-lg" style="display:none;">
                                     <div class="mt-2">
                                         <small class="fg-red fw-600">Trạng thái phiếu</small>
                                         <asp:DropDownList ID="ddl_trangthai" runat="server" data-role="select">
@@ -166,251 +173,202 @@
                                         </asp:DropDownList>
                                     </div>
                                 </div>
+
                                 <div class="cell-lg-4 pl-2-lg pr-2-lg" style="display:none;">
-                                    <div class="mt-2">
-                                        <small class="fw-600">Ngày trả thực tế</small>
-                                        <div>
-                                            <asp:TextBox ID="txt_ngaytrathucte" runat="server" MaxLength="10" data-role="calendar-picker" data-outside="true" data-dialog-mode="true" data-week-start="1" data-locale="vi-VN" data-format="DD/MM/YYYY" data-input-format="DD/MM/YYYY" data-clear-button="false"></asp:TextBox>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="cell-lg-4 pl-2-lg pr-2-lg">
                                     <div class="mt-2">
                                         <small class="fw-600">Công nợ khách</small>
                                         <asp:TextBox ID="txt_congno" Text="0" CssClass="input-small" onfocus="AutoSelect(this)" MaxLength="14" oninput="format_sotien_new(this)" runat="server" data-role="input"></asp:TextBox>
                                     </div>
                                 </div>
-                                <div class="cell-lg-4 pl-2-lg pr-2-lg">
+                                <div class="cell-lg-4 pl-2-lg pr-2-lg" style="display:none;">
                                     <div class="mt-2">
-                                        <small class="fw-600">Ghi chú</small>
-                                        <asp:TextBox ID="txt_ghichu" CssClass="" runat="server" data-role="input"></asp:TextBox>
+                                        
                                     </div>
                                 </div>
-                                <div class="cell-lg-4 pl-2-lg pr-2-lg">
+                                <div class="cell-lg-4 pl-2-lg pr-2-lg" style="display:none;">
                                     <div class="mt-4 pt-1">
                                         <asp:CheckBox ID="chk_trehen" Visible="false" runat="server" Text="Trễ hẹn" CssClass="fg-red text-bold" />
                                     </div>
                                 </div>
                             </div>
-                            <div class="mt-6 text-right">
-                                <asp:Button ID="but_add_edit" runat="server" Text="" CssClass="button success small" OnClick="but_add_edit_Click" />
-                            </div>
-                            <hr />
+                            
                             <asp:PlaceHolder ID="PlaceHolder1" runat="server">
                                 <div class="row mt-3">
                                     <div class="cell-lg-12 p-3 bg-light">
-                                        <b>Thêm sản phẩm bảo hành vào phiếu</b>
-
-                                        <asp:Panel ID="Panel1" runat="server" DefaultButton="but_add_sp_chitiet">
-                                            <div class="row">
-                                                <div class="cell-lg-6 pl-2-lg pr-2-lg">
-                                                    <div class="mt-2">
+                                        <div class="row mt-3">
+                                            <!-- Khối 2: Thông tin Sản phẩm -->
+                                            <div class="cell-lg-12 pb-4 mb-4 border-bottom bd-lightGray">
+                                                <div class="text-bold mb-4" style="font-size: 18px; color: #d32f2f; text-transform: uppercase;">2. Thông tin Sản phẩm</div>
+                                                <div class="row">
+                                                    <div class="cell-12 mt-2">
+                                                        <small class="fg-red fw-600">Chọn từ kho</small>
+                                                        <div class="d-flex">
+                                                            <asp:DropDownList ID="DropDownList1" runat="server" CssClass="select2-dropdown"></asp:DropDownList>
+                                                            <asp:Button ID="but_check_sp" OnClick="DropDownList1_SelectedIndexChanged" runat="server" Text="Check" CssClass="button" />
+                                                        </div>
+                                                    </div>
+                                                    <div class="cell-lg-12 mt-2">
                                                         <small class="fg-red fw-600">Tên sản phẩm</small>
                                                         <asp:TextBox ID="txt_name" runat="server" data-role="input" MaxLength="100"></asp:TextBox>
                                                     </div>
-                                                    <div class="mt-2">
-                                                        <small class="fw-600">Ảnh sản phẩm</small>
-                                                        <input type="file" id="fileInput" onchange="uploadFile()" data-role="file" data-button-title="<span class='mif-file-upload'></span>" />
-                                                        <div id="message" runat="server"></div>
-                                                        <div id="uploadedFilePath"></div>
-                                                        <div style="display: none">
-                                                            <asp:TextBox ID="txt_link_fileupload" runat="server"></asp:TextBox>
-                                                        </div>
-                                                        <%--<div>
-    <asp:Label ID="Label2" runat="server" Text=""></asp:Label>
-</div>
-<div style='position: absolute; bottom: 0px; left: 100px'>
-    <asp:Button ID="Button2" runat="server" Text="Xóa ảnh cũ" CssClass="alert small" Visible="false" OnClick="Button2_Click" />
-</div>--%>
+                                                    <div class="cell-lg-3 cell-md-6 mt-2">
+                                                        <small class="fw-600 fg-red">Số lượng nhận</small>
+                                                        <asp:TextBox data-role="spinner" data-buttons-position="right" ID="txt_sl_chitiet" runat="server" Text="1" data-min-value="1" oninput="format_sotien_new(this)"></asp:TextBox>
                                                     </div>
-                                                    <div class="mt-2">
-                                                        <small class="fw-600">Hãng sản phẩm</small>
-                                                        <div>
-                                                            <asp:DropDownList ID="ddl_hang_add" runat="server" data-role="select" data-filter="true"></asp:DropDownList>
-                                                        </div>
+                                                    <div class="cell-lg-3 cell-md-6 mt-2">
+                                                        <small class="fw-600 fg-red">ĐVT</small>
+                                                        <asp:TextBox data-role="input" ID="txt_dvt" runat="server"></asp:TextBox>
                                                     </div>
-   
-                                                    <div class="mt-2">
-                                                        <small class="fw-600">Đơn vị tính</small>
-                                                        <div>
-                                                            <asp:DropDownList ID="ddl_dvt_add" runat="server" data-role="select" data-filter="true"></asp:DropDownList>
-                                                        </div>
+                                                    <div style="display:none;">
+                                                        
                                                     </div>
-                                                    <div class="mt-2">
-                                                        <small class="fw-600">Model</small>
-                                                        <asp:TextBox ID="txt_model" runat="server" data-role="input" MaxLength="100"></asp:TextBox>
+                                                    <div class="cell-lg-3 cell-md-6 mt-2">
+                                                        <small class="fw-600 fg-red">Seri</small>
+                                                        <asp:TextBox data-role="input" ID="txt_seri" runat="server"></asp:TextBox>
                                                     </div>
-                                                    <div class="mt-2">
-                                                        <small class="fw-600">Thông số kỹ thuật</small>
-                                                        <CKEditor:CKEditorControl ID="txt_thongso" runat="server" Height="100px" Width="100%" CustomConfig="/ckeditor/config-basic.js"></CKEditor:CKEditorControl>
-                                                        <%--<asp:TextBox ID="txt_thongso" data-role="textarea" runat="server" TextMode="MultiLine"></asp:TextBox>--%>
-                                                    </div>
-                                                </div>
-                                                <div class="cell-lg-3 pl-2-lg pr-2-lg">
-                                                    <div class="mt-2">
-                                                        <small class="fw-600">Số lượng</small>
-                                                        <asp:TextBox ID="txt_soluong" data-role="spinner" data-buttons-position="right" Text="1" data-min-value="1" data-max-value="999" onfocus="AutoSelect(this)" oninput="format_sotien_new(this)" runat="server"></asp:TextBox>
-                                                    </div>
-                                                    <div class="mt-2">
-                                                        <small class="fw-600">Số tiền bảo hành</small>
-                                                        <asp:TextBox ID="txt_sotien_baohanhg" onfocus="AutoSelect(this)" MaxLength="14" oninput="format_sotien_new(this)" runat="server" data-role="input" Text="0"></asp:TextBox>
-                                                    </div>
-                                                </div>
-                                                <div class="cell-lg-3 pl-2-lg pr-2-lg">
-                                                    <div class="mt-2">
-                                                        <small class="fw-600">Giảm giá (%)</small>
-                                                        <asp:TextBox ID="txt_giamgia_phantram" Text="0" onfocus="AutoSelect(this)" MaxLength="4" runat="server" data-role="input"></asp:TextBox>
-                                                    </div>
-                                                    <div class="mt-2">
-                                                        <small class="fw-600">Seri</small>
-                                                        <asp:TextBox ID="txt_seri_add" runat="server" data-role="input"></asp:TextBox>
-                                                    </div>
-                                                    <div class="mt-2">
+                                                    <div class="cell-lg-3 cell-md-6 mt-2">
                                                         <small class="fw-600">Thời hạn BH</small>
-                                                        <asp:TextBox ID="txt_thoihan_baohanh_add" runat="server" data-role="input"></asp:TextBox>
+                                                        <asp:TextBox data-role="input" ID="txt_thoihan_baohanh" runat="server"></asp:TextBox>
                                                     </div>
-                                                </div>
-                                                <div class="cell-lg-12 text-right pr-2-lg mt-3 mb-3">
-                                                    <asp:Button ID="but_add_sp_chitiet" OnClick="but_add_sp_chitiet_Click" runat="server" CssClass="info small" Text="Thêm vào phiếu bảo hành" />
-                                                </div>
-                                            </div>
-                                        </asp:Panel>
-                                    </div>
-
-                                    <div class="cell-lg-12">
-                                        <div style="overflow: auto" class=" mt-3">
-                                            <div class="row">
-                                                <asp:Repeater ID="Repeater2" runat="server" OnItemDataBound="Repeater2_ItemDataBound">
-                                                    <ItemTemplate>
-                                                        <span style="display: none">
-                                                            <asp:Label ID="lbID_chitiet" runat="server" Text='<%#Eval("id") %>'></asp:Label>
-                                                        </span>
-                                                        <div class="cell-lg-12 mb-4">
-                                                            <div class="border bd-gray p-4 bg-white" style="box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-radius: 4px;">
-                                                                <div class="row">
-                                                                    <!-- Cột 1: Thông tin Sản phẩm -->
-                                                                    <div class="cell-lg-4 border-right bd-lightGray pr-4">
-                                                                        <div class="d-flex flex-align-center mb-3">
-                                                                            <div class="mr-3" data-role="lightbox" class="c-pointer">
-                                                                                <img src='<%#Eval("anh") %>' class="img-cover-vuong border" width="60" height="60" onerror="this.src='/uploads/images/no-image.png'" />
-                                                                            </div>
-                                                                            <div>
-                                                                                <div class="text-bold text-leader"><%#Eval("ten") %></div>
-
-                                                                            </div>
-                                                                        </div>
-                                                                        
-                                                                        <div class="row">
-                                                                            <div class="cell-6 mt-2">
-                                                                                <small class="fw-600 fg-red">Số lượng nhận</small>
-                                                                                <asp:TextBox data-role="input" CssClass="input-small" ID="txt_sl_chitiet" MaxLength="4" runat="server" Text='<%#Eval("soluong","{0:#,##0}") %>'></asp:TextBox>
-                                                                            </div>
-                                                                            <div class="cell-6 mt-2">
-                                                                                <small class="fw-600 fg-red">Giá tiền</small>
-                                                                                <asp:TextBox data-role="input" CssClass="input-small" oninput="format_sotien_new(this)" ID="txt_sotien_baohanh1" runat="server" Text='<%#Eval("sotien_baohanh","{0:#,##0}") %>'></asp:TextBox>
-                                                                            </div>
-                                                                            <div class="cell-6 mt-2">
-                                                                                <small class="fw-600 fg-red">Seri</small>
-                                                                                <asp:TextBox data-role="input" CssClass="input-small" ID="txt_seri" runat="server" Text='<%#Eval("seri") %>'></asp:TextBox>
-                                                                            </div>
-                                                                            <div class="cell-6 mt-2">
-                                                                                <small class="fw-600">Thời hạn BH</small>
-                                                                                <asp:TextBox data-role="input" CssClass="input-small" ID="txt_thoihan_baohanh" runat="server" Text='<%#Eval("thoi_han_baohanh") %>'></asp:TextBox>
-                                                                            </div>
-                                                                            <div class="cell-12 mt-2">
-                                                                                <small class="fw-600">Ghi chú SP (Tình trạng sp)</small>
-                                                                                <asp:TextBox data-role="input" CssClass="input-small" ID="txt_ghichu_sanpham" runat="server" Text='<%#Eval("ghichu_sanpham") %>'></asp:TextBox>
-                                                                            </div>
-                                                                            <div class="cell-6 mt-2">
-                                                                                <small class="fw-600">Hãng</small>
-                                                                                <asp:DropDownList ID="ddl_hang_chitiet" runat="server" data-role="select" data-filter="true"></asp:DropDownList>
-                                                                            </div>
-                                                                            <div class="cell-6 mt-2">
-                                                                                <small class="fw-600">Đơn vị tính</small>
-                                                                                <asp:DropDownList ID="ddl_dvt_chitiet" runat="server" data-role="select" data-filter="true"></asp:DropDownList>
-                                                                            </div>
-                                                                            <div class="cell-6 mt-2">
-                                                                                <small class="fw-600">Model</small>
-                                                                                <asp:TextBox data-role="input" CssClass="input-small" ID="txt_model_chitiet" runat="server" Text='<%#Eval("model") %>'></asp:TextBox>
-                                                                            </div>
-                                                                            <div class="cell-12 mt-2">
-                                                                                <small class="fw-600">Giảm giá (%)</small>
-                                                                                <asp:TextBox data-role="input" CssClass="input-small" onfocus="AutoSelect(this)" MaxLength="4" ID="txt_giamgia_phantram_chitiet" runat="server" Text='<%#Eval("giamgia_phantram") %>'></asp:TextBox>
-                                                                            </div>
-                                                                            <div class="cell-12 mt-2">
-                                                                                <small class="fw-600">Thông số kỹ thuật</small>
-                                                                                <asp:TextBox data-role="textarea" CssClass="input-small" ID="txt_thongso_chitiet" runat="server" TextMode="MultiLine" Text='<%#Eval("thongso_kythuat") %>'></asp:TextBox>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                    
-                                                                    <!-- Cột 2: Đối tác sửa chữa -->
-                                                                    <div class="cell-lg-4 border-right bd-lightGray pr-4 pl-4">
-                                                                        <div class="text-bold mb-2">Quy trình Sửa chữa</div>
-                                                                        <div class="row">
-                                                                            <div class="cell-6 mt-2">
-                                                                                <small class="fw-600">Nơi sửa</small>
-                                                                                <asp:TextBox data-role="input" CssClass="input-small" ID="txt_noisua" runat="server" Text='<%#Eval("noi_sua") %>'></asp:TextBox>
-                                                                            </div>
-                                                                            <div class="cell-6 mt-2">
-                                                                                <small class="fw-600">Mã ĐT Sửa</small>
-                                                                                <asp:TextBox data-role="input" CssClass="input-small" ID="txt_madoitac" runat="server" Text='<%#Eval("ma_doitac_sua") %>'></asp:TextBox>
-                                                                            </div>
-                                                                            
-                                                                            <div class="cell-6 mt-2">
-                                                                                <small class="fw-600">Ngày mang đi</small>
-                                                                                <asp:TextBox ID="txt_ngaymangsua" runat="server" CssClass="input-small" data-role="calendar-picker" data-outside="true" data-dialog-mode="true" data-week-start="1" data-locale="vi-VN" data-format="DD/MM/YYYY" data-input-format="DD/MM/YYYY" data-clear-button="true" Text='<%#Eval("ngay_mang_sua", "{0:dd/MM/yyyy}") %>'></asp:TextBox>
-                                                                            </div>
-                                                                            <div class="cell-6 mt-2">
-                                                                                <small class="fw-600">SL mang đi</small>
-                                                                                <asp:TextBox data-role="input" CssClass="input-small" ID="txt_slmangsua" runat="server" Text='<%#Eval("sl_mang_sua") %>'></asp:TextBox>
-                                                                            </div>
-                                                                            
-                                                                            <div class="cell-6 mt-2">
-                                                                                <small class="fw-600">Ngày sửa về</small>
-                                                                                <asp:TextBox ID="txt_ngaysuave" runat="server" CssClass="input-small" data-role="calendar-picker" data-outside="true" data-dialog-mode="true" data-week-start="1" data-locale="vi-VN" data-format="DD/MM/YYYY" data-input-format="DD/MM/YYYY" data-clear-button="true" Text='<%#Eval("ngay_sua_ve", "{0:dd/MM/yyyy}") %>'></asp:TextBox>
-                                                                            </div>
-                                                                            <div class="cell-6 mt-2">
-                                                                                <small class="fw-600">SL sửa về</small>
-                                                                                <asp:TextBox data-role="input" CssClass="input-small" ID="txt_slsuave" runat="server" Text='<%#Eval("sl_sua_ve") %>'></asp:TextBox>
-                                                                            </div>
-                                                                            <div class="cell-12 mt-2">
-                                                                                <small class="fw-600">Chi phí sửa chữa (Công nợ ĐT)</small>
-                                                                                <asp:TextBox data-role="input" CssClass="input-small" oninput="format_sotien_new(this)" ID="txt_congnodoitac" runat="server" Text='<%#Eval("congno_doitac","{0:#,##0}") %>'></asp:TextBox>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                    
-                                                                    <!-- Cột 3: Trả khách hàng -->
-                                                                    <div class="cell-lg-4 pl-4">
-                                                                        <div class="text-bold mb-2">Bàn giao Khách hàng</div>
-                                                                        <div class="row">
-                                                                            <div class="cell-6 mt-2">
-                                                                                <small class="fw-600">Số phiếu trả</small>
-                                                                                <asp:TextBox data-role="input" CssClass="input-small" ID="txt_sophieutra" runat="server" Text='<%#Eval("so_phieu_tra") %>'></asp:TextBox>
-                                                                            </div>
-                                                                            <div class="cell-6 mt-2">
-                                                                                <small class="fw-600">SL trả khách</small>
-                                                                                <asp:TextBox data-role="input" CssClass="input-small" ID="txt_sltrakhach" runat="server" Text='<%#Eval("sl_tra_khach") %>'></asp:TextBox>
-                                                                            </div>
-                                                                            <div class="cell-12 mt-2">
-                                                                                <small class="fw-600">Công nợ khách</small>
-                                                                                <asp:TextBox data-role="input" CssClass="input-small" oninput="format_sotien_new(this)" ID="txt_congnotrakhach" runat="server" Text='<%#Eval("congno_trakhach","{0:#,##0}") %>'></asp:TextBox>
-                                                                            </div>
-                                                                            <div class="cell-12 mt-2">
-                                                                                <small class="fw-600">Ghi chú trả khách</small>
-                                                                                <asp:TextBox data-role="input" CssClass="input-small" ID="txt_ghichutrakhach" runat="server" Text='<%#Eval("ghichu_trakhach") %>'></asp:TextBox>
-                                                                            </div>
-                                                                            <div class="cell-12 mt-2 text-right">
-                                                                                <asp:Button ToolTip="Xóa SP này khỏi phiếu" ID="but_xoachitiet" OnClick="but_xoachitiet_Click" CommandArgument='<%#Eval("id") %>' runat="server" Text="Xóa Sản Phẩm Này" CssClass="button alert small outline" />
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
+                                                    <div class="cell-lg-12 mt-2">
+                                                        <small class="fw-600">Ghi chú SP (Tình trạng sp)</small>
+                                                        <asp:TextBox data-role="input" ID="txt_ghichu_sanpham" runat="server"></asp:TextBox>
+                                                    </div>
+                                                    <div class="cell-lg-4 cell-md-4 mt-2">
+                                                        <small class="fw-600">Ảnh 1</small>
+                                                        <div class="d-flex flex-align-center mt-1">
+                                                            <asp:Image ID="img_anh1" runat="server" Width="60" Height="60" CssClass="img-cover-vuong border mr-2" ImageUrl="/uploads/images/no-image.png" />
+                                                            <div style="flex:1;">
+                                                                <input type="file" id="fileInput1" onchange="uploadFile(this, 'message1', '<%= img_anh1.ClientID %>', '<%= txt_anh1.ClientID %>')" data-role="file" data-button-title="<span class='mif-file-upload'></span>" />
+                                                                <div id="message1" class="fg-red text-small"></div>
+                                                                <div style="display: none">
+                                                                    <asp:TextBox ID="txt_anh1" runat="server"></asp:TextBox>
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                    </ItemTemplate>
-                                                </asp:Repeater>
+                                                    </div>
+                                                    <div class="cell-lg-4 cell-md-4 mt-2">
+                                                        <small class="fw-600">Ảnh 2</small>
+                                                        <div class="d-flex flex-align-center mt-1">
+                                                            <asp:Image ID="img_anh2" runat="server" Width="60" Height="60" CssClass="img-cover-vuong border mr-2" ImageUrl="/uploads/images/no-image.png" />
+                                                            <div style="flex:1;">
+                                                                <input type="file" id="fileInput2" onchange="uploadFile(this, 'message2', '<%= img_anh2.ClientID %>', '<%= txt_anh2.ClientID %>')" data-role="file" data-button-title="<span class='mif-file-upload'></span>" />
+                                                                <div id="message2" class="fg-red text-small"></div>
+                                                                <div style="display: none">
+                                                                    <asp:TextBox ID="txt_anh2" runat="server"></asp:TextBox>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="cell-lg-4 cell-md-4 mt-2">
+                                                        <small class="fw-600">Ảnh 3</small>
+                                                        <div class="d-flex flex-align-center mt-1">
+                                                            <asp:Image ID="img_anh3" runat="server" Width="60" Height="60" CssClass="img-cover-vuong border mr-2" ImageUrl="/uploads/images/no-image.png" />
+                                                            <div style="flex:1;">
+                                                                <input type="file" id="fileInput3" onchange="uploadFile(this, 'message3', '<%= img_anh3.ClientID %>', '<%= txt_anh3.ClientID %>')" data-role="file" data-button-title="<span class='mif-file-upload'></span>" />
+                                                                <div id="message3" class="fg-red text-small"></div>
+                                                                <div style="display: none">
+                                                                    <asp:TextBox ID="txt_anh3" runat="server"></asp:TextBox>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <!-- Hidden fields for compatibility if needed -->
+                                                    <div style="display:none;">
+                                                        <asp:DropDownList ID="ddl_hang_add" runat="server"></asp:DropDownList>
+                                                        <asp:DropDownList ID="ddl_dvt_add" runat="server"></asp:DropDownList>
+                                                        <asp:TextBox ID="txt_model" runat="server"></asp:TextBox>
+                                                        <asp:TextBox ID="txt_thongso" runat="server"></asp:TextBox>
+                                                        <asp:TextBox ID="txt_giamgia_phantram" runat="server" Text="0"></asp:TextBox>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Khối 3: Hướng xử lý -->
+                                            <div class="cell-lg-12 pb-4 mb-4 border-bottom bd-lightGray">
+                                                <div class="text-bold mb-4" style="font-size: 18px; color: #d32f2f; text-transform: uppercase;">3. Hướng xử lý</div>
+                                                <div class="row">
+                                                    <div class="cell-lg-12 mt-2">
+                                                        <small class="fw-600 fg-red">Hướng xử lý</small>
+                                                        <div class="mt-2 d-flex flex-align-center">
+                                                            <asp:RadioButtonList ID="ddl_huongxuly" runat="server" RepeatDirection="Horizontal" CellPadding="30">
+                                                                <asp:ListItem Value="Sửa chữa" Selected="True">Sửa chữa</asp:ListItem>
+                                                                <asp:ListItem Value="Thay mới">Thay mới</asp:ListItem>
+                                                            </asp:RadioButtonList>
+                                                        </div>
+                                                    </div>
+                                                    <div class="cell-lg-12 mt-2">
+                                                        <small class="fw-600">Ghi chú</small>
+                                                        <asp:TextBox ID="txt_ghichu" runat="server" data-role="input" placeholder="Nhập ghi chú..."></asp:TextBox>
+                                                    </div>
+                                                    
+                                                    <!-- Ẩn các trường không dùng tới theo yêu cầu -->
+                                                    <div style="display:none;">
+                                                        <asp:TextBox ID="txt_noisua" runat="server"></asp:TextBox>
+                                                        <asp:TextBox ID="txt_madoitac" runat="server"></asp:TextBox>
+                                                        <asp:TextBox ID="txt_ngaymangsua" runat="server"></asp:TextBox>
+                                                        <asp:TextBox ID="txt_slmangsua" runat="server"></asp:TextBox>
+                                                        <asp:TextBox ID="txt_ngaysuave" runat="server"></asp:TextBox>
+                                                        <asp:TextBox ID="txt_slsuave" runat="server"></asp:TextBox>
+                                                        <asp:TextBox ID="txt_congnodoitac" runat="server" Text="0"></asp:TextBox>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Khối 4: Trả khách hàng -->
+                                            <div class="cell-lg-12 pb-4 mb-4 border-bottom bd-lightGray">
+                                                <div class="text-bold mb-4" style="font-size: 18px; color: #d32f2f; text-transform: uppercase;">4. Bàn giao Khách hàng</div>
+                                                <div class="row">
+                                                    <div class="cell-lg-12 mt-2">
+                                                        <small class="fw-600 fg-red">Ngày trả khách</small>
+                                                        <asp:TextBox ID="txt_ngaytrathucte" runat="server" data-role="calendar-picker" data-outside="true" data-dialog-mode="true" data-week-start="1" data-locale="vi-VN" data-format="DD/MM/YYYY" data-input-format="DD/MM/YYYY" data-clear-button="true"></asp:TextBox>
+                                                    </div>
+                                                    <div class="cell-lg-12 mt-2">
+                                                        <small class="fw-600 fg-red">Trạng thái bàn giao:</small>
+                                                        <div class="mt-2 d-flex flex-align-center">
+                                                            <asp:RadioButtonList ID="ddl_trangthai_chitiet" runat="server" RepeatDirection="Horizontal" CellPadding="30">
+                                                                <asp:ListItem Value="Đã sửa xong" Selected="True">Đã sửa xong</asp:ListItem>
+                                                                <asp:ListItem Value="Đã thay mới">Đã thay mới</asp:ListItem>
+                                                                <asp:ListItem Value="Đã bàn giao">Đã bàn giao cho khách</asp:ListItem>
+                                                            </asp:RadioButtonList>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <!-- Ẩn các trường không dùng tới theo yêu cầu -->
+                                                    <div style="display:none;">
+                                                        <asp:TextBox ID="txt_sophieutra" runat="server"></asp:TextBox>
+                                                        <asp:TextBox ID="txt_sltrakhach" runat="server"></asp:TextBox>
+                                                        <asp:TextBox ID="txt_ghichutrakhach" runat="server"></asp:TextBox>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Khối 5: Thanh toán -->
+                                            <div class="cell-lg-12 pb-4 mb-4 border-bottom bd-lightGray">
+                                                <div class="text-bold mb-4" style="font-size: 18px; color: #d32f2f; text-transform: uppercase;">5. Thanh toán</div>
+                                                <div class="row">
+                                                    <div class="cell-lg-12 mt-2">
+                                                        <small class="fw-600 fg-red">Trạng thái thanh toán:</small>
+                                                        <div class="mt-2 d-flex flex-align-center">
+                                                            <asp:RadioButtonList ID="rd_trangthai_thanhtoan" runat="server" RepeatDirection="Horizontal" CellPadding="30">
+                                                                <asp:ListItem Value="Chưa thanh toán" Selected="True">Chưa thanh toán</asp:ListItem>
+                                                                <asp:ListItem Value="Đã thanh toán">Đã thanh toán</asp:ListItem>
+                                                                <asp:ListItem Value="Thanh toán một phần">Thanh toán một phần</asp:ListItem>
+                                                            </asp:RadioButtonList>
+                                                        </div>
+                                                    </div>
+                                                    <div class="cell-lg-6 mt-2">
+                                                        <small class="fw-600 fg-red">Thành tiền</small>
+                                                        <asp:TextBox data-role="input" oninput="format_sotien_new(this)" ID="txt_sotien_baohanh1" runat="server" Text="0"></asp:TextBox>
+                                                    </div>
+                                                    <div class="cell-lg-6 mt-2">
+                                                        <small class="fw-600">Công nợ khách</small>
+                                                        <asp:TextBox data-role="input" oninput="format_sotien_new(this)" ID="txt_congnotrakhach" runat="server" Text="0"></asp:TextBox>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                                 
                                                 <!-- Bảng TỔNG CỘNG -->
                                                 <div class="cell-lg-12">
@@ -420,7 +378,7 @@
                                                                 <td class="text-right">TỔNG CỘNG</td>
                                                                 <td class="text-right text-bold" style="width: 200px;"><%=ViewState["TongSauGiam_ChiTiet"] %></td>
                                                             </tr>
-                                                            <tr class="bg-light fg-red text-bold">
+                                                            <tr class="bg-light fg-red text-bold" style="display:none;">
                                                                 <td class="text-right">TỔNG CHI PHÍ SỬA CHỮA</td>
                                                                 <td class="text-right text-bold"><%=ViewState["TongChiPhiSuaChua_ChiTiet"] ?? "0" %></td>
                                                             </tr>
@@ -428,7 +386,7 @@
                                                                 {  %>
                                                             <%if (ViewState["pt_giamgiadacbiet"] != null && ViewState["pt_giamgiadacbiet"].ToString() != "0")
                                                                 {  %>
-                                                            <tr class="bg-yellow fg-red text-bold">
+                                                            <tr class="bg-yellow fg-red text-bold" style="display:none;">
                                                                 <td class="text-right">GIẢM GIÁ ĐẶC BIỆT (%)
                                                                     <div><small><%= ViewState["pt_giamgiadacbiet"]%>%</small></div>
                                                                 </td>
@@ -439,7 +397,7 @@
                                                             <%}
                                                             else
                                                                 {  %>
-                                                            <tr class="bg-yellow fg-red text-bold">
+                                                            <tr class="bg-yellow fg-red text-bold" style="display:none;">
                                                                 <td class="text-right">GIẢM GIÁ ĐẶC BIỆT (số tiền)</td>
                                                                 <td class="text-right text-bold">
                                                                     <%= ViewState["giamgia_dacbiet"] != null ? Convert.ToInt64(ViewState["giamgia_dacbiet"]).ToString("#,##0") : "0" %></td>
@@ -481,17 +439,16 @@
                                                             <%} %>
                                                         </tfoot>
                                                     </table>
+                                                    <%--<div>
+                                                         <asp:TextBox ID="txt_ghichu_chuagiao" runat="server" data-role="input"></asp:TextBox>
+                                                    </div>--%>
+                                                    <div class="text-right mt-4 pt-4 border-top bd-lightGray">
+                                                         <asp:Button ID="but_add_edit" runat="server" Text="TẠO / CẬP NHẬT PHIẾU" CssClass="button success small" OnClick="but_add_edit_Click" />
+                                                         <asp:Button ID="Button1" runat="server" Text="XÁC NHẬN ĐÃ TRẢ HÀNG" CssClass="button primary small" OnClick="but_daban_Click" />
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                        <%--<div>
-                                             <asp:TextBox ID="txt_ghichu_chuagiao" runat="server" data-role="input"></asp:TextBox>
-                                        </div>--%>
-                                        <div class="text-right">
-                                             <asp:Button ID="Button1" runat="server" Text="XÁC NHẬN ĐÃ TRẢ HÀNG" CssClass="button primary small" OnClick="but_daban_Click" />
-                                        </div>
-                                    </div>
-                                </div>
                             </asp:PlaceHolder>
 
 
@@ -1057,16 +1014,15 @@
     </asp:UpdateProgress>
 </asp:Content>
 <asp:Content ID="Content3" ContentPlaceHolderID="foot" runat="Server">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
-        function uploadFile() {
-            var fileInput = document.getElementById("fileInput");
-            var messageDiv = document.getElementById("message");
-            var uploadedFilePathDiv = document.getElementById("uploadedFilePath");
+        function uploadFile(fileInput, messageId, previewId, hiddenInputId) {
+            var messageDiv = document.getElementById(messageId);
 
             if (fileInput.files.length > 0) {
                 var file = fileInput.files[0];
 
-                // Kiểm tra loại tệp
                 var allowedExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".heic"];
                 var fileExtension = file.name.substr(file.name.lastIndexOf(".")).toLowerCase();
                 if (allowedExtensions.indexOf(fileExtension) === -1) {
@@ -1074,12 +1030,13 @@
                     return;
                 }
 
-                // Kiểm tra kích thước tệp
-                var maxFileSize = 10 * 1024 * 1024; // MB
+                var maxFileSize = 10 * 1024 * 1024;
                 if (file.size > maxFileSize) {
-                    messageDiv.innerHTML = "Vui lòng chọn file có kích thước nhỏ hơn 10 MB.";
+                    messageDiv.innerHTML = "File > 10 MB.";
                     return;
                 }
+                
+                messageDiv.innerHTML = "Đang tải...";
 
                 var formData = new FormData();
                 formData.append("file", file);
@@ -1088,9 +1045,9 @@
                 xhr.open("POST", "/uploads/Upload_Handler_Style1.ashx", true);
                 xhr.onload = function () {
                     if (xhr.status === 200) {
-                        //messageDiv.innerHTML = "File uploaded successfully!";
-                        uploadedFilePathDiv.innerHTML = "<div><small>Ảnh mới chọn<small></div><img width='100' src='" + xhr.responseText + "' />"; // Hiển thị ảnh
-                        document.getElementById('<%= txt_link_fileupload.ClientID %>').value = xhr.responseText;// Hiển thị đường dẫn
+                        messageDiv.innerHTML = "";
+                        document.getElementById(previewId).src = xhr.responseText;
+                        document.getElementById(hiddenInputId).value = xhr.responseText;
                      } else {
                          messageDiv.innerHTML = "Lỗi upload.";
                      }
@@ -1099,9 +1056,28 @@
              } else {
                  messageDiv.innerHTML = "Vui lòng chọn file.";
              }
-         }
+        }
+    </script>
 
-     </script>
 
-
+    <script type="text/javascript">
+        var $jq = jQuery.noConflict(); // Trả lại $ cho m4q của Metro UI
+        function initSelect2() {
+            $jq('.select2-dropdown').select2({
+                width: '100%',
+                placeholder: "Tìm kiếm...",
+                allowClear: true
+            });
+        }
+        $jq(document).ready(function () {
+            initSelect2();
+        });
+        
+        var prm = Sys.WebForms.PageRequestManager.getInstance();
+        if (prm != null) {
+            prm.add_endRequest(function (sender, e) {
+                initSelect2();
+            });
+        }
+    </script>
 </asp:Content>

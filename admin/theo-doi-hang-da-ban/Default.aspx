@@ -70,6 +70,27 @@
 <asp:Content ID="Content2" ContentPlaceHolderID="main" runat="Server">
     <asp:UpdatePanel ID="up_main" runat="server" UpdateMode="Conditional">
         <ContentTemplate>
+            <!-- Edit Warranty Modal Popup -->
+            <asp:Panel ID="pn_edit_warranty" runat="server" Visible="false">
+                <div style="position: fixed; width: 100%; height: 100%; top: 0; left: 0; background-color: rgba(0,0,0,0.5); z-index: 1040!important;">
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 400px; max-width: 90%; background-color: #fff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                        <div class="p-4">
+                            <div class="d-flex flex-justify-between flex-align-center mb-4">
+                                <h4 class="m-0 text-bold">Cập nhật bảo hành</h4>
+                                <a href="#" runat="server" id="close_edit_warranty" onserverclick="but_close_edit_warranty_Click" class="fg-red fg-lightRed-hover"><span class="mif-cross mif-2x"></span></a>
+                            </div>
+                            <div class="mb-4">
+                                <small class="text-bold mb-1 d-block">Thời gian bảo hành (tháng):</small>
+                                <asp:TextBox ID="txt_edit_thangbaohanh" runat="server" data-role="input" type="number" placeholder="Nhập số tháng"></asp:TextBox>
+                            </div>
+                            <div class="text-right">
+                                <asp:LinkButton ID="btn_save_warranty" runat="server" CssClass="button primary" OnClick="btn_save_warranty_Click">Lưu thay đổi</asp:LinkButton>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </asp:Panel>
+
             <!-- Detail Modal Popup -->
             <asp:Panel ID="pn_detail" runat="server" Visible="false">
                 <div style="position: fixed; width: 100%; height: 52px; background-color: none; top: 0; left: 0; z-index: 1041!important;">
@@ -370,7 +391,7 @@
                                             <th style="width: 120px;">Tổng tiền cuối</th>
                                             <th style="width: 150px;">Bảo hành</th>
                                             <th style="width: 70px;">ID<br />Báo giá</th>
-                                            <th style="width: 100px; text-align: center;">Hành động</th>
+                                            <th style="width: 50px; text-align: center;"></th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -402,10 +423,16 @@
                                                          </asp:Panel>
                                                      </td>
                                                      <td class="text-center"><%# Eval("baogiaId") %></td>
-                                                    <td class="text-center">
-                                                        <asp:LinkButton ID="btn_view" runat="server" CssClass="button mini primary rounded" CommandArgument='<%# Eval("baogiaId") + "|" + Eval("productId") %>' OnClick="btn_view_Click">
-                                                            Xem chi tiết
-                                                        </asp:LinkButton>
+                                                    <td class="text-center" style="vertical-align: middle;">
+                                                        <div class="dropdown-button place-right">
+                                                            <button class="button small bg-transparent dropdown-toggle no-marker" type="button" style="border: none;">
+                                                                <span class="mif mif-more-horiz" style="font-size: 20px;"></span>
+                                                            </button>
+                                                            <ul class="d-menu place-right" data-role="dropdown">
+                                                                <li><asp:LinkButton ID="btn_view" runat="server" OnClick="btn_view_Click" CommandArgument='<%# Eval("baogiaId") + "|" + Eval("productId") %>'>Xem chi tiết</asp:LinkButton></li>
+                                                                <li><asp:LinkButton ID="btn_edit_warranty" runat="server" OnClick="btn_edit_warranty_Click" CommandArgument='<%# Eval("baogiaId") + "|" + Eval("productId") %>'>Chỉnh sửa</asp:LinkButton></li>
+                                                            </ul>
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             </ItemTemplate>

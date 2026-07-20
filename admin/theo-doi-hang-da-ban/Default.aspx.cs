@@ -385,4 +385,55 @@ lbl_detail_tongdonhang_saugiam.Text = totalSauGiamAll.ToString("#,##0");
     {
         pn_detail.Visible = false;
     }
+
+    protected void btn_edit_warranty_Click(object sender, EventArgs e)
+    {
+        LinkButton btn = (LinkButton)sender;
+        string[] args = btn.CommandArgument.Split('|');
+        if (args.Length == 2)
+        {
+            string baogiaId = args[0];
+            string productId = args[1];
+
+            ViewState["edit_baogiaId"] = baogiaId;
+            ViewState["edit_productId"] = productId;
+
+            using (var db = new dbDataContext())
+            {
+                var ct = db.BaoGia_ChiTiet_tbs.FirstOrDefault(p => p.id_baogia == baogiaId && p.id_sanpham == productId);
+                if (ct != null)
+                {
+                    txt_edit_thangbaohanh.Text = ct.Thang_BaoHanh;
+                    pn_edit_warranty.Visible = true;
+                }
+            }
+        }
+    }
+
+    protected void but_close_edit_warranty_Click(object sender, EventArgs e)
+    {
+        pn_edit_warranty.Visible = false;
+    }
+
+    protected void btn_save_warranty_Click(object sender, EventArgs e)
+    {
+        if (ViewState["edit_baogiaId"] != null && ViewState["edit_productId"] != null)
+        {
+            string baogiaId = ViewState["edit_baogiaId"].ToString();
+            string productId = ViewState["edit_productId"].ToString();
+
+            using (var db = new dbDataContext())
+            {
+                var ct = db.BaoGia_ChiTiet_tbs.FirstOrDefault(p => p.id_baogia == baogiaId && p.id_sanpham == productId);
+                if (ct != null)
+                {
+                    ct.Thang_BaoHanh = txt_edit_thangbaohanh.Text;
+                    db.SubmitChanges();
+                    
+                    pn_edit_warranty.Visible = false;
+                    show_main();
+                }
+            }
+        }
+    }
 }
