@@ -105,48 +105,52 @@
                                             <small class="modal-label">Tên sản phẩm</small>
                                             <div class="modal-value text-bold"><asp:Label ID="lbl_detail_tensp" runat="server"></asp:Label></div>
                                         </div>
-                                        <div class="mt-2">
-                                            <small class="modal-label">Model</small>
-                                            <div class="modal-value"><asp:Label ID="lbl_detail_model" runat="server"></asp:Label></div>
-                                        </div>
-                                         <div class="mt-2">
-                                             <small class="modal-label">Số Seri (Serial)</small>
-                                             <div class="modal-value"><asp:Label ID="lbl_detail_seri" runat="server"></asp:Label></div>
+                                         <div class="mt-1" style="border-bottom: 1px solid #f5f5f5; padding-bottom: 4px;">
+                                             <small class="fg-dark fw-600" style="display: inline-block; width: 130px;">Model:</small>
+                                             <span class="ml-1"><asp:Label ID="lbl_detail_model" runat="server"></asp:Label></span>
+                                         </div>
+                                         <div class="mt-1" style="border-bottom: 1px solid #f5f5f5; padding-bottom: 4px;">
+                                             <small class="fg-dark fw-600" style="display: inline-block; width: 130px;">Số Seri (Serial):</small>
+                                             <span class="ml-1"><asp:Label ID="lbl_detail_seri" runat="server"></asp:Label></span>
+                                         </div>
+                                         <div class="mt-1" style="border-bottom: 1px solid #f5f5f5; padding-bottom: 4px;">
+                                             <small class="fg-dark fw-600" style="display: inline-block; width: 130px;">Mã KH (Kích hoạt):</small>
+                                             <span class="ml-1"><asp:Label ID="lbl_detail_makichhoat" runat="server"></asp:Label></span>
+                                         </div>
+                                         <div class="mt-1" style="border-bottom: 1px solid #f5f5f5; padding-bottom: 4px;">
+                                             <small class="fg-dark fw-600" style="display: inline-block; width: 130px;">Bảo hành (tháng):</small>
+                                             <span class="ml-1"><asp:Label ID="lbl_detail_thangbaohanh" runat="server"></asp:Label></span>
+                                         </div>
+                                         <div class="mt-1" style="border-bottom: 1px solid #f5f5f5; padding-bottom: 4px;">
+                                             <small class="fg-dark fw-600" style="display: inline-block; width: 130px;">Seri đổi lần 1:</small>
+                                             <span class="ml-1"><asp:Label ID="lbl_detail_seri_do_l1" runat="server"></asp:Label></span>
+                                         </div>
+                                         <div class="mt-1" style="border-bottom: 1px solid #f5f5f5; padding-bottom: 4px;">
+                                             <small class="fg-dark fw-600" style="display: inline-block; width: 130px;">Mã KH đổi lần 1:</small>
+                                             <span class="ml-1"><asp:Label ID="lbl_detail_id_khachhang_do_l1" runat="server"></asp:Label></span>
+                                         </div>
+                                         <div class="mt-1" style="border-bottom: 1px solid #f5f5f5; padding-bottom: 4px;">
+                                             <small class="fg-dark fw-600" style="display: inline-block; width: 130px;">Ngày đổi lần 1:</small>
+                                             <span class="ml-1"><asp:Label ID="lbl_detail_ngaydo_l1" runat="server"></asp:Label></span>
+                                         </div>
+                                         <div class="mt-1" style="border-bottom: 1px solid #f5f5f5; padding-bottom: 4px;">
+                                             <small class="fg-dark fw-600" style="display: inline-block; width: 130px;">Seri đổi lần 2:</small>
+                                             <span class="ml-1"><asp:Label ID="lbl_detail_seri_do_l2" runat="server"></asp:Label></span>
+                                         </div>
+                                         <div class="mt-1" style="border-bottom: 1px solid #f5f5f5; padding-bottom: 4px;">
+                                             <small class="fg-dark fw-600" style="display: inline-block; width: 130px;">Mã KH đổi lần 2:</small>
+                                             <span class="ml-1"><asp:Label ID="lbl_detail_id_khachhang_do_l2" runat="server"></asp:Label></span>
+                                         </div>
+                                         <div class="mt-1" style="border-bottom: 1px solid #f5f5f5; padding-bottom: 4px;">
+                                             <small class="fg-dark fw-600" style="display: inline-block; width: 130px;">Ngày đổi lần 2:</small>
+                                             <span class="ml-1"><asp:Label ID="lbl_detail_ngaydo_l2" runat="server"></asp:Label></span>
                                          </div>
                                          <div class="mt-2">
-                                             <small class="modal-label">Bảo hành (tháng)</small>
-                                             <div class="modal-value"><asp:Label ID="lbl_detail_thangbaohanh" runat="server"></asp:Label></div>
-                                         </div>
-                                         <div class="mt-2">
-                                             <small class="modal-label">Seri đo L1</small>
-                                             <div class="modal-value"><asp:Label ID="lbl_detail_seri_do_l1" runat="server"></asp:Label></div>
-                                         </div>
-                                         <div class="mt-2">
-                                             <small class="modal-label">ID khách hàng đo L1</small>
-                                             <div class="modal-value"><asp:Label ID="lbl_detail_id_khachhang_do_l1" runat="server"></asp:Label></div>
-                                         </div>
-                                         <div class="mt-2">
-                                             <small class="modal-label">Ngày đo L1</small>
-                                             <div class="modal-value"><asp:Label ID="lbl_detail_ngaydo_l1" runat="server"></asp:Label></div>
-                                         </div>
-                                         <div class="mt-2">
-                                             <small class="modal-label">Seri đo L2</small>
-                                             <div class="modal-value"><asp:Label ID="lbl_detail_seri_do_l2" runat="server"></asp:Label></div>
-                                         </div>
-                                         <div class="mt-2">
-                                             <small class="modal-label">ID khách hàng đo L2</small>
-                                             <div class="modal-value"><asp:Label ID="lbl_detail_id_khachhang_do_l2" runat="server"></asp:Label></div>
-                                         </div>
-                                         <div class="mt-2">
-                                             <small class="modal-label">Ngày đo L2</small>
-                                             <div class="modal-value"><asp:Label ID="lbl_detail_ngaydo_l2" runat="server"></asp:Label></div>
-                                         </div>
-                                         <div class="mt-2">
-                                             <small class="modal-label">Mô tả</small>
+                                             <small class="fg-dark fw-600 d-block mb-1">Mô tả</small>
                                              <div class="modal-value text-muted" style="font-size: 12px;"><asp:Label ID="lbl_detail_mota" runat="server"></asp:Label></div>
                                          </div>
                                          <div class="mt-2">
-                                             <small class="modal-label">Thông số kỹ thuật</small>
+                                             <small class="fg-dark fw-600 d-block mb-1">Thông số kỹ thuật</small>
                                              <div class="modal-value text-muted" style="font-size: 12px; border-bottom: none;"><asp:Label ID="lbl_detail_thongso" runat="server"></asp:Label></div>
                                         </div>
                                     </div>
@@ -157,7 +161,7 @@
                                             <span class="mif-user mr-1"></span> NHÂN VIÊN & DOANH SỐ
                                         </div>
                                         <div class="mt-2">
-                                            <small class="modal-label">Người bán (Tài khoản)</small>
+                                            <small class="modal-label">Người bán (Họ tên)</small>
                                             <div class="modal-value text-bold"><asp:Label ID="lbl_detail_nguoiban" runat="server"></asp:Label></div>
                                         </div>
                                         <div class="mt-2">
@@ -357,15 +361,15 @@
                                         <tr>
                                             <th style="width: 120px;">Ngày bán</th>
                                             <th style="width: 80px;">Ảnh</th>
-                                            <th style="width: 260px; min-width: 260px;">Sản phẩm</th>
-
+                                            <th style="width: 130px;">Khách hàng</th>
+                                            <th style="width: 230px; min-width: 230px;">Sản phẩm</th>
                                             <th style="width: 120px;">Số Seri</th>
+                                            <th style="width: 100px; text-align: center;">Mã KH</th>
                                             <th style="width: 90px; text-align: center;">SL Bán</th>
                                             <th style="width: 120px;">Giá bán</th>
                                             <th style="width: 120px;">Tổng tiền cuối</th>
-                                            <th style="width: 150px;">Khách hàng</th>
-                                            <th style="width: 70px;">ID<br />Báo giá</th>
                                             <th style="width: 150px;">Bảo hành</th>
+                                            <th style="width: 70px;">ID<br />Báo giá</th>
                                             <th style="width: 100px; text-align: center;">Hành động</th>
                                         </tr>
                                     </thead>
@@ -377,19 +381,18 @@
                                                     <td class="text-center">
                                                         <img src='<%# string.IsNullOrEmpty(Convert.ToString(Eval("productImage"))) ? "/uploads/images/no-image.png" : Eval("productImage") %>' class="product-img" />
                                                     </td>
-                                                    <td>
-                                                        <div class="fw-600"><%# Eval("productName") %></div>
-                                                    </td>
-
-                                                    <td><%# Eval("productSerial") %></td>
-                                                    <td class="text-center font-bold"><%# Eval("quantity") %></td>
-                                                    <td><%# Convert.ToInt64(Eval("price")).ToString("#,##0") %></td>
-                                                    <td class="font-bold fg-red"><%# Convert.ToInt64(Eval("totalPrice")).ToString("#,##0") %></td>
-                                                     <td style="min-width: 260px;">
+                                                     <td style="min-width: 130px;">
                                                         <div class="fw-600"><%# Eval("tenKhachHang") %></div>
                                                         <small class="text-muted"><%# Eval("sdtKhachHang") %></small>
                                                      </td>
-                                                     <td class="text-center"><%# Eval("baogiaId") %></td>
+                                                    <td style="min-width: 230px;">
+                                                        <div class="fw-600"><%# Eval("productName") %></div>
+                                                    </td>
+                                                    <td><%# Eval("productSerial") %></td>
+                                                    <td class="text-center"><%# Eval("maKH") %></td>
+                                                    <td class="text-center font-bold"><%# Eval("quantity") %></td>
+                                                    <td><%# Convert.ToInt64(Eval("price")).ToString("#,##0") %></td>
+                                                    <td class="font-bold fg-red"><%# Convert.ToInt64(Eval("totalPrice")).ToString("#,##0") %></td>
                                                      <td class="warranty-cell">
                                                          <asp:Label ID="lbl_warranty_unknown" runat="server" CssClass="warranty-unknown" Text="Không rõ" Visible='<%# string.IsNullOrWhiteSpace(Convert.ToString(Eval("thangBaoHanh"))) %>'></asp:Label>
                                                          <asp:Panel ID="pn_warranty_details" runat="server" Visible='<%# !string.IsNullOrWhiteSpace(Convert.ToString(Eval("thangBaoHanh"))) %>'>
@@ -398,6 +401,7 @@
                                                              <asp:Label ID="lbl_warranty_expired" runat="server" CssClass="warranty-status" Text="Hết hạn bảo hành" Visible='<%# Convert.ToBoolean(Eval("warrantyExpired")) %>'></asp:Label>
                                                          </asp:Panel>
                                                      </td>
+                                                     <td class="text-center"><%# Eval("baogiaId") %></td>
                                                     <td class="text-center">
                                                         <asp:LinkButton ID="btn_view" runat="server" CssClass="button mini primary rounded" CommandArgument='<%# Eval("baogiaId") + "|" + Eval("productId") %>' OnClick="btn_view_Click">
                                                             Xem chi tiết

@@ -45,6 +45,7 @@ public partial class admin_theo_doi_hang_da_ban_Default : System.Web.UI.Page
                                 tenKhachHang = bg.ten_khachhang,
                                 sdtKhachHang = bg.sdt_khachhang,
                                  diachiKhachHang = bg.diachi_khachhang,
+                                 maKH = ct.MaKichHoat,
                                  thangBaoHanh = ct.Thang_BaoHanh,
                                  vat = bg.vat ?? 0,
                                 giamgiadacbiet = bg.giamgiadacbiet ?? 0
@@ -115,6 +116,7 @@ public partial class admin_theo_doi_hang_da_ban_Default : System.Web.UI.Page
                      x.tenKhachHang,
                      x.sdtKhachHang,
                      x.diachiKhachHang,
+                     x.maKH,
                      x.thangBaoHanh,
                      warrantyExpiry,
                      warrantyExpired = warrantyExpiry.HasValue && warrantyExpiry.Value < DateTime.Now
@@ -240,27 +242,28 @@ public partial class admin_theo_doi_hang_da_ban_Default : System.Web.UI.Page
                         img_detail_sp.ImageUrl = string.IsNullOrEmpty(sp.anh) ? "/uploads/images/no-image.png" : sp.anh;
                         lbl_detail_tensp.Text = sp.ten;
                         lbl_detail_model.Text = sp.model;
-                        lbl_detail_seri.Text = string.IsNullOrEmpty(sp.so_seri) ? "N/A" : sp.so_seri;
-                        lbl_detail_thongso.Text = string.IsNullOrEmpty(sp.thongso_kythuat) ? "N/A" : sp.thongso_kythuat;
+                        lbl_detail_seri.Text = string.IsNullOrEmpty(sp.so_seri) ? "Không rõ" : sp.so_seri;
+                        lbl_detail_thongso.Text = string.IsNullOrEmpty(sp.thongso_kythuat) ? "Không rõ" : sp.thongso_kythuat;
                     }
                     else
                     {
                         img_detail_sp.ImageUrl = "/uploads/images/no-image.png";
                         lbl_detail_tensp.Text = "Sản phẩm tự chọn";
-                        lbl_detail_model.Text = "N/A";
-                        lbl_detail_seri.Text = "N/A";
-                        lbl_detail_thongso.Text = "N/A";
+                        lbl_detail_model.Text = "Không rõ";
+                        lbl_detail_seri.Text = "Không rõ";
+                        lbl_detail_thongso.Text = "Không rõ";
                     }
 
                      // Populate product inspection details
-                     lbl_detail_thangbaohanh.Text = string.IsNullOrWhiteSpace(ct.Thang_BaoHanh) ? "N/A" : ct.Thang_BaoHanh;
-                     lbl_detail_seri_do_l1.Text = string.IsNullOrWhiteSpace(ct.Seri_Do_L1) ? "N/A" : ct.Seri_Do_L1;
-                     lbl_detail_id_khachhang_do_l1.Text = string.IsNullOrWhiteSpace(ct.Id_khacHang_do_L1) ? "N/A" : ct.Id_khacHang_do_L1;
-                     lbl_detail_ngaydo_l1.Text = ct.NgayDo_L1.HasValue ? ct.NgayDo_L1.Value.ToString("dd/MM/yyyy HH:mm") : "N/A";
-                     lbl_detail_seri_do_l2.Text = string.IsNullOrWhiteSpace(ct.Seri_Do_L2) ? "N/A" : ct.Seri_Do_L2;
-                     lbl_detail_id_khachhang_do_l2.Text = string.IsNullOrWhiteSpace(ct.Id_khacHang_do_L2) ? "N/A" : ct.Id_khacHang_do_L2;
-                     lbl_detail_ngaydo_l2.Text = ct.NgayDo_L2.HasValue ? ct.NgayDo_L2.Value.ToString("dd/MM/yyyy HH:mm") : "N/A";
-                     lbl_detail_mota.Text = string.IsNullOrWhiteSpace(ct.Mota) ? "N/A" : ct.Mota;
+                     lbl_detail_makichhoat.Text = string.IsNullOrWhiteSpace(ct.MaKichHoat) ? "Không rõ" : ct.MaKichHoat;
+                     lbl_detail_thangbaohanh.Text = string.IsNullOrWhiteSpace(ct.Thang_BaoHanh) ? "Không rõ" : ct.Thang_BaoHanh;
+                     lbl_detail_seri_do_l1.Text = string.IsNullOrWhiteSpace(ct.Seri_Do_L1) ? "Không rõ" : ct.Seri_Do_L1;
+                     lbl_detail_id_khachhang_do_l1.Text = string.IsNullOrWhiteSpace(ct.Id_khacHang_do_L1) ? "Không rõ" : ct.Id_khacHang_do_L1;
+                     lbl_detail_ngaydo_l1.Text = ct.NgayDo_L1.HasValue ? ct.NgayDo_L1.Value.ToString("dd/MM/yyyy HH:mm") : "Không rõ";
+                     lbl_detail_seri_do_l2.Text = string.IsNullOrWhiteSpace(ct.Seri_Do_L2) ? "Không rõ" : ct.Seri_Do_L2;
+                     lbl_detail_id_khachhang_do_l2.Text = string.IsNullOrWhiteSpace(ct.Id_khacHang_do_L2) ? "Không rõ" : ct.Id_khacHang_do_L2;
+                     lbl_detail_ngaydo_l2.Text = ct.NgayDo_L2.HasValue ? ct.NgayDo_L2.Value.ToString("dd/MM/yyyy HH:mm") : "Không rõ";
+                     lbl_detail_mota.Text = string.IsNullOrWhiteSpace(ct.Mota) ? "Không rõ" : ct.Mota;
 
                      // Populate Customer Details
                      lbl_detail_tenkh.Text = bg.ten_khachhang;
@@ -269,7 +272,7 @@ public partial class admin_theo_doi_hang_da_ban_Default : System.Web.UI.Page
 
                     // Populate Order Details
                     lbl_detail_mabg.Text = bg.id.ToString();
-                    lbl_detail_ngayban.Text = bg.ngayban_kyhopdong.HasValue ? bg.ngayban_kyhopdong.Value.ToString("dd/MM/yyyy HH:mm") : "N/A";
+                    lbl_detail_ngayban.Text = bg.ngayban_kyhopdong.HasValue ? bg.ngayban_kyhopdong.Value.ToString("dd/MM/yyyy HH:mm") : "Không rõ";
                     lbl_detail_soluong.Text = ct.soluong?.ToString("#,##0") ?? "0";
 
                     // Proportional Calculations
@@ -366,7 +369,8 @@ lbl_detail_tongdonhang_saugiam.Text = totalSauGiamAll.ToString("#,##0");
                     rpt_order_items.DataBind();
 
                     // Populate Sales Revenue & Employee Info
-                    lbl_detail_nguoiban.Text = bg.nguoibaogia;
+                    var tk = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == bg.nguoibaogia);
+                    lbl_detail_nguoiban.Text = tk != null ? tk.hoten : bg.nguoibaogia;
                     lbl_detail_phantramdoanhso.Text = bg.phantram_doanhso_now?.ToString() ?? "0";
                     lbl_detail_thuongdoanhso.Text = bg.thuongdoanhso?.ToString("#,##0") ?? "0";
 

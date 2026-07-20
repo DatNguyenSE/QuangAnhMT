@@ -64,6 +64,7 @@
     <asp:UpdatePanel ID="up_import" runat="server" UpdateMode="Conditional">
         <Triggers>
             <asp:PostBackTrigger ControlID="but_import_excel" />
+            <asp:PostBackTrigger ControlID="but_import_makh_excel" />
         </Triggers>
         <ContentTemplate>
             <asp:Panel ID="pn_import" runat="server" Visible="false" DefaultButton="but_import_excel">
@@ -99,6 +100,7 @@
                                 </div>
                             </div>
                             <div class="mt-6 mb-20 text-right">
+                                <asp:Button ID="but_import_makh_excel" runat="server" CssClass="button info" Text="Nhập Mã KH từ excel" OnClick="but_import_makh_excel_Click" OnClientClick="return showLoadingForImport();" />
                                 <asp:Button ID="but_import_excel" runat="server" CssClass="button success" Text="Xác nhận nhập" OnClick="but_import_excel_Click" OnClientClick="return showLoadingForImport();" />
                             </div>
                             <div class="mb-20"></div>

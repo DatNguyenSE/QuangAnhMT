@@ -3386,4 +3386,116 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
         Repeater_ChiTietBaoGia.DataBind();
         up_xem_chitiet.Update();
     }
+
+    protected void but_import_makh_excel_Click(object sender, EventArgs e)
+    {
+        Server.ScriptTimeout = 3600;
+        if (file_import.HasFile)
+        {
+            try
+            {
+                OfficeOpenXml.ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
+                using (var package = new OfficeOpenXml.ExcelPackage(file_import.PostedFile.InputStream))
+                {
+                    var worksheet = package.Workbook.Worksheets.FirstOrDefault();
+                    if (worksheet != null)
+                    {
+                        dbDataContext db = new dbDataContext();
+                        db.CommandTimeout = 3600;
+
+                        int rowCount = worksheet.Dimension.Rows;
+                        int updatedCount = 0;
+                        int errorCount = 0;
+
+                        var dictSanPhamBySeri = db.KhoSanPham_tbs.AsEnumerable()
+                            .Where(s => !string.IsNullOrEmpty(s.so_seri))
+                            .GroupBy(s => s.so_seri.ToUpper())
+                            .ToDictionary(g => g.Key, g => g.First());
+
+                        for (int row = 3; row <= rowCount; row++)
+                        {
+                            try
+                            {
+                                if (row > 3 && row % 500 == 0)
+                                {
+                                    db.Dispose();
+                                    db = new dbDataContext();
+                                    db.CommandTimeout = 3600;
+
+                                    dictSanPhamBySeri = db.KhoSanPham_tbs.AsEnumerable()
+                                        .Where(s => !string.IsNullOrEmpty(s.so_seri))
+                                        .GroupBy(s => s.so_seri.ToUpper())
+                                        .ToDictionary(g => g.Key, g => g.First());
+                                }
+
+                                string strSeri = worksheet.Cells[row, 7].Text?.Trim() ?? ""; // G2
+                                string strMaKH = worksheet.Cells[row, 8].Text?.Trim() ?? ""; // H2
+
+                                if (!string.IsNullOrEmpty(strSeri) && !string.IsNullOrEmpty(strMaKH))
+                                {
+                                    string keySeri = strSeri.ToUpper();
+                                    if (dictSanPhamBySeri.ContainsKey(keySeri))
+                                    {
+                                        string idSanPham = dictSanPhamBySeri[keySeri].id.ToString();
+
+                                        var chiTietList = db.BaoGia_ChiTiet_tbs.Where(c => c.id_sanpham == idSanPham).ToList();
+                                        bool updated = false;
+                                        foreach (var ct in chiTietList)
+                                        {
+                                            ct.MaKichHoat = strMaKH;
+                                            updated = true;
+                                        }
+
+                                        if (updated)
+                                        {
+                                            db.SubmitChanges();
+                                            updatedCount++;
+                                        }
+                                    }
+                                }
+                            }
+                            catch (Exception innerEx)
+                            {
+                                errorCount++;
+                                try
+                                {
+                                    System.IO.File.AppendAllText(Server.MapPath("~/admin/quan-ly-bao-gia/import_error_log.txt"), "Lỗi Cập nhật KH dòng " + row + ": " + innerEx.Message + "\r\n");
+                                }
+                                catch { }
+
+                                db.Dispose();
+                                db = new dbDataContext();
+                                db.CommandTimeout = 3600;
+                                dictSanPhamBySeri = db.KhoSanPham_tbs.AsEnumerable()
+                                    .Where(s => !string.IsNullOrEmpty(s.so_seri))
+                                    .GroupBy(s => s.so_seri.ToUpper())
+                                    .ToDictionary(g => g.Key, g => g.First());
+                            }
+                        }
+
+                        db.Dispose();
+
+                        pn_import.Visible = false;
+                        up_import.Update();
+
+                        string msg = "Cập nhật thành công Mã KH cho " + updatedCount + " sản phẩm.";
+                        if (errorCount > 0) msg += " Có " + errorCount + " dòng bị lỗi (đã ghi vào file import_error_log.txt).";
+                        ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", msg, "false", "false", "OK", "success", ""), true);
+
+                        show_main();
+                        up_main.Update();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                string safeMsg = ex.Message.Replace("'", "\\'").Replace("\r", " ").Replace("\n", " ");
+                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Lỗi", "Lỗi: " + safeMsg, "false", "false", "OK", "alert", ""), true);
+            }
+        }
+        else
+        {
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Lỗi", "Vui lòng chọn file.", "false", "false", "OK", "alert", ""), true);
+        }
+    }
 }
