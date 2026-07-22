@@ -1023,10 +1023,6 @@
                                                         <div><a class="fw-600" title="Nhấn để gọi" href="tel:<%#Eval("sdt_khachhang") %>"><span class="mif-phone pr-1"></span><%#Eval("sdt_khachhang") %></a></div>
                                                     </asp:PlaceHolder>
                                                 </td>
-
-                                                <td class="text-left" style="max-width: 220px;">
-                                                    <%# Eval("diachiKhachHang") %>
-                                                </td>
                                                 <td class="text-left quote-expiry-cell">
                                                     <div><%# Eval("ngayhethan") == null ? "Không rõ" : Convert.ToDateTime(Eval("ngayhethan")).ToString("dd/MM/yyyy") %></div>
                                                     <asp:Label ID="lbl_quote_expired" runat="server" CssClass="quote-expired" Text="Đã quá hạn" Visible='<%# Convert.ToBoolean(Eval("baoGiaQuaHan")) %>'></asp:Label>

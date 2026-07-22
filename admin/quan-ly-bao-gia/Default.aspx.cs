@@ -410,8 +410,6 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
             var list_split = (from ob1 in db.BaoGia_tbs
                                where pagedIds.Contains(ob1.id)
                                join ob2 in db.BaoGia_ChiTiet_tbs on ob1.id.ToString() equals ob2.id_baogia into chiTietGroup
-                               join kh in db.Data_KhachHang_tbs on ob1.sdt_khachhang equals kh.sdt into KhachHangGroup
-                               from kh in KhachHangGroup.DefaultIfEmpty()
                                join tk in db.taikhoan_tbs on ob1.nguoibaogia equals tk.taikhoan into TaiKhoanGroup
                               from tk in TaiKhoanGroup.DefaultIfEmpty()
                               let tongTien = chiTietGroup.Sum(ct => (long?)ct.thanhtien) ?? 0
@@ -436,7 +434,6 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                                   ghichu_chuagiao = ob1.ghichu_chuagiao ?? "",
                                    ob1.sdt_khachhang,
                                    ob1.ten_khachhang,
-                                   diachiKhachHang = kh != null ? kh.diachi : "",
                                   ob1.ngayhethan,
                                   ob1.ngaybaogia,
                                   ob1.nguoibaogia,
