@@ -1,4 +1,4 @@
-﻿using OfficeOpenXml;
+using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,73 +13,6 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
     // ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Tài khoản đã bị khóa.", "false", "false", "OK", "alert", ""), true);
     String_cl str_cl = new String_cl();
     DateTime_cl dt_cl = new DateTime_cl();
-
-    // Lưu trạng thái quyền trong request hiện tại, tránh Split/Contains lặp lại cho từng dòng Repeater.
-    private bool _canViewPurchasePrice;
-
-    private static bool HasPermission(string permissionText, string permissionCode)
-    {
-        if (string.IsNullOrWhiteSpace(permissionText) || string.IsNullOrWhiteSpace(permissionCode))
-            return false;
-
-        return permissionText
-            .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-            .Any(p => string.Equals(p.Trim(), permissionCode, StringComparison.Ordinal));
-    }
-
-    private static long? TryGetId(string value)
-    {
-        long id;
-        return long.TryParse(value, out id) ? (long?)id : null;
-    }
-
-    private string GetCurrentSearchKey()
-    {
-        string key = ViewState["search_key"] as string;
-        if (key != null)
-            return key.Trim();
-
-        return !string.IsNullOrWhiteSpace(txt_timkiem1.Text)
-            ? txt_timkiem1.Text.Trim()
-            : txt_timkiem.Text.Trim();
-    }
-
-    private void BindProductSourceDropDowns(dbDataContext db, KhoSanPham_tb product)
-    {
-        var data = db.DuLieuNguon_tbs
-            .Where(p => p.kyhieu == "hangsanpham" || p.kyhieu == "nhomsanpham" || p.kyhieu == "donvitinh")
-            .Select(p => new { p.id, p.ten, p.kyhieu })
-            .ToList();
-
-        var hangSanPham = data.Where(p => p.kyhieu == "hangsanpham").OrderBy(p => p.ten).ToList();
-        var nhomSanPham = data.Where(p => p.kyhieu == "nhomsanpham").OrderBy(p => p.ten).ToList();
-        var donViTinh = data.Where(p => p.kyhieu == "donvitinh").OrderBy(p => p.ten).ToList();
-
-        DropDownList1.DataSource = hangSanPham;
-        DropDownList1.DataValueField = "id";
-        DropDownList1.DataTextField = "ten";
-        DropDownList1.DataBind();
-        DropDownList1.Items.Insert(0, new ListItem("Chọn hãng", ""));
-
-        DropDownList2.DataSource = nhomSanPham;
-        DropDownList2.DataValueField = "id";
-        DropDownList2.DataTextField = "ten";
-        DropDownList2.DataBind();
-        DropDownList2.Items.Insert(0, new ListItem("Chọn nhóm", ""));
-
-        DropDownList3.DataSource = donViTinh;
-        DropDownList3.DataValueField = "id";
-        DropDownList3.DataTextField = "ten";
-        DropDownList3.DataBind();
-        DropDownList3.Items.Insert(0, new ListItem("Chọn đơn vị tính", ""));
-
-        if (product == null)
-            return;
-
-        DropDownList1.SelectedValue = hangSanPham.Any(p => p.id.ToString() == product.id_hang) ? product.id_hang : "";
-        DropDownList2.SelectedValue = nhomSanPham.Any(p => p.id.ToString() == product.id_nhom) ? product.id_nhom : "";
-        DropDownList3.SelectedValue = donViTinh.Any(p => p.id.ToString() == product.donvitinh) ? product.donvitinh : "";
-    }
 
     public void set_dulieu_macdinh()
     {
@@ -178,9 +111,28 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
     #region main - phân trang - tìm kiếm
     protected void Repeater1_ItemDataBound(object sender, RepeaterItemEventArgs e)
     {
-        PlaceHolder purchasePriceHolder = e.Item.FindControl("PlaceHolder5") as PlaceHolder;
-        if (purchasePriceHolder != null)
-            purchasePriceHolder.Visible = _canViewPurchasePrice;
+        // Lấy quyền người dùng từ một nơi nào đó, ví dụ: Session, ViewState hoặc từ cơ sở dữ liệu
+        string userPermissions = ViewState["quyen"].ToString();
+        var permissionsList = userPermissions.Split(',');
+        // Kiểm tra nếu quyền của người dùng có quyền 3
+        if (permissionsList.Contains("8"))
+        {
+            // Nếu người dùng có quyền 2, hiển thị giá trị 'LuongCoBan'
+            PlaceHolder PlaceHolder5 = (PlaceHolder)e.Item.FindControl("PlaceHolder5");
+            if (PlaceHolder5 != null)
+            {
+                PlaceHolder5.Visible = true;
+            }
+        }
+        else
+        {
+            // Nếu không có quyền 2, ẩn giá trị 'LuongCoBan'
+            PlaceHolder PlaceHolder5 = (PlaceHolder)e.Item.FindControl("PlaceHolder5");
+            if (PlaceHolder5 != null)
+            {
+                PlaceHolder5.Visible = false;
+            }
+        }
     }
     public void show_main()
     {
@@ -188,37 +140,43 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
         {
             using (dbDataContext db = new dbDataContext())
             {
-                db.ObjectTrackingEnabled = false;
-
                 #region kiểm tra quyền - k cho xem giá nhập
-                string account = Convert.ToString(ViewState["taikhoan"]);
-                string permission = db.taikhoan_tbs
-                    .Where(p => p.taikhoan == account)
-                    .Select(p => p.permission)
-                    .FirstOrDefault() ?? "";
-
-                ViewState["quyen"] = permission;
-                _canViewPurchasePrice = HasPermission(permission, "8");
-                PlaceHolder1.Visible = _canViewPurchasePrice;
-                PlaceHolder3.Visible = _canViewPurchasePrice;
-                PlaceHolder6.Visible = _canViewPurchasePrice;
-                PlaceHolder4.Visible = _canViewPurchasePrice;
+                var q = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == ViewState["taikhoan"].ToString());
+                ViewState["quyen"] = q.permission;
+                var permissionsList = q.permission.Split(',');
+                if (permissionsList.Contains("8"))
+                {
+                    PlaceHolder1.Visible = true;
+                    PlaceHolder3.Visible = true;
+                    PlaceHolder6.Visible = true;
+                    PlaceHolder4.Visible = true;
+                }
+                else
+                {
+                    PlaceHolder1.Visible = false;
+                    PlaceHolder3.Visible = false;
+                    PlaceHolder6.Visible = false;
+                    PlaceHolder4.Visible = false;
+                }
                 #endregion
 
                 #region lấy dữ liệu
-                string _key = GetCurrentSearchKey();
-                var products = db.KhoSanPham_tbs.AsQueryable();
+                string _key = ViewState["search_key"] as string;
+                if (_key == null)
+                {
+                    _key = !string.IsNullOrWhiteSpace(txt_timkiem1.Text)
+                        ? txt_timkiem1.Text.Trim()
+                        : txt_timkiem.Text.Trim();
+                }
 
+                var products = db.KhoSanPham_tbs.AsQueryable();
                 if (!string.IsNullOrEmpty(_key))
                 {
                     long searchId;
                     bool hasSearchId = long.TryParse(_key, out searchId);
-                    List<string> categoryIds = db.DuLieuNguon_tbs
+                    var categoryIds = db.DuLieuNguon_tbs
                         .Where(p => (p.kyhieu == "hangsanpham" || p.kyhieu == "nhomsanpham") && p.ten.Contains(_key))
-                        .Select(p => p.id)
-                        .ToList()
-                        .Select(id => id.ToString())
-                        .ToList();
+                        .Select(p => p.id.ToString());
 
                     products = products.Where(p =>
                         p.ten.Contains(_key) ||
@@ -332,7 +290,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                 //PHÂN TRANG****PHÂN TRANG
                 var list_split = list_all.Skip(current_page * show - show).Take(show).ToList();
                 //xử lý thanh thông báo phân trang
-                int stt = (show * current_page) - show + 1; int _s1 = stt + list_split.Count - 1;
+                int stt = (show * current_page) - show + 1; int _s1 = stt + list_split.Count() - 1;
                 if (_Tong_Record != 0) lb_show.Text = stt + "-" + _s1 + " trong số " + _Tong_Record.ToString("#,##0"); else lb_show.Text = "0-0/0"; lb_show_md.Text = stt + "-" + _s1 + " trong số " + _Tong_Record.ToString("#,##0");
                 #endregion
                 Repeater1.DataSource = list_split;
@@ -485,7 +443,29 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
 
             using (dbDataContext db = new dbDataContext())
             {
-                BindProductSourceDropDowns(db, null);
+                var data = db.DuLieuNguon_tbs
+             .Where(p => p.kyhieu == "hangsanpham" || p.kyhieu == "nhomsanpham" || p.kyhieu == "donvitinh")
+             .ToList();
+
+                var hangSanPham = data.Where(p => p.kyhieu == "hangsanpham").OrderBy(p => p.ten).ToList();
+                var nhomSanPham = data.Where(p => p.kyhieu == "nhomsanpham").OrderBy(p => p.ten).ToList();
+                var donvitinh = data.Where(p => p.kyhieu == "donvitinh").OrderBy(p => p.ten).ToList();
+
+                DropDownList1.DataSource = hangSanPham;
+                DropDownList1.DataValueField = "id";
+                DropDownList1.DataTextField = "ten";
+                DropDownList1.DataBind();
+                DropDownList1.Items.Insert(0, new ListItem("Chọn hãng", ""));
+                DropDownList2.DataSource = nhomSanPham;
+                DropDownList2.DataValueField = "id";
+                DropDownList2.DataTextField = "ten";
+                DropDownList2.DataBind();
+                DropDownList2.Items.Insert(0, new ListItem("Chọn nhóm", ""));
+                DropDownList3.DataSource = donvitinh;
+                DropDownList3.DataValueField = "id";
+                DropDownList3.DataTextField = "ten";
+                DropDownList3.DataBind();
+                DropDownList3.Items.Insert(0, new ListItem("Chọn đơn vị tính", ""));
 
             }
             //hiện form add_edit trong updatePanel_add
@@ -533,8 +513,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
 
         using (dbDataContext db = new dbDataContext())
         {
-            long? editId = TryGetId(Convert.ToString(ViewState["id_edit"]));
-            var q = db.KhoSanPham_tbs.FirstOrDefault(p => p.id == editId);
+            var q = db.KhoSanPham_tbs.FirstOrDefault(p => p.id.ToString() == ViewState["id_edit"].ToString());
             if (q != null)
             {
                 KhoSanPham_tb _ob = q;
@@ -562,13 +541,50 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             string _id = button.CommandArgument;
 
             //truy vấn dữ liệu để sửa
-            long? productId = TryGetId(_id);
-            var q = db.KhoSanPham_tbs.FirstOrDefault(p => p.id == productId);
+            var q = db.KhoSanPham_tbs.FirstOrDefault(p => p.id.ToString() == _id);
             if (q != null)
             {
                 ViewState["id_edit"] = _id;
 
-                BindProductSourceDropDowns(db, q);
+                var data = db.DuLieuNguon_tbs
+         .Where(p => p.kyhieu == "hangsanpham" || p.kyhieu == "nhomsanpham" || p.kyhieu == "donvitinh")
+         .ToList();
+
+                var hangSanPham = data.Where(p => p.kyhieu == "hangsanpham").OrderBy(p => p.ten).ToList();
+                var nhomSanPham = data.Where(p => p.kyhieu == "nhomsanpham").OrderBy(p => p.ten).ToList();
+                var donvitinh = data.Where(p => p.kyhieu == "donvitinh").OrderBy(p => p.ten).ToList();
+
+                DropDownList1.DataSource = hangSanPham;
+                DropDownList1.DataValueField = "id";
+                DropDownList1.DataTextField = "ten";
+                DropDownList1.DataBind();
+                DropDownList1.Items.Insert(0, new ListItem("Chọn hãng", ""));
+                // Kiểm tra nếu q.id_hang tồn tại trong danh sách
+                if (hangSanPham.Any(p => p.id.ToString() == q.id_hang))
+                    DropDownList1.SelectedValue = q.id_hang;
+                else
+                    DropDownList1.SelectedIndex = 0;
+
+                DropDownList2.DataSource = nhomSanPham;
+                DropDownList2.DataValueField = "id";
+                DropDownList2.DataTextField = "ten";
+                DropDownList2.DataBind();
+                DropDownList2.Items.Insert(0, new ListItem("Chọn nhóm", ""));
+                if (nhomSanPham.Any(p => p.id.ToString() == q.id_nhom))
+                    DropDownList2.SelectedValue = q.id_nhom;
+                else
+                    DropDownList2.SelectedIndex = 0;
+
+
+                DropDownList3.DataSource = donvitinh;
+                DropDownList3.DataValueField = "id";
+                DropDownList3.DataTextField = "ten";
+                DropDownList3.DataBind();
+                DropDownList3.Items.Insert(0, new ListItem("Chọn đơn vị tính", ""));
+                if (donvitinh.Any(p => p.id.ToString() == q.donvitinh))
+                    DropDownList3.SelectedValue = q.donvitinh;
+                else
+                    DropDownList3.SelectedIndex = 0;
 
                 txt_so_seri.Text = q.so_seri;
                 txt_name.Text = q.ten;
@@ -723,11 +739,10 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                 else//edit
                 {
                     #region chuẩn bị dữ liệu
-                    long? editId = TryGetId(Convert.ToString(ViewState["id_edit"]));
-                    var q_edit = db.KhoSanPham_tbs.FirstOrDefault(p => p.id == editId);
+                    var q_edit = db.KhoSanPham_tbs.FirstOrDefault(p => p.id.ToString() == ViewState["id_edit"].ToString());
                     if (q_edit != null)
                     {
-                        var q_seri = db.KhoSanPham_tbs.FirstOrDefault(p => p.so_seri == _so_seri && p.id != editId);
+                        var q_seri = db.KhoSanPham_tbs.FirstOrDefault(p => p.so_seri == _so_seri && p.id.ToString() != ViewState["id_edit"].ToString());
                         if (q_seri != null)
                         {
                             ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Số seri này đã tồn tại.", "false", "false", "OK", "alert", ""), true);
@@ -862,7 +877,6 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                 Directory.CreateDirectory(Server.MapPath("~/uploads/files/"));
             using (dbDataContext db = new dbDataContext())
             {
-                db.ObjectTrackingEnabled = false;
                 #region lấy dữ liệu
                 var list_all = (from ob1 in db.KhoSanPham_tbs
                                 join ob2 in db.DuLieuNguon_tbs
@@ -899,28 +913,15 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
 
 
 
-                // Giữ nguyên logic tìm kiếm của chức năng xuất Excel.
+                // Kiểm tra xem textbox có dữ liệu tìm kiếm không
                 string _key = txt_timkiem.Text.Trim();
                 if (!string.IsNullOrEmpty(_key))
-                {
-                    long searchId;
-                    bool hasSearchId = long.TryParse(_key, out searchId);
-                    list_all = list_all.Where(p => p.TenSP.Contains(_key) || (hasSearchId && p.id == searchId));
-                }
+                    list_all = list_all.Where(p => p.TenSP.Contains(_key) || p.id.ToString() == _key);
                 else
                 {
                     string _key1 = txt_timkiem1.Text.Trim();
                     if (!string.IsNullOrEmpty(_key1))
-                    {
-                        long searchId1;
-                        bool hasSearchId1 = long.TryParse(_key1, out searchId1);
-                        list_all = list_all.Where(p =>
-                            p.TenSP.Contains(_key1) ||
-                            p.Hang.Contains(_key1) ||
-                            p.Nhom.Contains(_key1) ||
-                            p.model == _key1 ||
-                            (hasSearchId1 && p.id == searchId1));
-                    }
+                        list_all = list_all.Where(p => p.TenSP.Contains(_key1) || p.Hang.Contains(_key1) || p.Nhom.Contains(_key1) || p.model == _key1 || p.id.ToString() == _key1);
                 }
 
                 ////xử lý theo thời gian
@@ -945,8 +946,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
 
                 //sắp xếp
                 list_all = list_all.OrderBy(p => p.Nhom).ThenBy(p => p.TenSP);
-                var exportData = list_all.ToList();
-                int _Tong_Record = exportData.Count;
+                int _Tong_Record = list_all.Count();
 
                 //Int64 _tongbanle = list_all.Sum(p => p.TongBanLe.Value), _tonggianhap = list_all.Sum(p => p.TongGiaNhap.Value);
                 //ViewState["tong_ton"] = list_all.Sum(p => p.soluong_hientai.Value).ToString("#,##0");
@@ -981,7 +981,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                     // Ghi dữ liệu từ LINQ Query vào ExcelWorksheet
                     IEnumerable<dynamic> list_xuat;
                     if (check_all_page.Checked == true)//nếu chọn tất cả
-                        list_xuat = exportData;
+                        list_xuat = list_all;
                     else//nếu chọn trang riêng lẻ
                     {
                         // Khởi tạo danh sách để lưu trữ dữ liệu xuất ra từ các trang cụ thể
@@ -998,7 +998,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                             int endIndex = startIndex + itemsPerPage;
 
                             // Lọc dữ liệu từ `list_all` cho trang cụ thể
-                            var pageData = exportData.Skip(startIndex).Take(itemsPerPage);
+                            var pageData = list_all.Skip(startIndex).Take(itemsPerPage);
 
                             // Thêm dữ liệu đã lọc vào danh sách `list_xuat`
                             list_split.AddRange(pageData);
@@ -1429,9 +1429,8 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
 
                 if (chkItem != null && lblData != null && chkItem.Checked)
                 {
-                    long id;
-                    if (long.TryParse(lblData.Text, out id))
-                        selectedIds.Add(id); // Thêm ID vào danh sách
+                    int id = int.Parse(lblData.Text);
+                    selectedIds.Add(id); // Thêm ID vào danh sách
                 }
             }
 
@@ -1486,8 +1485,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             string _id = button.CommandArgument;
             using (dbDataContext db = new dbDataContext())
             {
-                long? productId = TryGetId(_id);
-            var q = db.KhoSanPham_tbs.FirstOrDefault(p => p.id == productId);
+                var q = db.KhoSanPham_tbs.FirstOrDefault(p => p.id.ToString() == _id);
                 if (q != null)
                 {
                     KhoSanPham_tb _ob = new KhoSanPham_tb();
@@ -1540,8 +1538,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             string _id = button.CommandArgument;
             using (dbDataContext db = new dbDataContext())
             {
-                long? productId = TryGetId(_id);
-            var q = db.KhoSanPham_tbs.FirstOrDefault(p => p.id == productId);
+                var q = db.KhoSanPham_tbs.FirstOrDefault(p => p.id.ToString() == _id);
                 if (q != null)
                 {
                     db.KhoSanPham_tbs.DeleteOnSubmit(q);
@@ -1635,7 +1632,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
     //    //            if (!string.IsNullOrEmpty(_giaban))//có dữ liệu mới xử lý
     //    //            {
     //    //                // Thực hiện các thao tác với ID tại đây
-    //    //                var q = db.DanhMuc_tbs.FirstOrDefault(p => p.id == TryGetId(_id));
+    //    //                var q = db.DanhMuc_tbs.FirstOrDefault(p => p.id.ToString() == _id);
     //    //                if (q != null)
     //    //                {
     //    //                    int _r1 = Number_cl.Check_Int(_giaban);
@@ -1703,8 +1700,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             LinkButton button = (LinkButton)sender;
             string _id = button.CommandArgument;
             //truy vấn dữ liệu để sửa
-            long? productId = TryGetId(_id);
-            var q = db.KhoSanPham_tbs.FirstOrDefault(p => p.id == productId);
+            var q = db.KhoSanPham_tbs.FirstOrDefault(p => p.id.ToString() == _id);
             if (q != null)
             {
                 ViewState["id_edit"] = _id;
@@ -1750,8 +1746,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                 //    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Giá nhập không hợp lệ.", "false", "false", "OK", "alert", ""), true);
                 //    return;
                 //}
-                long? editId = TryGetId(Convert.ToString(ViewState["id_edit"]));
-            var q = db.KhoSanPham_tbs.FirstOrDefault(p => p.id == editId);
+                var q = db.KhoSanPham_tbs.FirstOrDefault(p => p.id.ToString() == ViewState["id_edit"].ToString());
                 if (q != null)
                 {
                     NhapXuatKho_tb _ob = new NhapXuatKho_tb();

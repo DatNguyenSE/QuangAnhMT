@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -16,6 +16,65 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
     {
         public string Id { get; set; }
         public string Text { get; set; }
+    }
+
+    private sealed class WarrantyListRow
+    {
+        public long id { get; set; }
+        public DateTime? ngaytao { get; set; }
+        public string HoTenNhanVien { get; set; }
+        public string sdt_khachhang { get; set; }
+        public string ten_khachhang { get; set; }
+        public string diachi_khachhang { get; set; }
+        public long TongTien { get; set; }
+        public long TongGiam { get; set; }
+        public long TongSauGiam { get; set; }
+        public int vat { get; set; }
+        public decimal TongTien_VAT { get; set; }
+        public decimal TongSauThue { get; set; }
+        public long congno { get; set; }
+        public string ghichu { get; set; }
+        public DateTime? NgayHenKhachTra { get; set; }
+        public DateTime? ngaynhan { get; set; }
+        public DateTime? NgayTra_ThucTe { get; set; }
+        public string trangthai { get; set; }
+        public bool trehen { get; set; }
+        public string SoPhieuTra { get; set; }
+        public string ChiTietSanPhamHtml { get; set; }
+    }
+
+    private sealed class DetailAggregate
+    {
+        public string IdPhieu { get; set; }
+        public long TongTien { get; set; }
+        public long TongGiamChiTiet { get; set; }
+        public long TongSauGiamChiTiet { get; set; }
+    }
+
+    private static string BuildProductHtml(IEnumerable<HangBaoHanh_ChiTiet_tb> details)
+    {
+        if (details == null) return "";
+
+        var list = details.ToList();
+        if (list.Count == 0) return "";
+
+        var sb = new System.Text.StringBuilder();
+        for (int i = 0; i < list.Count; i++)
+        {
+            var item = list[i];
+            sb.Append("<div class='fw-600 text-blue'>")
+              .Append(HttpUtility.HtmlEncode(item.ten ?? ""))
+              .Append("</div>");
+            sb.Append("<div class='text-small'>Seri: <b>")
+              .Append(HttpUtility.HtmlEncode(item.seri ?? ""))
+              .Append("</b> | SL: <b>")
+              .Append(item.soluong ?? 0)
+              .Append("</b></div>");
+
+            if (i < list.Count - 1)
+                sb.Append("<hr style='margin:4px 0;'/>");
+        }
+        return sb.ToString();
     }
 
     private static List<DropdownOption> GetCustomers(dbDataContext db)
@@ -203,85 +262,110 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
         {
             using (dbDataContext db = new dbDataContext())
             {
-                #region lấy dữ liệu
+                // Danh sách chỉ đọc: tắt tracking và deferred loading để giảm RAM/CPU.
+                db.ObjectTrackingEnabled = false;
+                db.DeferredLoadingEnabled = false;
+
                 var phieuQuery = db.HangBaoHanh_tbs.AsQueryable();
 
-                string _key = txt_timkiem.Text.Trim();
-                if (string.IsNullOrEmpty(_key))
-                    _key = txt_timkiem1.Text.Trim(); // Gộp 2 ô tìm kiếm
+                string key = txt_timkiem.Text.Trim();
+                if (string.IsNullOrEmpty(key))
+                    key = txt_timkiem1.Text.Trim();
 
-                if (!string.IsNullOrEmpty(_key))
+                if (!string.IsNullOrEmpty(key))
                 {
-                    long searchId = -1;
-                    long.TryParse(_key, out searchId);
+                    long searchId;
+                    bool hasSearchId = long.TryParse(key, out searchId);
 
-                    // Tìm trước các ID phiếu có chứa số Seri hoặc Số phiếu trả tương ứng (truy vấn độc lập rất nhanh)
-                    var matchedStrIds = db.HangBaoHanh_ChiTiet_tbs
-                                          .Where(c => c.seri.Contains(_key) || c.so_phieu_tra.Contains(_key))
-                                          .Select(c => c.id_PhieuBaoHanh)
-                                          .Distinct()
-                                          .ToList();
-                    List<long> matchedIds = new List<long>();
-                    foreach (var s in matchedStrIds)
-                    {
-                        if (long.TryParse(s, out long parsed))
-                            matchedIds.Add(parsed);
-                    }
-
-                    // Tối ưu: Không dùng p.id.ToString() == _key vì nó ép kiểu toàn bộ Database làm mất index. Dùng p.id == searchId.
+                    // Giữ nguyên phạm vi tìm kiếm cũ nhưng để SQL xử lý dưới dạng EXISTS,
+                    // không kéo danh sách ID chi tiết lên RAM trước.
                     phieuQuery = phieuQuery.Where(p =>
-                        p.ten_khachhang.Contains(_key) ||
-                        p.diachi_khachhang.Contains(_key) ||
-                        p.sdt_khachhang.Contains(_key) ||
-                        (searchId != -1 && p.id == searchId) ||
-                        matchedIds.Contains(p.id)
+                        p.ten_khachhang.Contains(key) ||
+                        p.diachi_khachhang.Contains(key) ||
+                        p.sdt_khachhang.Contains(key) ||
+                        (hasSearchId && p.id == searchId) ||
+                        db.HangBaoHanh_ChiTiet_tbs.Any(c =>
+                            c.id_PhieuBaoHanh == p.id.ToString() &&
+                            (c.seri.Contains(key) || c.so_phieu_tra.Contains(key)))
                     );
                 }
 
-                int _Tong_Record = phieuQuery.Count();
+                int totalRecords = phieuQuery.Count();
+                int pageSize = Number_cl.Check_Int(txt_show.Text.Trim());
+                if (pageSize <= 0) pageSize = 30;
 
-                int show = Number_cl.Check_Int(txt_show.Text.Trim()); if (show <= 0) show = 30;
-                int current_page = int.Parse(ViewState["current_page_hangbaohanh"].ToString()); 
-                int total_page = number_of_page_class.return_total_page(_Tong_Record, show); 
-                if (current_page < 1) current_page = 1; else if (current_page > total_page) current_page = total_page;
-                ViewState["total_page"] = total_page;
+                int currentPage;
+                if (!int.TryParse(Convert.ToString(ViewState["current_page_hangbaohanh"]), out currentPage))
+                    currentPage = 1;
 
-                if (current_page >= total_page) { but_xemtiep.Enabled = false; but_xemtiep1.Enabled = false; } else { but_xemtiep.Enabled = true; but_xemtiep1.Enabled = true; }
-                if (current_page == 1) { but_quaylai.Enabled = false; but_quaylai1.Enabled = false; } else { but_quaylai.Enabled = true; but_quaylai1.Enabled = true; }
+                int totalPages = number_of_page_class.return_total_page(totalRecords, pageSize);
+                if (totalPages <= 0) totalPages = 1;
+                if (currentPage < 1) currentPage = 1;
+                if (currentPage > totalPages) currentPage = totalPages;
 
-                if (_Tong_Record != 0)
+                ViewState["current_page_hangbaohanh"] = currentPage.ToString();
+                ViewState["total_page"] = totalPages;
+
+                but_xemtiep.Enabled = currentPage < totalPages;
+                but_xemtiep1.Enabled = currentPage < totalPages;
+                but_quaylai.Enabled = currentPage > 1;
+                but_quaylai1.Enabled = currentPage > 1;
+
+                // Tổng hợp chi tiết ngay tại SQL: mỗi phiếu chỉ còn một dòng tổng,
+                // thay vì tải toàn bộ chi tiết về RAM.
+                if (totalRecords > 0)
                 {
-                    // Lấy các cột tối thiểu để tính tổng nhanh gọn trên RAM mà không kéo hết bảng
-                    var phieuTotalsData = phieuQuery.Select(p => new { p.id, p.giamgiadacbiet, p.vat }).ToList();
-                    
-                    // Chỉ lấy chi tiết thuộc các phiếu sau khi đã lọc, không quét toàn bộ bảng.
-                    var allChiTiet = (from c in db.HangBaoHanh_ChiTiet_tbs
-                                      join p in phieuQuery on c.id_PhieuBaoHanh equals p.id.ToString()
-                                      select new { c.id_PhieuBaoHanh, c.thanhtien, c.giamgia_thanhtien, c.TongSauGiam })
-                                      .ToList();
-                    var chiTietLookup = allChiTiet.ToLookup(c => c.id_PhieuBaoHanh);
+                    var detailAggregates = db.HangBaoHanh_ChiTiet_tbs
+                        .GroupBy(c => c.id_PhieuBaoHanh)
+                        .Select(g => new DetailAggregate
+                        {
+                            IdPhieu = g.Key,
+                            TongTien = g.Sum(x => (long?)x.thanhtien) ?? 0,
+                            TongGiamChiTiet = g.Sum(x => (long?)x.giamgia_thanhtien) ?? 0,
+                            TongSauGiamChiTiet = g.Sum(x => (long?)x.TongSauGiam) ?? 0
+                        })
+                        .ToList()
+                        .ToDictionary(x => x.IdPhieu ?? "", x => x);
 
-                    var list_all_totals = phieuTotalsData.Select(p => {
-                        var ctGroup = chiTietLookup[p.id.ToString()];
-                        var tongTien = ctGroup.Sum(x => (long?)x.thanhtien) ?? 0;
-                        var tongGiamCT = ctGroup.Sum(x => (long?)x.giamgia_thanhtien) ?? 0;
-                        var tongSauGiamCT = ctGroup.Sum(x => (long?)x.TongSauGiam) ?? 0;
-                        var giamGiaDacBiet = (long?)p.giamgiadacbiet ?? 0;
-                        var tongGiam = tongGiamCT + giamGiaDacBiet;
-                        var tongSauGiam = tongSauGiamCT - giamGiaDacBiet;
-                        var tienVAT = p.vat != null && p.vat != 0 ? tongSauGiam * ((decimal)p.vat / 100m) : 0;
-                        var tongSauThue = p.vat != null && p.vat != 0 ? tongSauGiam * (1 + (decimal)p.vat / 100m) : tongSauGiam;
-                        return new {
-                            TongTien = tongTien, TongGiam = tongGiam, TongSauGiam = tongSauGiam,
-                            TongTien_VAT = tienVAT, TongSauThue = tongSauThue
-                        };
-                    }).ToList();
+                    var masterTotals = phieuQuery
+                        .Select(p => new
+                        {
+                            p.id,
+                            GiamGiaDacBiet = p.giamgiadacbiet ?? 0,
+                            Vat = p.vat ?? 0
+                        })
+                        .ToList();
 
-                    ViewState["TongThanhTien"] = list_all_totals.Sum(p => p.TongTien).ToString("#,##0");
-                    ViewState["TongGiam"] = list_all_totals.Sum(p => p.TongGiam).ToString("#,##0");
-                    ViewState["TongSauGiam"] = list_all_totals.Sum(p => p.TongSauGiam).ToString("#,##0");
-                    ViewState["TongTien_VAT"] = Convert.ToInt64(list_all_totals.Sum(p => p.TongTien_VAT)).ToString("#,##0");
-                    ViewState["TongSauThue"] = Convert.ToInt64(list_all_totals.Sum(p => p.TongSauThue)).ToString("#,##0");
+                    long tongThanhTien = 0;
+                    long tongGiam = 0;
+                    long tongSauGiam = 0;
+                    decimal tongTienVat = 0;
+                    decimal tongSauThue = 0;
+
+                    foreach (var p in masterTotals)
+                    {
+                        DetailAggregate detail;
+                        if (!detailAggregates.TryGetValue(p.id.ToString(), out detail))
+                        {
+                            detail = new DetailAggregate();
+                        }
+
+                        long sauGiam = detail.TongSauGiamChiTiet - p.GiamGiaDacBiet;
+                        decimal tienVat = p.Vat != 0 ? sauGiam * ((decimal)p.Vat / 100m) : 0m;
+                        decimal sauThue = p.Vat != 0 ? sauGiam * (1m + (decimal)p.Vat / 100m) : sauGiam;
+
+                        tongThanhTien += detail.TongTien;
+                        tongGiam += detail.TongGiamChiTiet + p.GiamGiaDacBiet;
+                        tongSauGiam += sauGiam;
+                        tongTienVat += tienVat;
+                        tongSauThue += sauThue;
+                    }
+
+                    ViewState["TongThanhTien"] = tongThanhTien.ToString("#,##0");
+                    ViewState["TongGiam"] = tongGiam.ToString("#,##0");
+                    ViewState["TongSauGiam"] = tongSauGiam.ToString("#,##0");
+                    ViewState["TongTien_VAT"] = Convert.ToInt64(tongTienVat).ToString("#,##0");
+                    ViewState["TongSauThue"] = Convert.ToInt64(tongSauThue).ToString("#,##0");
                 }
                 else
                 {
@@ -292,79 +376,129 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
                     ViewState["TongSauThue"] = "0";
                 }
 
-                // Gọi thật sự các record của trang hiện tại từ DB
-                var pagedPhieu = phieuQuery.OrderByDescending(p => p.ngaytao).Skip(current_page * show - show).Take(show).ToList();
-                var phieuIds = pagedPhieu.Select(p => p.id.ToString()).ToList();
-                
-                var pagedChiTiet = new List<HangBaoHanh_ChiTiet_tb>();
-                if (phieuIds.Count > 0)
+                // Chỉ lấy đúng dữ liệu master của trang hiện tại.
+                var pagedPhieu = phieuQuery
+                    .OrderByDescending(p => p.ngaytao)
+                    .ThenByDescending(p => p.id)
+                    .Skip((currentPage - 1) * pageSize)
+                    .Take(pageSize)
+                    .Select(p => new
+                    {
+                        p.id,
+                        p.ngaytao,
+                        p.nguoitao,
+                        p.sdt_khachhang,
+                        p.ten_khachhang,
+                        p.diachi_khachhang,
+                        p.giamgiadacbiet,
+                        p.vat,
+                        p.congno,
+                        p.ghichu,
+                        p.NgayHenKhachTra,
+                        p.ngaynhan,
+                        p.NgayTra_ThucTe,
+                        p.trangthai,
+                        p.trehen
+                    })
+                    .ToList();
+
+                var pageIdStrings = pagedPhieu.Select(p => p.id.ToString()).ToList();
+
+                // Một truy vấn duy nhất lấy toàn bộ chi tiết của trang, loại bỏ N+1 query
+                // từ GetChiTietSanPham trong ItemTemplate.
+                var pageDetails = pageIdStrings.Count == 0
+                    ? new List<HangBaoHanh_ChiTiet_tb>()
+                    : db.HangBaoHanh_ChiTiet_tbs
+                        .Where(c => pageIdStrings.Contains(c.id_PhieuBaoHanh))
+                        .ToList();
+
+                var detailLookup = pageDetails.ToLookup(c => c.id_PhieuBaoHanh ?? "");
+
+                var accountNames = pagedPhieu
+                    .Where(p => !string.IsNullOrEmpty(p.nguoitao))
+                    .Select(p => p.nguoitao)
+                    .Distinct()
+                    .ToList();
+
+                var accountLookup = accountNames.Count == 0
+                    ? new Dictionary<string, string>()
+                    : db.taikhoan_tbs
+                        .Where(t => accountNames.Contains(t.taikhoan))
+                        .Select(t => new { t.taikhoan, t.hoten })
+                        .ToList()
+                        .GroupBy(t => t.taikhoan)
+                        .ToDictionary(g => g.Key, g => g.Select(x => x.hoten).FirstOrDefault() ?? "");
+
+                var listSplit = new List<WarrantyListRow>(pagedPhieu.Count);
+                foreach (var p in pagedPhieu)
                 {
-                    pagedChiTiet = db.HangBaoHanh_ChiTiet_tbs.Where(c => phieuIds.Contains(c.id_PhieuBaoHanh)).ToList();
+                    string idString = p.id.ToString();
+                    var details = detailLookup[idString].ToList();
+
+                    long tongTien = details.Sum(x => x.thanhtien ?? 0);
+                    long tongGiamChiTiet = details.Sum(x => x.giamgia_thanhtien ?? 0);
+                    long tongSauGiamChiTiet = details.Sum(x => x.TongSauGiam ?? 0);
+                    long giamGiaDacBiet = p.giamgiadacbiet ?? 0;
+                    long tongGiam = tongGiamChiTiet + giamGiaDacBiet;
+                    long tongSauGiam = tongSauGiamChiTiet - giamGiaDacBiet;
+                    int vat = p.vat ?? 0;
+                    decimal tienVat = vat != 0 ? tongSauGiam * ((decimal)vat / 100m) : 0m;
+                    decimal sauThue = vat != 0 ? tongSauGiam * (1m + (decimal)vat / 100m) : tongSauGiam;
+
+                    string employeeName = "";
+                    if (!string.IsNullOrEmpty(p.nguoitao))
+                        accountLookup.TryGetValue(p.nguoitao, out employeeName);
+
+                    listSplit.Add(new WarrantyListRow
+                    {
+                        id = p.id,
+                        ngaytao = p.ngaytao,
+                        HoTenNhanVien = employeeName ?? "",
+                        sdt_khachhang = p.sdt_khachhang,
+                        ten_khachhang = p.ten_khachhang,
+                        diachi_khachhang = p.diachi_khachhang,
+                        TongTien = tongTien,
+                        TongGiam = tongGiam,
+                        TongSauGiam = tongSauGiam,
+                        vat = vat,
+                        TongTien_VAT = tienVat,
+                        TongSauThue = sauThue,
+                        congno = p.congno ?? 0,
+                        ghichu = p.ghichu,
+                        NgayHenKhachTra = p.NgayHenKhachTra,
+                        ngaynhan = p.ngaynhan,
+                        NgayTra_ThucTe = p.NgayTra_ThucTe,
+                        trangthai = p.trangthai,
+                        trehen = p.trehen ?? false,
+                        SoPhieuTra = details.Select(x => x.so_phieu_tra).FirstOrDefault(x => !string.IsNullOrEmpty(x)) ?? "",
+                        ChiTietSanPhamHtml = BuildProductHtml(details)
+                    });
                 }
-                var pageAccounts = pagedPhieu.Select(p => p.nguoitao).Where(x => x != null).Distinct().ToList();
-                var tkList = db.taikhoan_tbs.Where(t => pageAccounts.Contains(t.taikhoan)).ToList();
 
-                var list_split = (from ob1 in pagedPhieu
-                                join tk in tkList on ob1.nguoitao equals tk.taikhoan into TaiKhoanGroup
-                                from tk in TaiKhoanGroup.DefaultIfEmpty()
-                                let chiTietGroup = pagedChiTiet.Where(c => c.id_PhieuBaoHanh == ob1.id.ToString())
-                                let firstDetail = chiTietGroup.FirstOrDefault()
-                                let tongTien = chiTietGroup.Sum(ct => (long?)ct.thanhtien) ?? 0
-                                let tongGiamCT = chiTietGroup.Sum(ct => (long?)ct.giamgia_thanhtien) ?? 0
-                                let tongSauGiamCT = chiTietGroup.Sum(ct => (long?)ct.TongSauGiam) ?? 0
-                                let giamGiaDacBiet = (long?)ob1.giamgiadacbiet ?? 0
-                                let tongGiam = tongGiamCT + giamGiaDacBiet
-                                let tongSauGiam = tongSauGiamCT - giamGiaDacBiet
-                                let tienVAT = ob1.vat != null && ob1.vat != 0 ? tongSauGiam * ((decimal)ob1.vat / 100m) : 0
-                                let tongSauThue = ob1.vat != null && ob1.vat != 0 ? tongSauGiam * (1 + (decimal)ob1.vat / 100m) : tongSauGiam
-                                select new
-                                {
-                                    ob1.id,
-                                    ob1.ngaytao,
-                                    HoTenNhanVien = tk == null ? "" : tk.hoten,
-                                    ob1.sdt_khachhang,
-                                    ob1.ten_khachhang,
-                                    ob1.diachi_khachhang,
-                                    TongTien = tongTien,
-                                    TongGiam = tongGiam,
-                                    TongSauGiam = tongSauGiam,
-                                    vat = ob1.vat ?? 0,
-                                    TongTien_VAT = tienVAT,
-                                    TongSauThue = tongSauThue,
-                                    congno = ob1.congno ?? 0,
-                                    ob1.ghichu,
-                                    ob1.NgayHenKhachTra,
-                                    ob1.ngaynhan,
-                                    ob1.NgayTra_ThucTe,
-                                    ob1.trangthai,
-                                     trehen = ob1.trehen ?? false,
-                                    TenSanPham = firstDetail != null ? firstDetail.ten : "",
-                                    Seri = firstDetail != null ? firstDetail.seri : "",
-                                    NoiSua = firstDetail != null ? firstDetail.noi_sua : "",
-                                    SoLuongNhan = firstDetail != null ? (firstDetail.soluong ?? 0) : 0,
-                                    SoPhieuTra = firstDetail != null ? firstDetail.so_phieu_tra : ""
-                                }).ToList();
+                int startRecord = totalRecords == 0 ? 0 : ((currentPage - 1) * pageSize) + 1;
+                int endRecord = totalRecords == 0 ? 0 : startRecord + listSplit.Count - 1;
 
-                int stt = (show * current_page) - show + 1; int _s1 = stt + list_split.Count - 1;
-                if (_Tong_Record != 0) lb_show.Text = stt + "-" + _s1 + " trong số " + _Tong_Record.ToString("#,##0"); else lb_show.Text = "0-0/0"; lb_show_md.Text = stt + "-" + _s1 + " trong số " + _Tong_Record.ToString("#,##0");
-                
-                Repeater1.DataSource = list_split;
+                lb_show.Text = totalRecords == 0
+                    ? "0-0/0"
+                    : startRecord + "-" + endRecord + " trong số " + totalRecords.ToString("#,##0");
+                lb_show_md.Text = startRecord + "-" + endRecord + " trong số " + totalRecords.ToString("#,##0");
+
+                Repeater1.DataSource = listSplit;
                 Repeater1.DataBind();
-                #endregion
             }
         }
-        catch (Exception _ex)
+        catch (Exception ex)
         {
-            string _tk = Session["taikhoan"] as string; // Sử dụng 'as' để tránh lỗi nếu là null
-            if (!string.IsNullOrEmpty(_tk)) // Kiểm tra xem '_tk' có hợp lệ hay không
-            {
-                _tk = mahoa_cl.giaima_Bcorn(_tk);
-            }
+            string account = Session["taikhoan"] as string;
+            if (!string.IsNullOrEmpty(account))
+                account = mahoa_cl.giaima_Bcorn(account);
             else
-                _tk = "";
-            Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
+                account = "";
+
+            Log_cl.Add_Log(ex.Message, account, ex.StackTrace);
         }
     }
+
     protected void but_quaylai_Click(object sender, EventArgs e)
     {
         try
@@ -691,34 +825,33 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
     }
     public void load_congno(dbDataContext db, string _idbg, Int64 _congno, string _trangthai)
     {
+        PlaceHolder3.Visible = true;
 
-        PlaceHolder3.Visible = true;//hiện lịch sử thanh toán
-        var q_thanhtoan = from thanhtoan in db.HangBaoHanh_LichSu_ThanhToan_tbs
-                          join taiKhoan in db.taikhoan_tbs
-                          on thanhtoan.nguoixacnhan equals taiKhoan.taikhoan
-                          where thanhtoan.id_PhieuBaoHanh == _idbg
-                          select new
-                          {
-                              // Chọn các trường bạn cần từ cả hai bảng
-                              thanhtoan.id,
-                              thanhtoan.ngay_thanhtoan,
-                              thanhtoan.nguoixacnhan,
-                              thanhtoan.sotien_thanhtoan,
-                              taiKhoan.hoten,
-                          };
-        Repeater5.DataSource = q_thanhtoan.OrderByDescending(p => p.ngay_thanhtoan);
+        var thanhToanList = (from thanhtoan in db.HangBaoHanh_LichSu_ThanhToan_tbs
+                             join taiKhoan in db.taikhoan_tbs
+                                 on thanhtoan.nguoixacnhan equals taiKhoan.taikhoan
+                             where thanhtoan.id_PhieuBaoHanh == _idbg
+                             orderby thanhtoan.ngay_thanhtoan descending
+                             select new
+                             {
+                                 thanhtoan.id,
+                                 thanhtoan.ngay_thanhtoan,
+                                 thanhtoan.nguoixacnhan,
+                                 thanhtoan.sotien_thanhtoan,
+                                 taiKhoan.hoten
+                             }).ToList();
+
+        Repeater5.DataSource = thanhToanList;
         Repeater5.DataBind();
-        txt_sotien_thanhtoan_congno.Text = _congno.ToString("#,##0");
-        if (q_thanhtoan.Any())
-            ViewState["Tong_ThanhToan"] = q_thanhtoan.Sum(p => p.sotien_thanhtoan);
-        else
-            ViewState["Tong_ThanhToan"] = 0;
-        if (_congno == 0)
-            Label2.Text = "Đã thanh toán đủ";
-        else
-            Label2.Text = "Còn thiếu " + _congno.ToString("#,##0");
 
+        txt_sotien_thanhtoan_congno.Text = _congno.ToString("#,##0");
+        ViewState["Tong_ThanhToan"] = thanhToanList.Sum(p => p.sotien_thanhtoan ?? 0);
+
+        Label2.Text = _congno == 0
+            ? "Đã thanh toán đủ"
+            : "Còn thiếu " + _congno.ToString("#,##0");
     }
+
     protected void but_show_chinhsua_Click(object sender, EventArgs e)
     {
         reset_control_add_edit();
@@ -779,15 +912,6 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
                  DropDownList2.DataTextField = "Text";
                 DropDownList2.DataBind();
                 DropDownList2.Items.Insert(0, new ListItem("Tìm thông tin khách hàng", ""));
-
-                var data = db.DuLieuNguon_tbs
-            .Where(p => p.kyhieu == "hangsanpham" || p.kyhieu == "nhomsanpham" || p.kyhieu == "donvitinh")
-            .ToList();
-
-                var hangSanPham = data.Where(p => p.kyhieu == "hangsanpham").OrderBy(p => p.ten).ToList();
-                var nhomSanPham = data.Where(p => p.kyhieu == "nhomsanpham").OrderBy(p => p.ten).ToList();
-                var donvitinh = data.Where(p => p.kyhieu == "donvitinh").OrderBy(p => p.ten).ToList();
-
 
                 load_edit(db, _id);
                 Int64 _congno = 0;
@@ -1828,26 +1952,11 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
 
     public string GetChiTietSanPham(object id_phieu)
     {
-        if (id_phieu == null) return "";
-        using (dbDataContext db = new dbDataContext())
-        {
-            var q = db.HangBaoHanh_ChiTiet_tbs.Where(p => p.id_PhieuBaoHanh == id_phieu.ToString()).ToList();
-            if (q.Count == 0) return "";
-            
-            System.Text.StringBuilder sb = new System.Text.StringBuilder();
-            for (int i = 0; i < q.Count; i++)
-            {
-                var item = q[i];
-                sb.Append($"<div class='fw-600 text-blue'>{item.ten}</div>");
-                sb.Append($"<div class='text-small'>Seri: <b>{item.seri}</b> | SL: <b>{item.soluong ?? 0}</b></div>");
-                if (i < q.Count - 1)
-                {
-                    sb.Append("<hr style='margin:4px 0;'/>");
-                }
-            }
-            return sb.ToString();
-        }
+        // Danh sách chính đã nạp chi tiết theo lô trong show_main().
+        // Giữ phương thức để tương thích với các trang cũ, không truy vấn DB theo từng dòng.
+        return "";
     }
+
     public string GetOrInsertDuLieuNguon(dbDataContext db, string ten, string kyhieu)
     {
         if (string.IsNullOrEmpty(ten)) return "";
