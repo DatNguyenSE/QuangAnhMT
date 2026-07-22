@@ -17,6 +17,45 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
     String_cl str_cl = new String_cl();
     DateTime_cl dt_cl = new DateTime_cl();
 
+    private sealed class DropdownOption
+    {
+        public string Id { get; set; }
+        public string Text { get; set; }
+        public string Seri { get; set; }
+    }
+
+    private static List<DropdownOption> GetCustomers(dbDataContext db)
+    {
+        var customers = db.Data_KhachHang_tbs
+            .OrderBy(x => x.ten)
+            .Select(x => new { x.id, x.sdt, x.ten })
+            .ToList()
+            .Select(x => new DropdownOption
+            {
+                Id = x.id.ToString(),
+                Text = (string.IsNullOrEmpty(x.sdt) ? "(Không có SĐT)" : x.sdt) + " - " + x.ten
+            })
+            .ToList();
+        return customers;
+    }
+
+    private static List<DropdownOption> GetProducts(dbDataContext db)
+    {
+        var products = db.KhoSanPham_tbs
+            .OrderByDescending(p => p.id)
+            .Select(p => new { p.id, p.so_seri, p.ten, p.soluong_hientai })
+            .Take(1000)
+            .ToList()
+            .Select(p => new DropdownOption
+            {
+                Id = p.id.ToString(),
+                Seri = p.so_seri,
+                Text = p.ten + (!string.IsNullOrEmpty(p.so_seri) ? " - " + p.so_seri : "") + " <span class='fg-red'> (" + (p.soluong_hientai ?? 0) + ")</span>"
+            })
+            .ToList();
+        return products;
+    }
+
     public void set_dulieu_macdinh()
     {
 
@@ -1147,20 +1186,12 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
             PlaceHolder8.Visible = true;
             using (dbDataContext db = new dbDataContext())
             {
-                var allCust = db.Data_KhachHang_tbs
-                                .OrderBy(x => x.ten)
-                                .AsEnumerable()
-                                .Select(u => new { 
-                                    id = u.id.ToString(), 
-                                    CustomField = (string.IsNullOrEmpty(u.sdt) ? "(Không có SĐT)" : u.sdt) + " - " + u.ten 
-                                })
-                                .ToList();
-
-                DropDownList2.DataSource = allCust;
-                DropDownList2.DataValueField = "id";
-                DropDownList2.DataTextField = "CustomField";
+                DropDownList2.DataSource = GetCustomers(db);
+                DropDownList2.DataValueField = "Id";
+                DropDownList2.DataTextField = "Text";
                 DropDownList2.DataBind();
                 DropDownList2.Items.Insert(0, new ListItem("Khách hàng đã báo giá", ""));
+                BindProductDropdown(db);
             }
 
             //hiện form add_edit trong updatePanel_add
@@ -1205,21 +1236,7 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
     public void load_edit(dbDataContext db, string _idbg)
     {
 
-        var q = db.KhoSanPham_tbs
-      .OrderBy(p => p.ten)
-      .Select(p => new { p.id, p.so_seri, DisplayText = p.ten + (p.so_seri != null && p.so_seri != "" ? " - " + p.so_seri : "") + " <span class='fg-red'>(" + (p.soluong_hientai != null ? p.soluong_hientai : 0) + ")</span>" });
-
-        DropDownList1.Items.Clear();
-        DropDownList1.Items.Add(new ListItem("Chọn", ""));
-        foreach(var item in q.ToList())
-        {
-            ListItem li = new ListItem(item.DisplayText, item.id.ToString());
-            if (!string.IsNullOrEmpty(item.so_seri))
-            {
-                li.Attributes.Add("data-seri", item.so_seri);
-            }
-            DropDownList1.Items.Add(li);
-        }
+        BindProductDropdown(db);
 
         // Lấy danh sách chi tiết bao giá cùng thông tin sản phẩm
         var q_chitiet = from chitiet in db.BaoGia_ChiTiet_tbs
@@ -1249,8 +1266,11 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                             sanpham.thongso_kythuat,
                             VAT = sanpham.cohoadon,//true false
                             TenHang = ob2.ten,
-                        };
-        if (q_chitiet.Any())
+                         };
+        // Materialize once: Any(), Sum() and DataBind() on the deferred query
+        // otherwise execute the same detail query repeatedly when opening the modal.
+        var chiTietList = q_chitiet.ToList();
+        if (chiTietList.Count > 0)
         {
             var bg = db.BaoGia_tbs.FirstOrDefault(p => p.id.ToString() == _idbg);
             if (bg != null)
@@ -1264,9 +1284,9 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                 ViewState["giamgia_dacbiet"] = "0";
             }
 
-            ViewState["TongThanhTien_ChiTiet"] = (q_chitiet.Sum(p => (long?)p.thanhtien) ?? 0).ToString("#,##0");
-            ViewState["TongGiam_ChiTiet"] = (q_chitiet.Sum(p => (long?)p.giamgia_thanhtien) ?? 0).ToString("#,##0");
-            Int64 TongSauGiam_ChiTiet = q_chitiet.Sum(p => (long?)p.TongSauGiam) ?? 0;
+            ViewState["TongThanhTien_ChiTiet"] = (chiTietList.Sum(p => (long?)p.thanhtien) ?? 0).ToString("#,##0");
+            ViewState["TongGiam_ChiTiet"] = (chiTietList.Sum(p => (long?)p.giamgia_thanhtien) ?? 0).ToString("#,##0");
+            Int64 TongSauGiam_ChiTiet = chiTietList.Sum(p => (long?)p.TongSauGiam) ?? 0;
             ViewState["TongSauGiam_ChiTiet"] = TongSauGiam_ChiTiet.ToString("#,##0");
             //nếu có giảm đặc biệt
             if (ViewState["giamgia_dacbiet"].ToString() != "0")
@@ -1316,9 +1336,27 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
             ViewState["TongGiam_ChiTiet"] = "0";
             ViewState["TongSauGiam_ChiTiet"] = "0";
         }
-        Repeater2.DataSource = q_chitiet.OrderBy(p => p.ten_sanpham);
+        Repeater2.DataSource = chiTietList.OrderBy(p => p.ten_sanpham);
         Repeater2.DataBind();
 
+    }
+
+    private void BindProductDropdown(dbDataContext db)
+    {
+        // Web Forms restores the dropdown items from ViewState on postback.
+        // Keep them instead of querying and rendering the whole product list again.
+        if (DropDownList1.Items.Count > 1)
+            return;
+
+        DropDownList1.Items.Clear();
+        DropDownList1.Items.Add(new ListItem("Chọn", ""));
+        foreach (var item in GetProducts(db))
+        {
+            ListItem option = new ListItem(item.Text, item.Id);
+            if (!string.IsNullOrEmpty(item.Seri))
+                option.Attributes.Add("data-seri", item.Seri);
+            DropDownList1.Items.Add(option);
+        }
     }
     public void load_congno(dbDataContext db, string _idbg, Int64 _congno, string _trangthai)
     {
@@ -1521,11 +1559,6 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                     ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng nhập tên khách hàng.", "false", "false", "OK", "alert", ""), true);
                     return;
                 }
-                if (_diachi == "")
-                {
-                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng nhập địa chỉ khách hàng.", "false", "false", "OK", "alert", ""), true);
-                    return;
-                }
                 if (_ngayhieuluc <= 0)
                 {
                     ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Ngày hiệu lực không hợp lệ.", "false", "false", "OK", "alert", ""), true);
@@ -1656,12 +1689,11 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                     ViewState["id_guide_chitiet"] = _ob.id_guide.ToString().ToLower();
                     load_edit(db, _ob.id.ToString());
                     #endregion
-                    #region cập nhật dữ liệu và update hiển thị
-                    show_main();
-                    up_main.Update();
+                    // Không tải lại bảng danh sách ở đây. Người dùng đang ở trong modal;
+                    // tải lại up_main làm chạy lại toàn bộ thống kê và khiến bước nhập SP chậm.
                     PlaceHolder1.Visible = true;
+                    up_add.Update();
                     ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Xử lý thành công.", "1000", "warning"), true);
-                    #endregion
 
                 }
                 else//edit
@@ -1774,6 +1806,10 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
 
 
                         #region cập nhật số lượng tại bảng chi tiết
+                        // Đọc toàn bộ chi tiết của báo giá một lần thay vì query từng dòng trong repeater.
+                        var detailRows = db.BaoGia_ChiTiet_tbs
+                            .Where(p => p.id_baogia == _ob.id.ToString())
+                            .ToList();
                         foreach (RepeaterItem item in Repeater2.Items)
                         {
                             // Tìm các điều khiển TextBox và Label từ RepeaterItem
@@ -1790,7 +1826,10 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                                 decimal _giamgia_phantram = Number_cl.Check_Decimal(txt_giamgia_phantram_chitiet.Text.Trim());
                                 if (_sl >= 0)
                                 {
-                                    var q_chitiet = db.BaoGia_ChiTiet_tbs.FirstOrDefault(p => p.id.ToString() == _id_chitiet);
+                                    long detailId;
+                                    var q_chitiet = long.TryParse(_id_chitiet, out detailId)
+                                        ? detailRows.FirstOrDefault(p => p.id == detailId)
+                                        : null;
                                     if (q_chitiet != null)
                                     {
                                         q_chitiet.soluong = _sl;
@@ -1817,8 +1856,8 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
 
                         #region cập nhật dữ liệu và update hiển thị
                         load_edit(db, _ob.id.ToString());
-                        show_main();
-                        up_main.Update();
+                        // Chỉ cập nhật modal, tránh chạy lại toàn bộ danh sách và thống kê.
+                        up_add.Update();
                         ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Xử lý thành công", "1000", "warning"), true);
                         #endregion
 
@@ -2324,6 +2363,24 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
     }
 
 
+    protected void but_chon_sanpham_Click(object sender, EventArgs e)
+    {
+        check_login_cl.check_login_admin("18", "19");
+        long productId;
+        if (!long.TryParse(DropDownList1.SelectedValue, out productId))
+            return;
+
+        using (dbDataContext db = new dbDataContext())
+        {
+            var product = db.KhoSanPham_tbs
+                .Where(p => p.id == productId)
+                .Select(p => p.so_seri)
+                .FirstOrDefault();
+            txt_so_seri.Text = product ?? "";
+        }
+        up_add.Update();
+    }
+
     protected void but_add_sp_chitiet_Click(object sender, EventArgs e)//bonbap
     {
 
@@ -2433,8 +2490,8 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
 
                 #region cập nhật dữ liệu và update hiển thị
                 load_edit(db, _idbg);
-                show_main();
-                up_main.Update();
+                // Chỉ cập nhật modal, không tải lại bảng danh sách và thống kê toàn trang.
+                up_add.Update();
                 ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Xử lý thành công", "1000", "warning"), true);
                 #endregion
             }

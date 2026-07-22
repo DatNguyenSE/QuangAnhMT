@@ -49,16 +49,18 @@
             document.getElementById('<%= txt_so_seri.ClientID %>').value = seri;
         }
 
-        function autoFillSeri(dropdown) {
-            var selectedOption = dropdown.options[dropdown.selectedIndex];
-            if (selectedOption) {
-                var seri = selectedOption.getAttribute('data-seri');
-                var txtSoSeri = document.getElementById('<%= txt_so_seri.ClientID %>');
-                if (txtSoSeri) {
-                    txtSoSeri.value = (seri != null) ? seri : "";
-                }
-            }
-        }
+         function autoFillSeri(dropdown) {
+             var selectedOption = dropdown.options[dropdown.selectedIndex];
+             if (selectedOption) {
+                 var seri = selectedOption.getAttribute('data-seri') || selectedOption.dataset.seri;
+                 var txtSoSeri = document.getElementById('<%= txt_so_seri.ClientID %>');
+                 if (txtSoSeri) {
+                     txtSoSeri.value = (seri != null) ? seri : "";
+                 }
+             }
+         }
+
+
     </script>
     
     <asp:UpdatePanel ID="up_import" runat="server" UpdateMode="Conditional">
@@ -492,7 +494,10 @@
                                                 <div class="cell-lg-6 pl-2-lg pr-2-lg">
                                                     <div class="mt-2">
                                                         <small class="fg-red fw-600">Sản phẩm</small>
-                                                        <asp:DropDownList ID="DropDownList1" runat="server" data-role="select" data-filter-placeholder="Tìm theo tên, số seri" onchange="autoFillSeri(this)"></asp:DropDownList>
+                                             <div class="d-flex">
+                                                 <asp:DropDownList ID="DropDownList1" runat="server" data-role="select" data-filter-placeholder="Tìm theo tên, số seri"></asp:DropDownList>
+                                                 <asp:Button ID="but_chon_sanpham" runat="server" Text="Chọn" CssClass="button" OnClick="but_chon_sanpham_Click" />
+                                             </div>
                                                     </div>
                                                 </div>
                                                 <div class="cell-lg-3 pl-2-lg pr-2-lg">

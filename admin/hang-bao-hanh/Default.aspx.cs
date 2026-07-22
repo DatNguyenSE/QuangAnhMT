@@ -12,6 +12,39 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
     String_cl str_cl = new String_cl();
     DateTime_cl dt_cl = new DateTime_cl();
 
+    private sealed class DropdownOption
+    {
+        public string Id { get; set; }
+        public string Text { get; set; }
+    }
+
+    private static List<DropdownOption> GetCustomers(dbDataContext db)
+    {
+        var customers = db.Data_KhachHang_tbs
+            .OrderBy(x => x.ten)
+            .Select(x => new { x.id, x.sdt, x.ten })
+            .ToList()
+            .Select(x => new DropdownOption
+            {
+                Id = x.id.ToString(),
+                Text = (string.IsNullOrEmpty(x.sdt) ? "(Không có SĐT)" : x.sdt) + " - " + x.ten
+            })
+            .ToList();
+        return customers;
+    }
+
+    private static List<DropdownOption> GetProducts(dbDataContext db)
+    {
+        var products = db.KhoSanPham_tbs
+            .OrderByDescending(p => p.id)
+            .Select(p => new { p.id, p.ten, p.so_seri })
+            .Take(1000)
+            .ToList()
+            .Select(p => new DropdownOption { Id = p.id.ToString(), Text = p.ten + " - " + p.so_seri })
+            .ToList();
+        return products;
+    }
+
     public void set_dulieu_macdinh()
     {
 
@@ -148,29 +181,7 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
                 ddl_dvt_add.DataBind();
                 ddl_dvt_add.Items.Insert(0, new ListItem("Chọn ĐVT", ""));
 
-                #region tính toán Trễ hạn
-                DateTime _ngayhientai = DateTime.Now;
-                var q_check_all = db.CheckAll_tbs.FirstOrDefault(p => p.ngay.Value.Date == _ngayhientai.Date && p.hangmuc == "BaoHanh" && p.CheckAll == true);
-                if (q_check_all == null)
-                {
-                    var q = db.HangBaoHanh_tbs.Where(p => p.trangthai != "Đã trả");
-                    foreach (var t in q)
-                    {
-                        t.trehen = (t.NgayHenKhachTra != null && t.NgayHenKhachTra.Value.Date < _ngayhientai);
-                    }
-
-                    // Đánh dấu là đã check
-                    CheckAll_tb _ob1 = new CheckAll_tb
-                    {
-                        ngay = _ngayhientai, // Lưu ngày giờ chính xác của lần cập nhật
-                        hangmuc = "BaoHanh",
-                        CheckAll = true
-                    };
-                    db.CheckAll_tbs.InsertOnSubmit(_ob1);
-                    db.SubmitChanges();
-                }
-
-                #endregion
+                // Trạng thái trễ hẹn được tính khi đọc dữ liệu, tránh UPDATE toàn bảng lúc mở trang.
             }
             set_dulieu_macdinh();
             show_main();
@@ -192,12 +203,6 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
         {
             using (dbDataContext db = new dbDataContext())
             {
-                // Tự động kiểm tra và cập nhật trạng thái "Trễ hẹn" vào Database (Bật nếu quá hạn, Tắt nếu chưa tới hạn)
-                db.ExecuteCommand(@"UPDATE [let99665_thaianaudio].[HangBaoHanh_tb] 
-                                    SET trehen = CASE WHEN NgayHenKhachTra < CAST(GETDATE() AS DATE) THEN 1 ELSE 0 END 
-                                    WHERE trangthai <> N'Đã trả' 
-                                    AND (trehen IS NULL OR trehen <> CASE WHEN NgayHenKhachTra < CAST(GETDATE() AS DATE) THEN 1 ELSE 0 END)");
-
                 #region lấy dữ liệu
                 var phieuQuery = db.HangBaoHanh_tbs.AsQueryable();
 
@@ -249,8 +254,11 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
                     // Lấy các cột tối thiểu để tính tổng nhanh gọn trên RAM mà không kéo hết bảng
                     var phieuTotalsData = phieuQuery.Select(p => new { p.id, p.giamgiadacbiet, p.vat }).ToList();
                     
-                    // Kéo các cột cần thiết của toàn bộ Chi Tiết (chỉ khoảng vài chục ngàn dòng int, cực nhanh)
-                    var allChiTiet = db.HangBaoHanh_ChiTiet_tbs.Select(c => new { c.id_PhieuBaoHanh, c.thanhtien, c.giamgia_thanhtien, c.TongSauGiam }).ToList();
+                    // Chỉ lấy chi tiết thuộc các phiếu sau khi đã lọc, không quét toàn bộ bảng.
+                    var allChiTiet = (from c in db.HangBaoHanh_ChiTiet_tbs
+                                      join p in phieuQuery on c.id_PhieuBaoHanh equals p.id.ToString()
+                                      select new { c.id_PhieuBaoHanh, c.thanhtien, c.giamgia_thanhtien, c.TongSauGiam })
+                                      .ToList();
                     var chiTietLookup = allChiTiet.ToLookup(c => c.id_PhieuBaoHanh);
 
                     var list_all_totals = phieuTotalsData.Select(p => {
@@ -293,7 +301,8 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
                 {
                     pagedChiTiet = db.HangBaoHanh_ChiTiet_tbs.Where(c => phieuIds.Contains(c.id_PhieuBaoHanh)).ToList();
                 }
-                var tkList = db.taikhoan_tbs.ToList();
+                var pageAccounts = pagedPhieu.Select(p => p.nguoitao).Where(x => x != null).Distinct().ToList();
+                var tkList = db.taikhoan_tbs.Where(t => pageAccounts.Contains(t.taikhoan)).ToList();
 
                 var list_split = (from ob1 in pagedPhieu
                                 join tk in tkList on ob1.nguoitao equals tk.taikhoan into TaiKhoanGroup
@@ -328,7 +337,7 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
                                     ob1.ngaynhan,
                                     ob1.NgayTra_ThucTe,
                                     ob1.trangthai,
-                                    trehen = ob1.trehen ?? false,
+                                     trehen = ob1.trehen ?? false,
                                     TenSanPham = firstDetail != null ? firstDetail.ten : "",
                                     Seri = firstDetail != null ? firstDetail.seri : "",
                                     NoiSua = firstDetail != null ? firstDetail.noi_sua : "",
@@ -486,16 +495,9 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
         
         using (dbDataContext db = new dbDataContext())
         {
-            var q = db.KhoSanPham_tbs
-                      .OrderByDescending(p => p.id)
-                      .Select(p => new { 
-                          p.id, 
-                          CustomField = p.ten + " - " + p.so_seri 
-                      })
-                      .Take(1000);
-            DropDownList1.DataSource = q;
-            DropDownList1.DataTextField = "CustomField";
-            DropDownList1.DataValueField = "id";
+            DropDownList1.DataSource = GetProducts(db);
+            DropDownList1.DataTextField = "Text";
+            DropDownList1.DataValueField = "Id";
             DropDownList1.DataBind();
         }
         DropDownList1.Items.Insert(0, new ListItem("Tìm theo tên SP, số seri", ""));
@@ -772,11 +774,9 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
                 }
                 txt_vat.Text = q.vat != null ? q.vat.Value.ToString() : "0";
 
-                var qKhachHang = (from u in db.Data_KhachHang_tbs
-                                  select new { u.sdt, u.ten, CustomField = u.sdt + " - " + u.ten });
-                DropDownList2.DataSource = qKhachHang;
-                DropDownList2.DataValueField = "sdt";
-                DropDownList2.DataTextField = "CustomField";
+                 DropDownList2.DataSource = GetCustomers(db);
+                 DropDownList2.DataValueField = "Id";
+                 DropDownList2.DataTextField = "Text";
                 DropDownList2.DataBind();
                 DropDownList2.Items.Insert(0, new ListItem("Tìm thông tin khách hàng", ""));
 
@@ -853,11 +853,6 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
             if (_ten_kh == "")
             {
                 ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng nhập tên khách hàng.", "false", "false", "OK", "alert", ""), true);
-                return;
-            }
-            if (_diachi == "")
-            {
-                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng nhập địa chỉ khách hàng.", "false", "false", "OK", "alert", ""), true);
                 return;
             }
             #endregion
@@ -1536,11 +1531,13 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
     {
         using (dbDataContext db = new dbDataContext())
         {
-            string _sdt = DropDownList2.SelectedValue;
-            var q = db.Data_KhachHang_tbs.FirstOrDefault(p => p.sdt == _sdt);
-            if (q != null)
-            {
-                txt_sdt.Text = _sdt;
+             long customerId;
+             if (!long.TryParse(DropDownList2.SelectedValue, out customerId))
+                 return;
+             var q = db.Data_KhachHang_tbs.FirstOrDefault(p => p.id == customerId);
+             if (q != null)
+             {
+                 txt_sdt.Text = q.sdt;
                 txt_ten_kh.Text = q.ten;
                 txt_diachi_kh.Text = q.diachi;
 
