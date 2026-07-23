@@ -1,4 +1,4 @@
-﻿<%@ Page Title="" Language="C#" MasterPageFile="~/admin/MasterPageAdmin.master" AutoEventWireup="true" CodeFile="ban-hang.aspx.cs" Inherits="admin_thong_ke_ban_hang" ResponseEncoding="utf-8" Culture="vi-VN" UICulture="vi-VN" %>
+<%@ Page Title="" Language="C#" MasterPageFile="~/admin/MasterPageAdmin.master" AutoEventWireup="true" CodeFile="ban-hang.aspx.cs" Inherits="admin_thong_ke_ban_hang" ResponseEncoding="utf-8" Culture="vi-VN" UICulture="vi-VN" %>
 
 <asp:Content ID="Content1" ContentPlaceHolderID="head" Runat="Server">
     <meta charset="utf-8" />
@@ -51,25 +51,31 @@
         </asp:Panel>
 
         <div class="row mb-4">
-            <div class="cell-lg-3 cell-md-6 cell-sm-12">
+            <div class="cell-lg-2 cell-md-4 cell-sm-6">
                 <div class="remark success">
                     <div>ĐƠN ĐÃ BÁN</div>
                     <h3><asp:Literal ID="ltr_don_ban" runat="server" /></h3>
                 </div>
             </div>
-            <div class="cell-lg-3 cell-md-6 cell-sm-12">
+            <div class="cell-lg-3 cell-md-4 cell-sm-6">
                 <div class="remark alert">
-                    <div>DOANH THU</div>
+                    <div>TỔNG DOANH THU</div>
                     <h3><asp:Literal ID="ltr_doanhthu" runat="server" /></h3>
                 </div>
             </div>
-            <div class="cell-lg-3 cell-md-6 cell-sm-12">
-                <div class="remark info">
+            <div class="cell-lg-3 cell-md-4 cell-sm-6">
+                <div class="remark info" style="border-left-color: #00bcd4;">
+                    <div>DOANH THU BẢO HÀNH</div>
+                    <h3><asp:Literal ID="ltr_doanhthubaohanh" runat="server" /></h3>
+                </div>
+            </div>
+            <div class="cell-lg-2 cell-md-6 cell-sm-6">
+                <div class="remark primary">
                     <div>ĐÃ THANH TOÁN</div>
                     <h3><asp:Literal ID="ltr_dathanhtoan" runat="server" /></h3>
                 </div>
             </div>
-            <div class="cell-lg-3 cell-md-6 cell-sm-12">
+            <div class="cell-lg-2 cell-md-6 cell-sm-6">
                 <div class="remark warning">
                     <div>CÔNG NỢ</div>
                     <h3><asp:Literal ID="ltr_congno" runat="server" /></h3>

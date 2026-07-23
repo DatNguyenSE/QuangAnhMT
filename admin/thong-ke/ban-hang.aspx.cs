@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Globalization;
 using System.Linq;
 using System.Web;
@@ -179,10 +179,101 @@ public partial class admin_thong_ke_ban_hang : System.Web.UI.Page
                 var dataBan = data.Where(x => x.ngayban_kyhopdong.HasValue || x.trangthai == "Đã ký HĐ").ToList();
                 var idsBan = dataBan.Select(x => x.id.ToString()).ToList();
 
+                // --- BẮT ĐẦU TRUY VẤN HÀNG BẢO HÀNH ---
+                var listBH = (from bh in db.HangBaoHanh_tbs
+                              select new
+                              {
+                                  bh.id,
+                                  bh.ngaytao,
+                                  bh.NgayTra_ThucTe,
+                                  bh.nguoitao,
+                                  bh.ten_khachhang,
+                                  bh.sdt_khachhang,
+                                  bh.diachi_khachhang,
+                                  bh.trangthai,
+                                  CongNo = bh.congno ?? 0,
+                                  TongSauThue = bh.giatri_thuc_donhang ?? 0
+                              }).AsQueryable();
+
+                if (check_login_cl.CheckQuyen(db, currentUser, "17"))
+                    listBH = listBH.Where(x => x.nguoitao == currentUser);
+
+                if (tuNgay.HasValue)
+                {
+                    if (ddl_loai_ngay.SelectedValue == "baogia")
+                        listBH = listBH.Where(x => x.ngaytao.HasValue && x.ngaytao.Value >= tuNgayLoc.Value);
+                    else
+                        listBH = listBH.Where(x => x.NgayTra_ThucTe.HasValue && x.NgayTra_ThucTe.Value >= tuNgayLoc.Value);
+                }
+
+                if (denNgay.HasValue)
+                {
+                    if (ddl_loai_ngay.SelectedValue == "baogia")
+                        listBH = listBH.Where(x => x.ngaytao.HasValue && x.ngaytao.Value < denNgayLoc.Value);
+                    else
+                        listBH = listBH.Where(x => x.NgayTra_ThucTe.HasValue && x.NgayTra_ThucTe.Value < denNgayLoc.Value);
+                }
+
+                if (ddl_trangthai.SelectedValue == "daban")
+                    listBH = listBH.Where(x => x.trangthai == "Đã trả");
+                else if (ddl_trangthai.SelectedValue == "chuaban")
+                    listBH = listBH.Where(x => x.trangthai != "Đã trả");
+
+                if (ddl_thanhtoan.SelectedValue == "done")
+                    listBH = listBH.Where(x => x.trangthai == "Đã trả" && x.CongNo == 0);
+                else if (ddl_thanhtoan.SelectedValue == "debt")
+                    listBH = listBH.Where(x => x.trangthai == "Đã trả" && x.CongNo != 0);
+
+                if (!string.IsNullOrWhiteSpace(ddl_nhanvien.SelectedValue))
+                    listBH = listBH.Where(x => x.nguoitao == ddl_nhanvien.SelectedValue);
+
+                if (!string.IsNullOrWhiteSpace(key))
+                {
+                    listBH = listBH.Where(x =>
+                        x.id.ToString() == key ||
+                        (x.ten_khachhang != null && x.ten_khachhang.Contains(key)) ||
+                        (x.sdt_khachhang != null && x.sdt_khachhang.Contains(key)) ||
+                        (x.diachi_khachhang != null && x.diachi_khachhang.Contains(key)));
+                }
+
+                var dataBH = listBH.ToList();
+                var idsBH = dataBH.Select(x => x.id.ToString()).ToList();
+
+                if (!string.IsNullOrWhiteSpace(txt_sanpham.Text))
+                {
+                    string spKey = txt_sanpham.Text.Trim();
+                    var hangIds = db.DuLieuNguon_tbs
+                        .Where(h => h.kyhieu == "hangsanpham" && h.ten != null && h.ten.Contains(spKey))
+                        .Select(h => h.id.ToString())
+                        .ToList();
+
+                    var idsCoSpBH = db.HangBaoHanh_ChiTiet_tbs
+                        .Where(ct => idsBH.Contains(ct.id_PhieuBaoHanh) &&
+                            (
+                                (ct.ten != null && ct.ten.Contains(spKey)) ||
+                                (ct.model != null && ct.model.Contains(spKey)) ||
+                                (ct.id_hang != null && hangIds.Contains(ct.id_hang))
+                            ))
+                        .Select(ct => ct.id_PhieuBaoHanh)
+                        .Distinct()
+                        .ToList();
+
+                    dataBH = dataBH.Where(x => idsCoSpBH.Contains(x.id.ToString())).ToList();
+                    idsBH = dataBH.Select(x => x.id.ToString()).ToList();
+                }
+
+                var dataBanBH = dataBH.Where(x => x.trangthai == "Đã trả").ToList();
+                decimal doanhThuBaoHanh = dataBanBH.Sum(x => (decimal)x.TongSauThue);
+                decimal congNoBaoHanh = dataBanBH.Sum(x => (decimal)x.CongNo);
+                // --- KẾT THÚC TRUY VẤN HÀNG BẢO HÀNH ---
+
                 int tongBaoGia = data.Count;
-                int donBan = dataBan.Count;
-                decimal doanhThu = dataBan.Sum(x => (decimal)x.TongSauThue);
-                decimal congNo = dataBan.Sum(x => (decimal)x.CongNo);
+                int donBan = dataBan.Count + dataBanBH.Count;
+                decimal doanhThuBanHang = dataBan.Sum(x => (decimal)x.TongSauThue);
+                decimal congNoBanHang = dataBan.Sum(x => (decimal)x.CongNo);
+                
+                decimal doanhThu = doanhThuBanHang + doanhThuBaoHanh;
+                decimal congNo = congNoBanHang + congNoBaoHanh;
                 decimal daThanhToan = doanhThu - congNo;
 
                 var chiTietBan = (from ct in db.BaoGia_ChiTiet_tbs
@@ -204,10 +295,11 @@ public partial class admin_thong_ke_ban_hang : System.Web.UI.Page
                                   }).ToList();
 
                 decimal giaVon = chiTietBan.Sum(x => (decimal)x.GiaVon);
-                decimal loiNhuan = doanhThu - giaVon;
+                decimal loiNhuan = doanhThuBanHang - giaVon; // Note: giaVon only from BaoGia
 
                 ltr_don_ban.Text = donBan.ToString("N0");
                 ltr_doanhthu.Text = Money(doanhThu);
+                ltr_doanhthubaohanh.Text = Money(doanhThuBaoHanh);
                 ltr_congno.Text = Money(congNo);
                 ltr_dathanhtoan.Text = Money(daThanhToan);
 

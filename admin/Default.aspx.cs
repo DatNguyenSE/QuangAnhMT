@@ -498,7 +498,7 @@ public partial class admin_Default : System.Web.UI.Page
    
        
                 #region lấy dữ liệu
-                var base_phieu = db.HangBaoHanh_tbs
+              var base_phieu = db.HangBaoHanh_tbs
                                    .Where(p => p.trangthai != "Đã trả")
                                    .OrderBy(p => p.NgayHenKhachTra)
                                    .Take(50)
