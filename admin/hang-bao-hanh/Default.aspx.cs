@@ -1831,7 +1831,8 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
         if (id_phieu == null) return "";
         using (dbDataContext db = new dbDataContext())
         {
-            var q = db.HangBaoHanh_ChiTiet_tbs.Where(p => p.id_PhieuBaoHanh == id_phieu.ToString()).ToList();
+            string idPhieuStr = id_phieu.ToString();
+            var q = db.HangBaoHanh_ChiTiet_tbs.Where(p => p.id_PhieuBaoHanh == idPhieuStr).ToList();
             if (q.Count == 0) return "";
             
             System.Text.StringBuilder sb = new System.Text.StringBuilder();

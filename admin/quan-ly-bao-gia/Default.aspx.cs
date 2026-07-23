@@ -434,6 +434,7 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                                   ghichu_chuagiao = ob1.ghichu_chuagiao ?? "",
                                    ob1.sdt_khachhang,
                                    ob1.ten_khachhang,
+                                   ob1.diachi_khachhang,
                                   ob1.ngayhethan,
                                   ob1.ngaybaogia,
                                   ob1.nguoibaogia,

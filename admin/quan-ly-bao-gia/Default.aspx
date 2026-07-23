@@ -533,7 +533,7 @@
                                                     </div>
                                                 </div>
                                                 <div class="cell-lg-12 text-right pr-2-lg mt-3 mb-3">
-                                                    <a class="btn-copy button mini rounded dark" onclick="copyToClipboard('https://thaianaudio.vn/bao-gia.aspx?id=<%=ViewState["id_guide_chitiet"] %>')">Copy Link</a>
+                                                    <a class="btn-copy button mini rounded dark" onclick="copyToClipboard('https://quanganhmt.com/bao-gia.aspx?id=<%=ViewState["id_guide_chitiet"] %>')">Copy Link</a>
                                                     <asp:Button ID="but_add_sp_chitiet" OnClick="but_add_sp_chitiet_Click" runat="server" CssClass="info small" Text="THÊM SẢN PHẨM" />
                                                 </div>
                                             </div>
@@ -1023,6 +1023,9 @@
                                                         <div><a class="fw-600" title="Nhấn để gọi" href="tel:<%#Eval("sdt_khachhang") %>"><span class="mif-phone pr-1"></span><%#Eval("sdt_khachhang") %></a></div>
                                                     </asp:PlaceHolder>
                                                 </td>
+                                                <td class="text-left">
+                                                    <%#Eval("diachi_khachhang") %>
+                                                </td>
                                                 <td class="text-left quote-expiry-cell">
                                                     <div><%# Eval("ngayhethan") == null ? "Không rõ" : Convert.ToDateTime(Eval("ngayhethan")).ToString("dd/MM/yyyy") %></div>
                                                     <asp:Label ID="lbl_quote_expired" runat="server" CssClass="quote-expired" Text="Đã quá hạn" Visible='<%# Convert.ToBoolean(Eval("baoGiaQuaHan")) %>'></asp:Label>
@@ -1070,7 +1073,7 @@
                                                     </asp:PlaceHolder>
                                                 </td>
                                                 <td style="vertical-align: middle">
-                                                    <%--https://thaianaudio.vn/bao-gia.aspx?id=--%>
+                                                    <%--https://quanganhmt.com/bao-gia.aspx?id=--%>
                                                     <div class="dropdown-button place-right">
                                                         <button class="button small bg-transparent">
                                                             <span class="mif mif-more-horiz"></span>
@@ -1085,7 +1088,7 @@
                                                             <li>
                                                                 <asp:LinkButton ID="but_show_form_daban" OnClick="but_show_form_daban_Click" CommandArgument='<%# Eval("id") + "|" + Eval("TongSauThue","{0:#,##0}") %>' runat="server">Xác nhận đã bán</asp:LinkButton></li>
                                                             <li>
-                                                                <a class="btn-copy" onclick="copyToClipboard('https://thaianaudio.vn/bao-gia.aspx?id=<%# Eval("id_guide") %>')">Copy Link
+                                                                <a class="btn-copy" onclick="copyToClipboard('https://quanganhmt.com/bao-gia.aspx?id=<%# Eval("id_guide") %>')">Copy Link
                                                                 </a>
                                                             </li>
                                                             <li style="display: none;">
