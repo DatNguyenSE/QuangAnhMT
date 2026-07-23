@@ -1,4 +1,4 @@
-<%@ Page Title="Theo dõi hàng đã bán" Language="C#" MasterPageFile="~/admin/MasterPageAdmin.master" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="admin_theo_doi_hang_da_ban_Default" %>
+﻿<%@ Page Title="Theo dõi hàng đã bán" Language="C#" MasterPageFile="~/admin/MasterPageAdmin.master" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="admin_theo_doi_hang_da_ban_Default" %>
 
 <%@ Register Assembly="AjaxControlToolkit" Namespace="AjaxControlToolkit" TagPrefix="ajaxToolkit" %>
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="Server">
@@ -400,7 +400,7 @@
                                                 <tr>
                                                     <td><%# Eval("ngayban", "{0:dd/MM/yyyy}") %></td>
                                                     <td class="text-center">
-                                                        <img src='<%# string.IsNullOrEmpty(Convert.ToString(Eval("productImage"))) ? "/uploads/images/no-image.png" : Eval("productImage") %>' class="product-img" />
+                                                        <img src='<%# string.IsNullOrEmpty(Convert.ToString(Eval("productImage"))) ? "/uploads/images/no-image.png" : Eval("productImage") %>' class="product-img" loading="lazy" decoding="async" />
                                                     </td>
                                                      <td style="min-width: 130px;">
                                                         <div class="fw-600"><%# Eval("tenKhachHang") %></div>

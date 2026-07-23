@@ -1,4 +1,4 @@
-<%@ Page Title="Hàng bảo hành" Language="C#" MasterPageFile="~/admin/MasterPageAdmin.master" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="admin_hang_bao_hanh_Default" %>
+﻿<%@ Page Title="Hàng bảo hành" Language="C#" MasterPageFile="~/admin/MasterPageAdmin.master" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="admin_hang_bao_hanh_Default" %>
 
 <%@ Register Assembly="AjaxControlToolkit" Namespace="AjaxControlToolkit" TagPrefix="ajaxToolkit" %>
 <%@ Register Assembly="CKEditor.NET" Namespace="CKEditor.NET" TagPrefix="CKEditor" %>
@@ -894,7 +894,7 @@
                                                     <div class="text-small text-muted"><%#Eval("diachi_khachhang") %></div>
                                                 </td>
                                                 <td class="text-left">
-                                                    <%# GetChiTietSanPham(Eval("id")) %>
+                                                    <%# Eval("ChiTietSanPhamHtml") %>
                                                 </td>
 
                                                 <td>

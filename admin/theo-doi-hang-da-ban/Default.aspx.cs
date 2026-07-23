@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -7,6 +7,90 @@ using System.Web.UI.WebControls;
 
 public partial class admin_theo_doi_hang_da_ban_Default : System.Web.UI.Page
 {
+    private sealed class SoldItemRaw
+    {
+        public long detailId { get; set; }
+        public string productId { get; set; }
+        public string productName { get; set; }
+        public string productModel { get; set; }
+        public string productSerial { get; set; }
+        public string productImage { get; set; }
+        public int quantity { get; set; }
+        public long price { get; set; }
+        public long itemTongSauGiam { get; set; }
+        public long baogiaId { get; set; }
+        public DateTime? ngayban { get; set; }
+        public string tenKhachHang { get; set; }
+        public string sdtKhachHang { get; set; }
+        public string diachiKhachHang { get; set; }
+        public string maKH { get; set; }
+        public string thangBaoHanh { get; set; }
+        public int vat { get; set; }
+        public long giamgiadacbiet { get; set; }
+    }
+
+    private sealed class SoldItemRow
+    {
+        public string productId { get; set; }
+        public string productName { get; set; }
+        public string productModel { get; set; }
+        public string productSerial { get; set; }
+        public string productImage { get; set; }
+        public int quantity { get; set; }
+        public long price { get; set; }
+        public long itemTongSauGiam { get; set; }
+        public long totalPrice { get; set; }
+        public long baogiaId { get; set; }
+        public DateTime? ngayban { get; set; }
+        public string tenKhachHang { get; set; }
+        public string sdtKhachHang { get; set; }
+        public string diachiKhachHang { get; set; }
+        public string maKH { get; set; }
+        public string thangBaoHanh { get; set; }
+        public DateTime? warrantyExpiry { get; set; }
+        public bool warrantyExpired { get; set; }
+    }
+
+    private static SoldItemRow ProcessSoldItem(SoldItemRaw x, long totalSauGiamAll, DateTime now)
+    {
+        DateTime? warrantyExpiry = null;
+        int warrantyMonths;
+        if (x.ngayban.HasValue && int.TryParse(x.thangBaoHanh, out warrantyMonths))
+            warrantyExpiry = x.ngayban.Value.AddMonths(warrantyMonths);
+
+        long itemFinalPrice = 0;
+        if (totalSauGiamAll > 0)
+        {
+            double ratio = (double)x.itemTongSauGiam / totalSauGiamAll;
+            double itemShareDiscount = x.giamgiadacbiet * ratio;
+            double itemAfterSpecialDiscount = x.itemTongSauGiam - itemShareDiscount;
+            double itemWithVat = itemAfterSpecialDiscount * (1 + (double)x.vat / 100);
+            itemFinalPrice = (long)Math.Round(itemWithVat);
+        }
+
+        return new SoldItemRow
+        {
+            productId = x.productId,
+            productName = x.productName,
+            productModel = x.productModel,
+            productSerial = x.productSerial,
+            productImage = x.productImage,
+            quantity = x.quantity,
+            price = x.price,
+            itemTongSauGiam = x.itemTongSauGiam,
+            totalPrice = itemFinalPrice,
+            baogiaId = x.baogiaId,
+            ngayban = x.ngayban,
+            tenKhachHang = x.tenKhachHang,
+            sdtKhachHang = x.sdtKhachHang,
+            diachiKhachHang = x.diachiKhachHang,
+            maKH = x.maKH,
+            thangBaoHanh = x.thangBaoHanh,
+            warrantyExpiry = warrantyExpiry,
+            warrantyExpired = warrantyExpiry.HasValue && warrantyExpiry.Value < now
+        };
+    }
+
     protected void Page_Load(object sender, EventArgs e)
     {
         if (!IsPostBack)
@@ -21,150 +105,154 @@ public partial class admin_theo_doi_hang_da_ban_Default : System.Web.UI.Page
 
     public void show_main()
     {
-        using (dbDataContext db = new dbDataContext())
+        try
         {
-            // 1. Fetch raw query data
-            var rawQuery = from ct in db.BaoGia_ChiTiet_tbs
-                           join bg in db.BaoGia_tbs on ct.id_baogia equals bg.id.ToString()
-                           join sp in db.KhoSanPham_tbs on ct.id_sanpham equals sp.id.ToString() into spGroup
-                           from sp in spGroup.DefaultIfEmpty()
-                           where bg.ngayban_kyhopdong != null
-                           select new
-                           {
-                               productId = sp != null ? sp.id.ToString() : "",
-                               productName = sp != null ? sp.ten : "Sản phẩm tự chọn",
-                               productModel = sp != null ? sp.model : "",
-                                productSerial = sp != null ? sp.so_seri : "",
-                                soSeriKho = sp != null ? sp.so_seri : "",
-                               productImage = sp != null ? sp.anh : "",
-                               quantity = ct.soluong ?? 0,
-                               price = ct.giaban_taithoidiemnay ?? 0,
-                               itemTongSauGiam = ct.TongSauGiam ?? 0,
-                               baogiaId = bg.id,
-                                ngayban = bg.ngayban_kyhopdong,
-                                tenKhachHang = bg.ten_khachhang,
-                                sdtKhachHang = bg.sdt_khachhang,
-                                 diachiKhachHang = bg.diachi_khachhang,
-                                 maKH = ct.MaKichHoat,
-                                 thangBaoHanh = ct.Thang_BaoHanh,
-                                 vat = bg.vat ?? 0,
-                                giamgiadacbiet = bg.giamgiadacbiet ?? 0
-                           };
-
-            // Search Filter
-            string key = txt_timkiem.Text.Trim();
-            if (string.IsNullOrEmpty(key))
+            using (dbDataContext db = new dbDataContext())
             {
-                key = txt_timkiem1.Text.Trim();
-            }
-            if (!string.IsNullOrEmpty(key))
-            {
-                rawQuery = rawQuery.Where(p => p.productName.Contains(key) || 
-                                               p.productModel.Contains(key) || 
-                                               p.soSeriKho.Contains(key) ||
-                                               p.tenKhachHang.Contains(key) || 
-                                               p.sdtKhachHang.Contains(key) ||
-                                               p.baogiaId.ToString() == key);
-            }
+                db.ObjectTrackingEnabled = false;
+                db.DeferredLoadingEnabled = false;
 
-            var rawList = rawQuery.OrderByDescending(p => p.ngayban).ToList();
+                IQueryable<SoldItemRaw> rawQuery =
+                    from ct in db.BaoGia_ChiTiet_tbs
+                    join bg in db.BaoGia_tbs on ct.id_baogia equals bg.id.ToString()
+                    join sp in db.KhoSanPham_tbs on ct.id_sanpham equals sp.id.ToString() into spGroup
+                    from sp in spGroup.DefaultIfEmpty()
+                    where bg.ngayban_kyhopdong != null
+                    select new SoldItemRaw
+                    {
+                        detailId = ct.id,
+                        productId = sp != null ? sp.id.ToString() : "",
+                        productName = sp != null ? sp.ten : "Sản phẩm tự chọn",
+                        productModel = sp != null ? sp.model : "",
+                        productSerial = sp != null ? sp.so_seri : "",
+                        productImage = sp != null ? sp.anh : "",
+                        quantity = ct.soluong ?? 0,
+                        price = ct.giaban_taithoidiemnay ?? 0,
+                        itemTongSauGiam = ct.TongSauGiam ?? 0,
+                        baogiaId = bg.id,
+                        ngayban = bg.ngayban_kyhopdong,
+                        tenKhachHang = bg.ten_khachhang,
+                        sdtKhachHang = bg.sdt_khachhang,
+                        diachiKhachHang = bg.diachi_khachhang,
+                        maKH = ct.MaKichHoat,
+                        thangBaoHanh = ct.Thang_BaoHanh,
+                        vat = bg.vat ?? 0,
+                        giamgiadacbiet = bg.giamgiadacbiet ?? 0
+                    };
 
-            // 2. Group in memory to calculate total itemTongSauGiam per quotation
-            var totalsByBaoGia = rawList
-                .GroupBy(x => x.baogiaId)
-                .ToDictionary(g => g.Key, g => g.Sum(x => x.itemTongSauGiam));
+                string key = txt_timkiem.Text.Trim();
+                if (string.IsNullOrEmpty(key))
+                    key = txt_timkiem1.Text.Trim();
 
-             // 3. Project in memory to calculate proportional discount and VAT for each item
-             var processedList = rawList.Select(x =>
-             {
-                 DateTime? warrantyExpiry = null;
-                 int warrantyMonths;
-                 if (x.ngayban.HasValue && int.TryParse(x.thangBaoHanh, out warrantyMonths))
-                 {
-                     warrantyExpiry = x.ngayban.Value.AddMonths(warrantyMonths);
-                 }
-
-                 long totalSauGiamAll = totalsByBaoGia[x.baogiaId];
-                 long itemFinalPrice = 0;
-
-                if (totalSauGiamAll > 0)
+                if (!string.IsNullOrEmpty(key))
                 {
-                    double ratio = (double)x.itemTongSauGiam / totalSauGiamAll;
-                    double itemShareDiscount = x.giamgiadacbiet * ratio;
-                    double itemAfterSpecialDiscount = x.itemTongSauGiam - itemShareDiscount;
-                    double itemWithVat = itemAfterSpecialDiscount * (1 + (double)x.vat / 100);
-                    itemFinalPrice = (long)Math.Round(itemWithVat);
+                    long searchBaoGiaId;
+                    bool hasBaoGiaId = long.TryParse(key, out searchBaoGiaId);
+                    rawQuery = rawQuery.Where(p =>
+                        p.productName.Contains(key) ||
+                        p.productModel.Contains(key) ||
+                        p.productSerial.Contains(key) ||
+                        p.tenKhachHang.Contains(key) ||
+                        p.sdtKhachHang.Contains(key) ||
+                        (hasBaoGiaId && p.baogiaId == searchBaoGiaId));
+                }
+
+                int pageSize = Number_cl.Check_Int(txt_show.Text.Trim());
+                if (pageSize <= 0) pageSize = 10;
+
+                int currentPage;
+                if (!int.TryParse(Convert.ToString(ViewState["current_page"]), out currentPage) || currentPage < 1)
+                    currentPage = 1;
+
+                DateTime now = DateTime.Now;
+                bool validWarrantyOnly = Convert.ToString(ViewState["warranty_filter"]) == "valid";
+                int totalRecords;
+                List<SoldItemRow> pagedList;
+
+                if (!validWarrantyOnly)
+                {
+                    totalRecords = rawQuery.Count();
+                    int totalPagesTemp = number_of_page_class.return_total_page(totalRecords, pageSize);
+                    if (totalPagesTemp > 0 && currentPage > totalPagesTemp) currentPage = totalPagesTemp;
+
+                    var pageRaw = rawQuery
+                        .OrderByDescending(p => p.ngayban)
+                        .ThenByDescending(p => p.baogiaId)
+                        .ThenByDescending(p => p.detailId)
+                        .Skip((currentPage - 1) * pageSize)
+                        .Take(pageSize)
+                        .ToList();
+
+                    var pageBaoGiaIds = pageRaw.Select(p => p.baogiaId).Distinct().ToList();
+                    var totalsByBaoGia = pageBaoGiaIds.Count == 0
+                        ? new Dictionary<long, long>()
+                        : rawQuery
+                            .Where(p => pageBaoGiaIds.Contains(p.baogiaId))
+                            .GroupBy(p => p.baogiaId)
+                            .Select(g => new { BaoGiaId = g.Key, Total = g.Sum(x => x.itemTongSauGiam) })
+                            .ToDictionary(x => x.BaoGiaId, x => x.Total);
+
+                    pagedList = pageRaw.Select(x =>
+                    {
+                        long total;
+                        totalsByBaoGia.TryGetValue(x.baogiaId, out total);
+                        return ProcessSoldItem(x, total, now);
+                    }).ToList();
                 }
                 else
                 {
-                    itemFinalPrice = 0;
+                    // Thang_BaoHanh đang là chuỗi nên SQL Server không thể AddMonths trực tiếp.
+                    // Chỉ ở bộ lọc này mới lấy tập dữ liệu tối thiểu về RAM để giữ nguyên logic hiện tại.
+                    var warrantyRaw = rawQuery
+                        .OrderByDescending(p => p.ngayban)
+                        .ThenByDescending(p => p.baogiaId)
+                        .ThenByDescending(p => p.detailId)
+                        .ToList();
+
+                    var totalsByBaoGia = warrantyRaw
+                        .GroupBy(x => x.baogiaId)
+                        .ToDictionary(g => g.Key, g => g.Sum(x => x.itemTongSauGiam));
+
+                    var validRows = warrantyRaw
+                        .Select(x => ProcessSoldItem(x, totalsByBaoGia[x.baogiaId], now))
+                        .Where(x => x.warrantyExpiry.HasValue && x.warrantyExpiry.Value >= now)
+                        .ToList();
+
+                    totalRecords = validRows.Count;
+                    int totalPagesTemp = number_of_page_class.return_total_page(totalRecords, pageSize);
+                    if (totalPagesTemp > 0 && currentPage > totalPagesTemp) currentPage = totalPagesTemp;
+                    pagedList = validRows.Skip((currentPage - 1) * pageSize).Take(pageSize).ToList();
                 }
 
-                return new
+                int totalPages = number_of_page_class.return_total_page(totalRecords, pageSize);
+                ViewState["current_page"] = currentPage;
+                ViewState["total_page"] = totalPages;
+
+                btn_prev.Enabled = currentPage > 1;
+                btn_next.Enabled = currentPage < totalPages;
+
+                Repeater1.DataSource = pagedList;
+                Repeater1.DataBind();
+                tr_empty.Visible = totalRecords == 0;
+
+                if (totalRecords > 0)
                 {
-                    x.productId,
-                    x.productName,
-                    x.productModel,
-                    x.productSerial,
-                    x.productImage,
-                    x.quantity,
-                    x.price,
-                    x.itemTongSauGiam,
-                    totalPrice = itemFinalPrice, // final total price after discount and tax!
-                    x.baogiaId,
-                     x.ngayban,
-                     x.tenKhachHang,
-                     x.sdtKhachHang,
-                     x.diachiKhachHang,
-                     x.maKH,
-                     x.thangBaoHanh,
-                     warrantyExpiry,
-                     warrantyExpired = warrantyExpiry.HasValue && warrantyExpiry.Value < DateTime.Now
-                 };
-             }).ToList();
-
-             if (ViewState["warranty_filter"] as string == "valid")
-             {
-                 processedList = processedList
-                     .Where(x => x.warrantyExpiry.HasValue && x.warrantyExpiry.Value >= DateTime.Now)
-                     .ToList();
-             }
-
-            int totalRecords = processedList.Count();
-            int pageSize = Number_cl.Check_Int(txt_show.Text.Trim());
-            if (pageSize <= 0) pageSize = 10;
-
-            int currentPage = int.Parse(ViewState["current_page"].ToString());
-            int totalPages = number_of_page_class.return_total_page(totalRecords, pageSize);
-            if (currentPage < 1) currentPage = 1;
-            else if (currentPage > totalPages && totalPages > 0) currentPage = totalPages;
-            
-            ViewState["current_page"] = currentPage;
-            ViewState["total_page"] = totalPages;
-
-            // Enable/disable page buttons
-            btn_prev.Enabled = (currentPage > 1);
-            btn_next.Enabled = (currentPage < totalPages);
-
-            // Pagination
-            var pagedList = processedList.Skip((currentPage - 1) * pageSize).Take(pageSize).ToList();
-
-            Repeater1.DataSource = pagedList;
-            Repeater1.DataBind();
-
-            tr_empty.Visible = (totalRecords == 0);
-
-            // Display page info
-            int startRecord = (currentPage - 1) * pageSize + 1;
-            int endRecord = startRecord + pagedList.Count - 1;
-            if (totalRecords > 0)
-            {
-                lbl_page_info.Text = startRecord + "-" + endRecord + " trong số " + totalRecords.ToString("#,##0") + " sản phẩm đã bán";
+                    int startRecord = (currentPage - 1) * pageSize + 1;
+                    int endRecord = startRecord + pagedList.Count - 1;
+                    lbl_page_info.Text = startRecord + "-" + endRecord + " trong số " + totalRecords.ToString("#,##0") + " sản phẩm đã bán";
+                }
+                else
+                {
+                    lbl_page_info.Text = "0-0 trong số 0 sản phẩm";
+                }
             }
-            else
-            {
-                lbl_page_info.Text = "0-0 trong số 0 sản phẩm";
-            }
+        }
+        catch (Exception ex)
+        {
+            string account = Session["taikhoan"] as string;
+            if (!string.IsNullOrEmpty(account)) account = mahoa_cl.giaima_Bcorn(account);
+            else account = "";
+            Log_cl.Add_Log(ex.Message, account, ex.StackTrace);
         }
     }
 
@@ -230,9 +318,15 @@ public partial class admin_theo_doi_hang_da_ban_Default : System.Web.UI.Page
 
             using (dbDataContext db = new dbDataContext())
             {
-                var bg = db.BaoGia_tbs.FirstOrDefault(p => p.id.ToString() == baogiaId);
+                db.ObjectTrackingEnabled = false;
+                db.DeferredLoadingEnabled = false;
+                long baogiaIdValue;
+                long.TryParse(baogiaId, out baogiaIdValue);
+                var bg = db.BaoGia_tbs.FirstOrDefault(p => p.id == baogiaIdValue);
                 var ct = db.BaoGia_ChiTiet_tbs.FirstOrDefault(p => p.id_baogia == baogiaId && p.id_sanpham == productId);
-                var sp = db.KhoSanPham_tbs.FirstOrDefault(p => p.id.ToString() == productId);
+                long productIdValue;
+                long.TryParse(productId, out productIdValue);
+                var sp = db.KhoSanPham_tbs.FirstOrDefault(p => p.id == productIdValue);
 
                 if (bg != null && ct != null)
                 {

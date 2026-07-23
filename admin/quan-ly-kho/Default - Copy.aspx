@@ -1,4 +1,4 @@
-﻿<%@ Page Title="Quản lý kho" Language="C#" MasterPageFile="~/admin/MasterPageAdmin.master" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="admin_quan_ly_kho_Default" %>
+<%@ Page Title="Quản lý kho" Language="C#" MasterPageFile="~/admin/MasterPageAdmin.master" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="admin_quan_ly_kho_Default" %>
 <%@ Register Assembly="CKEditor.NET" Namespace="CKEditor.NET" TagPrefix="CKEditor" %>
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="Server">
 </asp:Content>
@@ -517,7 +517,7 @@
                                                 </td>
                                                 <td>
                                                     <div data-role="lightbox" class="c-pointer">
-                                                        <img loading='lazy' decoding='async' src='<%#Eval("anh") %>' class="img-cover-vuong" width="50" height="50" />
+                                                        <img src='<%#Eval("anh") %>' class="img-cover-vuong" width="50" height="50" />
                                                     </div>
                                                 </td>
                                                 <td>
