@@ -1,4 +1,4 @@
-﻿using OfficeOpenXml;
+using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -1799,6 +1799,45 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
     #endregion
 
 
+    protected void txt_so_seri_TextChanged(object sender, EventArgs e)
+    {
+        try
+        {
+            check_login_cl.check_login_admin("12", "12");
+            TextBox txt = (TextBox)sender;
+            RepeaterItem item = (RepeaterItem)txt.NamingContainer;
+            Label lbID = (Label)item.FindControl("lbID");
+            long id = long.Parse(lbID.Text);
+            string new_seri = txt.Text.Trim();
 
+            using (dbDataContext db = new dbDataContext())
+            {
+                if (!string.IsNullOrEmpty(new_seri))
+                {
+                    var q_seri = db.KhoSanPham_tbs.FirstOrDefault(p => p.so_seri == new_seri && p.id != id);
+                    if (q_seri != null)
+                    {
+                        ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Số seri này đã tồn tại ở sản phẩm khác.", "false", "false", "OK", "alert", ""), true);
+                        show_main();
+                        up_main.Update();
+                        return;
+                    }
+                }
 
+                var q = db.KhoSanPham_tbs.FirstOrDefault(p => p.id == id);
+                if (q != null)
+                {
+                    q.so_seri = new_seri;
+                    db.SubmitChanges();
+                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Cập nhật số seri thành công.", "1000", "warning"), true);
+                    show_main();
+                    up_main.Update();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Lỗi", "Có lỗi xảy ra: " + ex.Message, "false", "false", "OK", "alert", ""), true);
+        }
+    }
 }

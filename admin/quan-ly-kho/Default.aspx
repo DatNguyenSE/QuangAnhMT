@@ -1,4 +1,4 @@
-﻿<%@ Page Title="Quản lý kho" Language="C#" MasterPageFile="~/admin/MasterPageAdmin.master" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="admin_quan_ly_kho_Default" %>
+<%@ Page Title="Quản lý kho" Language="C#" MasterPageFile="~/admin/MasterPageAdmin.master" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="admin_quan_ly_kho_Default" %>
 <%@ Register Assembly="CKEditor.NET" Namespace="CKEditor.NET" TagPrefix="CKEditor" %>
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="Server">
 </asp:Content>
@@ -506,8 +506,9 @@
                                                         <%#Eval("id") %>
                                                     </asp:LinkButton>
                                                 </td>--%>
-                                                <td class="text-center">
-                                                    <%#Eval("so_seri") %>
+                                                <td class="text-center" style="cursor: pointer;" onclick="var sp = this.querySelector('.seri-span'); var inp = this.querySelector('.seri-input'); if(sp) { sp.style.display = 'none'; inp.style.display = 'inline-block'; inp.focus(); }">
+                                                    <span class="seri-span" style="display: inline-block; min-width: 50px; min-height: 20px;"><%# string.IsNullOrEmpty(Eval("so_seri")?.ToString()) ? "<i style='color:#ccc'>Click để nhập</i>" : Eval("so_seri") %></span>
+                                                    <asp:TextBox ID="txt_so_seri" runat="server" Text='<%#Eval("so_seri") %>' CssClass="input-small seri-input" style="display:none;" onblur="this.style.display='none'; var sp = this.parentElement.querySelector('.seri-span'); if(sp) sp.style.display='inline-block';" onkeydown="if(event.keyCode==13){ if(confirm('Bạn có muốn chỉnh số seri này không?')){ __doPostBack(this.name, ''); return false; } else { return false; } }" OnTextChanged="txt_so_seri_TextChanged" AutoPostBack="true"></asp:TextBox>
                                                 </td>
                                                 <%--<td class="text-center"><%# Container.ItemIndex + 1 %></td>--%>
                                                 <td class="checkbox-table">
