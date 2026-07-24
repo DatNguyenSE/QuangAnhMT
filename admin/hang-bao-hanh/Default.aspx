@@ -1,4 +1,4 @@
-﻿<%@ Page Title="Hàng bảo hành" Language="C#" MasterPageFile="~/admin/MasterPageAdmin.master" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="admin_hang_bao_hanh_Default" %>
+<%@ Page Title="Hàng bảo hành" Language="C#" MasterPageFile="~/admin/MasterPageAdmin.master" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="admin_hang_bao_hanh_Default" %>
 
 <%@ Register Assembly="AjaxControlToolkit" Namespace="AjaxControlToolkit" TagPrefix="ajaxToolkit" %>
 <%@ Register Assembly="CKEditor.NET" Namespace="CKEditor.NET" TagPrefix="CKEditor" %>
@@ -811,14 +811,22 @@
                         </li>
                     </ul>
                 </div>
+                <div style="position: fixed; right: 270px; top: 64px; z-index: 4;" class="d-none d-block-lg">
+                    <span style="font-size: 13px; color: #888; font-style: italic;">
+                        <span class="mif-barcode"></span> Sử dụng máy quét để tìm nhanh hơn
+                    </span>
+                </div>
                 <div id="timkiem-fixtop-bc" style="position: fixed; right: 10px; top: 58px; width: 240px; z-index: 4" class="d-none d-block-sm">
-                    <asp:TextBox MaxLength="50" data-prepend="<span class='mif mif-search'></span>" ID="txt_timkiem" runat="server" placeholder="Nhập từ khóa" data-role="input" CssClass="input-small" AutoPostBack="true" OnTextChanged="txt_timkiem_TextChanged"></asp:TextBox>
+                    <asp:TextBox MaxLength="50" data-prepend="<span class='mif mif-search'></span>" ID="txt_timkiem" runat="server" placeholder="Quét Seri hoặc nhập từ khóa..." data-role="input" CssClass="input-small" AutoPostBack="true" OnTextChanged="txt_timkiem_TextChanged"></asp:TextBox>
                 </div>
             </div>
 
             <div class="<%--border-top bd-lightGray--%> <%--pt-3 pl-3-lg pl-0 pr-3-lg pr-0 pb-3--%>p-3">
                 <div class="d-none-sm d-block">
-                    <asp:TextBox MaxLength="50" data-prepend="<span class='mif mif-search'></span>" ID="txt_timkiem1" runat="server" placeholder="Nhập từ khóa" data-role="input" AutoPostBack="true" OnTextChanged="txt_timkiem_TextChanged"></asp:TextBox>
+                    <div style="font-size: 12px; color: #888; font-style: italic; margin-bottom: 5px;">
+                        <span class="mif-barcode"></span> Sử dụng máy quét để tìm nhanh hơn
+                    </div>
+                    <asp:TextBox MaxLength="50" data-prepend="<span class='mif mif-search'></span>" ID="txt_timkiem1" runat="server" placeholder="Quét Seri hoặc nhập từ khóa..." data-role="input" AutoPostBack="true" OnTextChanged="txt_timkiem_TextChanged"></asp:TextBox>
                 </div>
                 <div class="d-none-lg d-block mb-3 mt-0-lg mt-3">
                     <div class="place-left">
@@ -1079,5 +1087,48 @@
                 initSelect2();
             });
         }
+
+        // --- BARCODE SCANNER LISTENER ---
+        var barcodeBuffer = "";
+        var barcodeTimeout = null;
+
+        document.addEventListener("keydown", function (e) {
+            var activeElement = document.activeElement;
+            if (activeElement && (activeElement.tagName === "INPUT" || activeElement.tagName === "TEXTAREA" || activeElement.tagName === "SELECT")) {
+                return; // Đang gõ vào textbox khác thì bỏ qua
+            }
+
+            if (e.key === 'Enter') {
+                if (barcodeBuffer.length >= 4) { // Chuỗi mã vạch thường dài hơn 4 ký tự
+                    e.preventDefault(); 
+                    var searchDesktop = document.getElementById('<%= txt_timkiem.ClientID %>');
+                    var searchMobile = document.getElementById('<%= txt_timkiem1.ClientID %>');
+                    var targetSearch = null;
+
+                    if (searchDesktop && searchDesktop.offsetWidth > 0) {
+                        targetSearch = searchDesktop;
+                    } else if (searchMobile && searchMobile.offsetWidth > 0) {
+                        targetSearch = searchMobile;
+                    }
+
+                    if (targetSearch) {
+                        targetSearch.value = barcodeBuffer;
+                        targetSearch.focus();
+                        __doPostBack(targetSearch.name, ''); // Submit tìm kiếm
+                    }
+                }
+                barcodeBuffer = "";
+            } else if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) { 
+                barcodeBuffer += e.key;
+                if (barcodeTimeout) {
+                    clearTimeout(barcodeTimeout);
+                }
+                // Nếu khoảng cách giữa 2 lần gõ > 50ms -> là người gõ chứ k phải máy quét -> xóa buffer
+                barcodeTimeout = setTimeout(function () {
+                    barcodeBuffer = "";
+                }, 50); 
+            }
+        });
+        // --------------------------------
     </script>
 </asp:Content>
