@@ -786,6 +786,9 @@
                         <li data-role="hint" data-hint-position="top" data-hint-text="Xóa">
                             <asp:LinkButton ID="but_xoa" OnClick="but_xoa_Click" runat="server"><span class="mif-bin"></span></asp:LinkButton>
                         </li>
+                        <li data-role="hint" data-hint-position="top" data-hint-text="Quét barcode bằng camera">
+                            <a href="javascript:openWarrantyCameraScanner();"><span class="mif-camera"></span></a>
+                        </li>
 
                         <%--<li data-role="hint" data-hint-position="top" data-hint-text="Lọc">
                             <asp:LinkButton ID="but_show_form_loc" runat="server" OnClick="but_show_form_loc_Click"><span class="mif-filter"></span></asp:LinkButton>
@@ -1024,6 +1027,20 @@
 <asp:Content ID="Content3" ContentPlaceHolderID="foot" runat="Server">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://unpkg.com/@zxing/browser@0.1.5/umd/zxing-browser.min.js"></script>
+    <div id="warrantyCameraModal" style="display:none; position:fixed; inset:0; z-index:1060; background:rgba(15,23,42,.78);">
+        <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:min(92vw,520px); background:#fff; border-radius:16px; padding:20px; box-shadow:0 24px 70px rgba(0,0,0,.3);">
+            <div class="d-flex flex-justify-between flex-align-center mb-3">
+                <div class="text-bold text-upper">Quét barcode hàng bảo hành</div>
+                <button type="button" class="button alert small" onclick="closeWarrantyCameraScanner()"><span class="mif-cross"></span></button>
+            </div>
+            <div style="position:relative; overflow:hidden; background:#0f172a; border-radius:10px; aspect-ratio:4/3;">
+                <video id="warrantyCameraVideo" autoplay muted playsinline style="width:100%; height:100%; object-fit:cover;"></video>
+                <div style="position:absolute; left:12%; right:12%; top:35%; height:30%; border:2px solid #22c55e; border-radius:8px; box-shadow:0 0 0 999px rgba(15,23,42,.2);"></div>
+            </div>
+            <div id="warrantyCameraStatus" class="mt-3 text-muted">Đưa một mã barcode vào gần khung xanh, để phần vạch chiếm phần lớn khung hình.</div>
+        </div>
+    </div>
     <script>
         function uploadFile(fileInput, messageId, previewId, hiddenInputId) {
             var messageDiv = document.getElementById(messageId);
@@ -1065,6 +1082,88 @@
                  messageDiv.innerHTML = "Vui lòng chọn file.";
              }
         }
+    </script>
+    <script type="text/javascript">
+        (function () {
+            var warrantyCameraReader = null;
+            var warrantyCameraControls = null;
+            var warrantyCameraActive = false;
+
+            function stopWarrantyCamera() {
+                warrantyCameraActive = false;
+                if (warrantyCameraControls && warrantyCameraControls.stop) {
+                    warrantyCameraControls.stop();
+                    warrantyCameraControls = null;
+                }
+                warrantyCameraReader = null;
+                var video = document.getElementById('warrantyCameraVideo');
+                if (video) video.srcObject = null;
+            }
+
+            window.closeWarrantyCameraScanner = function () {
+                stopWarrantyCamera();
+                var modal = document.getElementById('warrantyCameraModal');
+                if (modal) modal.style.display = 'none';
+            };
+
+            function submitWarrantyCameraBarcode(value) {
+                var searchDesktop = document.getElementById('<%= txt_timkiem.ClientID %>');
+                var searchMobile = document.getElementById('<%= txt_timkiem1.ClientID %>');
+                var targetSearch = null;
+
+                if (searchDesktop && searchDesktop.offsetWidth > 0)
+                    targetSearch = searchDesktop;
+                else if (searchMobile && searchMobile.offsetWidth > 0)
+                    targetSearch = searchMobile;
+
+                if (!targetSearch) return;
+                targetSearch.value = value;
+                targetSearch.focus();
+                __doPostBack(targetSearch.name, '');
+            }
+
+            window.openWarrantyCameraScanner = function () {
+                var modal = document.getElementById('warrantyCameraModal');
+                var video = document.getElementById('warrantyCameraVideo');
+                var status = document.getElementById('warrantyCameraStatus');
+                if (!modal || !video || !status) return;
+
+                modal.style.display = 'block';
+                status.innerText = 'Đang khởi động camera...';
+                stopWarrantyCamera();
+
+                if (!window.ZXingBrowser) {
+                    status.innerText = 'Không tải được bộ đọc barcode. Hãy kiểm tra kết nối Internet.';
+                    return;
+                }
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    status.innerText = 'Trình duyệt không hỗ trợ truy cập camera.';
+                    return;
+                }
+
+                warrantyCameraReader = new ZXingBrowser.BrowserMultiFormatReader();
+                warrantyCameraActive = true;
+                warrantyCameraReader.decodeFromConstraints({
+                    video: {
+                        facingMode: { ideal: 'environment' },
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 }
+                    },
+                    audio: false
+                }, video, function (result, error, controls) {
+                    if (controls) warrantyCameraControls = controls;
+                    if (!warrantyCameraActive || !result) return;
+
+                    var value = result.getText().trim();
+                    status.innerText = 'Đã nhận barcode: ' + value;
+                    stopWarrantyCamera();
+                    modal.style.display = 'none';
+                    submitWarrantyCameraBarcode(value);
+                }).catch(function () {
+                    status.innerText = 'Không thể mở camera. Hãy cấp quyền camera cho trang web.';
+                });
+            };
+        })();
     </script>
 
 

@@ -534,7 +534,7 @@
                                                 </div>
                                                 <div class="cell-lg-12 text-right pr-2-lg mt-3 mb-3">
                                                     <a class="btn-copy button mini rounded dark" onclick="copyToClipboard('https://quanganhmt.com/bao-gia.aspx?id=<%=ViewState["id_guide_chitiet"] %>')">Copy Link</a>
-                                                    <asp:Button ID="but_add_sp_chitiet" OnClick="but_add_sp_chitiet_Click" runat="server" CssClass="info small" Text="THÊM SẢN PHẨM" />
+                                                     <asp:Button ID="but_add_sp_chitiet" OnClick="but_add_sp_chitiet_Click" runat="server" CssClass="info small" Text="THÊM SẢN PHẨM VÀO BÁO GIÁ" />
                                                 </div>
                                             </div>
                                         </asp:Panel>

@@ -174,6 +174,62 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
             set_dulieu_macdinh();
             show_main();
 
+            OpenQuickQuoteFromInventory();
+
+        }
+    }
+
+    private void OpenQuickQuoteFromInventory()
+    {
+        string productId = Request.QueryString["tao-bao-gia"];
+        long parsedProductId;
+        if (!long.TryParse(productId, out parsedProductId))
+            return;
+
+        using (dbDataContext db = new dbDataContext())
+        {
+            if (!db.KhoSanPham_tbs.Any(p => p.id == parsedProductId))
+                return;
+        }
+
+        try
+        {
+            check_login_cl.check_login_admin("29", "29");
+            reset_control_add_edit();
+            ViewState["add_edit"] = "add";
+            ViewState["quick_quote"] = true;
+            ViewState["quick_quote_product"] = parsedProductId.ToString();
+            Label1.Text = "TẠO BÁO GIÁ";
+            but_add_edit.Text = "TẠO BÁO GIÁ CHO SẢN PHẨM NÀY";
+            but_add_sp_chitiet.Visible = false;
+            PlaceHolder8.Visible = true;
+            PlaceHolder1.Visible = true;
+
+            using (dbDataContext db = new dbDataContext())
+            {
+                DropDownList2.DataSource = GetCustomers(db);
+                DropDownList2.DataValueField = "Id";
+                DropDownList2.DataTextField = "Text";
+                DropDownList2.DataBind();
+                DropDownList2.Items.Insert(0, new ListItem("Khách hàng đã báo giá", ""));
+                BindProductDropdown(db);
+                if (DropDownList1.Items.FindByValue(parsedProductId.ToString()) != null)
+                    DropDownList1.SelectedValue = parsedProductId.ToString();
+
+                var selectedProduct = db.KhoSanPham_tbs
+                    .Where(p => p.id == parsedProductId)
+                    .Select(p => p.so_seri)
+                    .FirstOrDefault();
+                txt_so_seri.Text = selectedProduct ?? "";
+            }
+
+            pn_add.Visible = true;
+            up_add.Update();
+        }
+        catch (Exception _ex)
+        {
+            string _tk = Session["taikhoan"] as string;
+            Log_cl.Add_Log(_ex.Message, _tk ?? "", _ex.StackTrace);
         }
     }
     #region main - phân trang - tìm kiếm
@@ -1131,6 +1187,11 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
             Repeater2.DataSource = null;
             Repeater2.DataBind();
             ViewState["add_edit"] = null;
+            ViewState["customer_checked"] = false;
+            ViewState["quick_quote"] = false;
+            ViewState["quick_quote_product"] = null;
+            but_add_sp_chitiet.Visible = true;
+            but_add_edit.Visible = true;
             DropDownList1.DataSource = null;
             DropDownList1.DataBind();
             txt_soluong.Text = "1";
@@ -1546,6 +1607,28 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
 
             using (dbDataContext db = new dbDataContext())
             {
+                if (ViewState["add_edit"]?.ToString() == "add"
+                    && !Convert.ToBoolean(ViewState["customer_checked"] ?? false)
+                    && !string.IsNullOrEmpty(DropDownList2.SelectedValue))
+                {
+                    long customerId;
+                    if (long.TryParse(DropDownList2.SelectedValue, out customerId))
+                    {
+                        var selectedCustomer = db.Data_KhachHang_tbs.FirstOrDefault(p => p.id == customerId);
+                        if (selectedCustomer != null)
+                        {
+                            if (!string.IsNullOrWhiteSpace(selectedCustomer.sdt))
+                                txt_sdt.Text = selectedCustomer.sdt;
+                            txt_ten_kh.Text = selectedCustomer.ten;
+                            txt_diachi_kh.Text = selectedCustomer.diachi;
+                        }
+                    }
+                }
+
+                _sdt = str_cl.XuLy_SDT_NhapVao(txt_sdt.Text);
+                _ten_kh = str_cl.VietHoa_ChuCai_DauTien(txt_ten_kh.Text.Trim());
+                _diachi = txt_diachi_kh.Text.Trim();
+
                 #region Kiểm tra ngoại lệ.
                 if (str_cl.KiemTra_SDT(_sdt) == false)
                 {
@@ -1657,6 +1740,58 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                         _ob.Id_KhachHnag = _ob1.id.ToString();
                     }
                     db.SubmitChanges();
+
+                    if (Convert.ToBoolean(ViewState["quick_quote"] ?? false))
+                    {
+                        string productId = ViewState["quick_quote_product"]?.ToString();
+                        if (long.TryParse(productId, out long quickProductId))
+                        {
+                            var product = db.KhoSanPham_tbs.FirstOrDefault(p => p.id == quickProductId);
+                            if (product != null)
+                            {
+                                long productPrice = product.giabanle ?? 0;
+                                BaoGia_ChiTiet_tb detail = new BaoGia_ChiTiet_tb();
+                                detail.id_baogia = _ob.id.ToString();
+                                detail.id_sanpham = product.id.ToString();
+                                detail.soluong = 1;
+                                detail.giaban_taithoidiemnay = productPrice;
+                                detail.thanhtien = productPrice;
+                                detail.giamgia_phantram = 0;
+                                detail.giamgia_thanhtien = 0;
+                                detail.TongSauGiam = productPrice;
+                                db.BaoGia_ChiTiet_tbs.InsertOnSubmit(detail);
+                                db.SubmitChanges();
+                                update_baogia(db, _ob.id.ToString());
+                            }
+                        }
+
+                        ViewState["pt_giamgiadacbiet"] = _pt_GiamGia ?? 0;
+                        ViewState["giamgia_dacbiet"] = _giamgia_dacbiet;
+                        ViewState["vat_chitiet"] = _vat;
+                        ViewState["thanhtien_vat_chitiet"] = "0";
+                        ViewState["add_edit"] = "edit";
+                        ViewState["id_edit"] = _ob.id.ToString();
+                        ViewState["id_guide_chitiet"] = _ob.id_guide.ToString().ToLower();
+                        PlaceHolder8.Visible = false;
+                        PlaceHolder1.Visible = true;
+                        but_add_sp_chitiet.Visible = true;
+                        but_add_edit.Visible = true;
+                        but_add_edit.Text = "CẬP NHẬT BÁO GIÁ";
+                        if (DropDownList1.Items.FindByValue("") != null)
+                            DropDownList1.SelectedValue = "";
+                        txt_soluong.Text = "1";
+                        txt_giamgia_phantram.Text = "0";
+                        txt_so_seri.Text = "";
+                        txt_baohanh_thang.Text = "";
+                        txt_diengiai.Text = "";
+                        load_edit(db, _ob.id.ToString());
+                        show_main();
+                        up_main.Update();
+                        up_add.Update();
+                        ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), "window.history.replaceState(null, document.title, window.location.pathname);", true);
+                        ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Đã tạo báo giá và thêm sản phẩm.", "1500", "warning"), true);
+                        return;
+                    }
 
 
 
@@ -2350,6 +2485,7 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                     rd_loai_giamgia.SelectedValue = "sotien";
                     txt_giamgia_kh.Text = "0";
                 }
+                ViewState["customer_checked"] = true;
             }
             //else
             //{
@@ -2383,7 +2519,12 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
     {
 
         check_login_cl.check_login_admin("18", "19");
-        string _idbg = ViewState["id_edit"].ToString();
+        string _idbg = ViewState["id_edit"]?.ToString();
+        if (string.IsNullOrEmpty(_idbg))
+        {
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng tạo báo giá trước khi thêm sản phẩm.", "false", "false", "OK", "alert", ""), true);
+            return;
+        }
         string _idsp = DropDownList1.SelectedValue.ToString();
         int _soluong_xuat = Number_cl.Check_Int(txt_soluong.Text.Trim());
         decimal _giamgia_phantram = Number_cl.Check_Decimal(txt_giamgia_phantram.Text.Trim());

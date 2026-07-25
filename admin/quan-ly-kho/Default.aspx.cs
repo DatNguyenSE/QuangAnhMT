@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Globalization;
 using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
@@ -262,7 +263,16 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                                     ob1.nguoitao,
                                  }).AsQueryable();
 
-                ////xử lý theo thời gian
+                // Lọc theo ngày tạo trước khi tính tổng và phân trang.
+                DateTime tuNgay;
+                if (DateTime.TryParse(txt_tungay.Text.Trim(), out tuNgay))
+                    products = products.Where(p => p.ngaytao >= tuNgay.Date);
+
+                DateTime denNgay;
+                if (DateTime.TryParse(txt_denngay.Text.Trim(), out denNgay))
+                    products = products.Where(p => p.ngaytao < denNgay.Date.AddDays(1));
+
+                /* ////xử lý theo thời gian
                 //string _id_locthoigian = ddl_thoigian.SelectedValue;
                 //if (_id_locthoigian == "1")//lọc theo ngày tạo
                 //{
@@ -270,7 +280,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                 //        list_all = list_all.Where(p => p.ngaytao.Value.Date >= DateTime.Parse(txt_tungay.Text).Date);
                 //    if (txt_denngay.Text != "")
                 //        list_all = list_all.Where(p => p.ngaytao.Value.Date <= DateTime.Parse(txt_denngay.Text).Date);
-                //}
+                //} */
 
                 //lọc theo phân loại bài viết
                 //List<string> list_phanloai_baiviet = new List<string>();
@@ -302,7 +312,10 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
 
                 #region phân trang OK, k sửa
                 // Chỉ sắp xếp ở truy vấn lấy dữ liệu trang hiện tại.
-                list_all = list_all.OrderBy(p => p.Nhom).ThenBy(p => p.TenSP);
+                list_all = list_all
+                    .OrderByDescending(p => p.ngaytao)
+                    .ThenBy(p => p.Nhom)
+                    .ThenBy(p => p.TenSP);
                 // Xử lý số record mỗi trang
                 int show = Number_cl.Check_Int(txt_show.Text.Trim()); if (show <= 0) show = 30;
                 //xử lý trang hiện tại. Đảm bảo current_page không nhỏ hơn 1 và không lớn hơn total_page
@@ -442,6 +455,29 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
 
 
     #region ADD - EDIT - CHI TIẾT
+    private T FindControlRecursive<T>(Control root, string id) where T : Control
+    {
+        if (root == null) return null;
+        if (root.ID == id) return root as T;
+
+        foreach (Control child in root.Controls)
+        {
+            T result = FindControlRecursive<T>(child, id);
+            if (result != null) return result;
+        }
+        return null;
+    }
+
+    private TextBox GetQuickTextBox(string id)
+    {
+        return FindControlRecursive<TextBox>(this, id);
+    }
+
+    private PlaceHolder GetQuickPlaceHolder(string id)
+    {
+        return FindControlRecursive<PlaceHolder>(this, id);
+    }
+
     public void reset_control_add_edit()
     {
         try
@@ -480,6 +516,11 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             reset_control_add_edit();
 
             ViewState["add_edit"] = "add";
+            ViewState["quick_entry"] = false;
+            pn_add.CssClass = "";
+            GetQuickPlaceHolder("ph_quick_entry_info").Visible = false;
+            GetQuickPlaceHolder("ph_quick_entry_quantity").Visible = false;
+            GetQuickPlaceHolder("ph_quick_entry_common_start").Visible = false;
             Label1.Text = "THÊM SẢN PHẨM MỚI";
             but_add_edit.Text = "THÊM MỚI";
 
@@ -505,12 +546,60 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
         }
     }
+
+    protected void but_open_quick_entry_Click(object sender, EventArgs e)
+    {
+        try
+        {
+            check_login_cl.check_login_admin("9", "9");
+            TextBox quickBarcode = GetQuickTextBox("txt_quick_barcode");
+            string barcode = quickBarcode == null ? "" : quickBarcode.Text.Trim();
+            if (string.IsNullOrEmpty(barcode)) return;
+
+            using (dbDataContext db = new dbDataContext())
+            {
+                if (db.KhoSanPham_tbs.Any(p => p.so_seri == barcode))
+                {
+                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
+                        thongbao_class.metro_dialog("Barcode đã tồn tại", "Số seri " + barcode + " đã có trong kho, không mở form tạo mới.", "false", "false", "OK", "alert", ""), true);
+                    return;
+                }
+
+                reset_control_add_edit();
+                BindProductSourceDropDowns(db, null);
+            }
+
+            ViewState["add_edit"] = "add";
+            ViewState["quick_entry"] = true;
+            pn_add.CssClass = "quick-entry-panel";
+            GetQuickPlaceHolder("ph_quick_entry_info").Visible = true;
+            GetQuickPlaceHolder("ph_quick_entry_quantity").Visible = true;
+            GetQuickPlaceHolder("ph_quick_entry_common_start").Visible = true;
+            Label1.Text = "NHẬP NHANH SẢN PHẨM BẰNG BARCODE";
+            but_add_edit.Text = "XÁC NHẬN TẠO SẢN PHẨM";
+            txt_so_seri.Text = barcode;
+            GetQuickTextBox("txt_quick_quantity").Text = "1";
+            GetQuickTextBox("txt_quick_date").Text = DateTime.Today.ToString("yyyy-MM-dd");
+            pn_add.Visible = true;
+            up_add.Update();
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), "quick_serial_preview", "window.setTimeout(function(){ if(window.updateQuickSerialPreview) updateQuickSerialPreview(); }, 80);", true);
+        }
+        catch (Exception _ex)
+        {
+            string _tk = Session["taikhoan"] as string;
+            Log_cl.Add_Log(_ex.Message, string.IsNullOrEmpty(_tk) ? "" : mahoa_cl.giaima_Bcorn(_tk), _ex.StackTrace);
+        }
+    }
     protected void but_close_form_add_Click(object sender, EventArgs e)
     {
         try
         {
             //reset control
             reset_control_add_edit();
+            pn_add.CssClass = "";
+            GetQuickPlaceHolder("ph_quick_entry_info").Visible = false;
+            GetQuickPlaceHolder("ph_quick_entry_quantity").Visible = false;
+            GetQuickPlaceHolder("ph_quick_entry_common_start").Visible = false;
             //ẩn form
             pn_add.Visible = !pn_add.Visible;
         }
@@ -666,6 +755,12 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
 
             using (dbDataContext db = new dbDataContext())
             {
+                if (Convert.ToBoolean(ViewState["quick_entry"]))
+                {
+                    SaveQuickProducts(db, _so_seri, _tensp, _anh, _cohoadon, _hangthanhly, _id_hang, _id_nhom, _id_donvitinh, _model, _thongso, _ghichu, _giaban, _gianhap, _nguoitao);
+                    return;
+                }
+
                 #region Kiểm tra ngoại lệ.
 
                 if (_so_seri == "")
@@ -781,6 +876,84 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                 _tk = "";
             Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
         }
+    }
+
+    private void SaveQuickProducts(dbDataContext db, string baseSerial, string name, string image, bool coHoaDon, bool hangThanhLy,
+        string idHang, string idNhom, string idDonViTinh, string model, string thongSo, string ghiChu,
+        long giaBan, long giaNhap, string nguoiTao)
+    {
+        int quantity;
+        if (string.IsNullOrWhiteSpace(baseSerial) || string.IsNullOrWhiteSpace(name))
+        {
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
+                thongbao_class.metro_dialog("Thiếu thông tin", "Vui lòng nhập số seri và tên sản phẩm.", "false", "false", "OK", "alert", ""), true);
+            return;
+        }
+
+        TextBox quickQuantity = GetQuickTextBox("txt_quick_quantity");
+        TextBox quickDate = GetQuickTextBox("txt_quick_date");
+        if (quickQuantity == null || quickDate == null || !int.TryParse(quickQuantity.Text.Trim(), out quantity) || quantity < 1 || quantity > 1000)
+        {
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
+                thongbao_class.metro_dialog("Số lượng không hợp lệ", "Số lượng sản phẩm muốn tạo phải từ 1 đến 1.000.", "false", "false", "OK", "alert", ""), true);
+            return;
+        }
+
+        DateTime ngayNhap;
+        if (!DateTime.TryParseExact(quickDate.Text.Trim(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out ngayNhap))
+            ngayNhap = DateTime.Today;
+
+        var serials = Enumerable.Range(1, quantity)
+            .Select(i => i == 1 ? baseSerial : baseSerial + "-" + i)
+            .ToList();
+
+        var duplicateSerials = db.KhoSanPham_tbs
+            .Where(p => serials.Contains(p.so_seri))
+            .Select(p => p.so_seri)
+            .ToList();
+        if (duplicateSerials.Count > 0)
+        {
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
+                thongbao_class.metro_dialog("Không thể tạo sản phẩm", "Các số seri sau đã tồn tại: " + string.Join(", ", duplicateSerials), "false", "false", "OK", "alert", ""), true);
+            return;
+        }
+
+        foreach (string serial in serials)
+        {
+            KhoSanPham_tb product = new KhoSanPham_tb();
+            product.sanpham_tuychon = false;
+            product.so_seri = serial;
+            product.ten = name;
+            product.id_nhom = idNhom;
+            product.id_hang = idHang;
+            product.donvitinh = idDonViTinh;
+            product.anh = image;
+            product.model = model;
+            product.thongso_kythuat = thongSo;
+            product.giabanle = giaBan;
+            product.gianhap = giaNhap;
+            product.cohoadon = coHoaDon;
+            product.hangthanhly = hangThanhLy;
+            product.ghichu = ghiChu;
+            product.ngaytao = ngayNhap;
+            product.nguoitao = nguoiTao;
+            product.soluong_hientai = 1;
+            db.KhoSanPham_tbs.InsertOnSubmit(product);
+        }
+        db.SubmitChanges();
+
+        reset_control_add_edit();
+        ViewState["quick_entry"] = false;
+        pn_add.CssClass = "";
+        pn_add.Visible = false;
+        GetQuickPlaceHolder("ph_quick_entry_info").Visible = false;
+        GetQuickPlaceHolder("ph_quick_entry_quantity").Visible = false;
+        GetQuickPlaceHolder("ph_quick_entry_common_start").Visible = false;
+        show_main();
+        up_main.Update();
+        up_add.Update();
+        ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
+            thongbao_class.metro_notifi("Nhập kho thành công", "Đã tạo " + quantity.ToString("#,##0") + " sản phẩm.", "1600", "success"), true);
     }
     #endregion
 

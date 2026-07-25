@@ -1,6 +1,82 @@
 ﻿<%@ Page Title="Quản lý kho" Language="C#" MasterPageFile="~/admin/MasterPageAdmin.master" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="admin_quan_ly_kho_Default" %>
 <%@ Register Assembly="CKEditor.NET" Namespace="CKEditor.NET" TagPrefix="CKEditor" %>
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="Server">
+    <style>
+        .quick-entry-panel > div:last-of-type {
+            background: rgba(20, 28, 38, .72) !important;
+            backdrop-filter: blur(5px);
+        }
+
+        .quick-entry-panel > div:last-of-type > div {
+            max-width: 1080px !important;
+            padding: 26px 16px 46px;
+        }
+
+        .quick-entry-panel > div:first-of-type > div,
+        .quick-entry-panel > div:last-of-type > div {
+            width: 100%;
+            max-width: 1106px !important;
+            box-sizing: border-box;
+            margin-left: auto !important;
+            margin-right: auto !important;
+        }
+
+        .quick-entry-panel > div:last-of-type > div > div {
+            border-radius: 18px;
+            box-shadow: 0 24px 70px rgba(0, 0, 0, .22);
+            overflow: hidden;
+        }
+
+        .quick-entry-panel .quick-entry-title {
+            color: #1f2937;
+            letter-spacing: .03em;
+        }
+
+        .quick-entry-panel .quick-entry-subtitle {
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 400;
+            letter-spacing: 0;
+            text-transform: none;
+        }
+
+        .quick-entry-panel .quick-entry-section {
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            background: #f8fafc;
+            padding: 14px 16px 18px;
+            margin-bottom: 18px;
+        }
+
+        .quick-entry-panel .quick-entry-section-title {
+            color: #334155;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: .08em;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .quick-entry-panel .quick-entry-section-help {
+            color: #64748b;
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+
+        .quick-entry-panel .quick-entry-serial {
+            background: #fff7ed;
+            border-color: #fdba74;
+            color: #9a3412;
+            font-family: Consolas, monospace;
+            font-weight: 700;
+        }
+
+        @media (max-width: 639px) {
+            .quick-entry-panel > div:last-of-type > div {
+                padding: 10px 8px 28px;
+            }
+        }
+    </style>
 </asp:Content>
 <asp:Content ID="Content2" ContentPlaceHolderID="main" runat="Server">
     <asp:UpdatePanel ID="up_nhaphang" runat="server" UpdateMode="Conditional">
@@ -80,38 +156,49 @@
     <asp:UpdatePanel ID="up_add" runat="server" UpdateMode="Conditional">
 
         <ContentTemplate>
+            <asp:TextBox ID="txt_quick_barcode" runat="server" style="display:none" />
+            <asp:Button ID="but_open_quick_entry" runat="server" Text="" style="display:none" OnClick="but_open_quick_entry_Click" CausesValidation="false" />
             <asp:Panel ID="pn_add" runat="server" Visible="false" DefaultButton="but_add_edit">
-                <div style="position: fixed; width: 100%; height: 52px; background-color: none; top: 0; left: 0; z-index: 1041!important;">
-                    <div style='top: 0; left: 0px; margin: 0 auto; max-width: 1100px; opacity: 1;'>
-                        <div style='position: absolute; right: 18px; top: 14px; z-index: 1040!important'>
-                            <a href='#' class='fg-white d-inline' id="close_add" runat="server" onserverclick="but_close_form_add_Click" title='Đóng'>
-                                <span class='mif mif-cross mif-2x fg-red fg-lightRed-hover'></span>
-                            </a>
-                        </div>
-                        <div class="bg-white pl-4 pl-8-md pr-8-md pr-4" style="height: 52px;">
-                            <div class="pt-4 text-upper text-bold">
-                                <asp:Label ID="Label1" runat="server" Text=""></asp:Label>
-                            </div>
-                            <hr />
-                        </div>
-                    </div>
-                </div>
                 <div style="position: fixed; width: 100%; height: 100%; top: 0; left: 0; overflow: auto; z-index: 1040!important; background-image: url('/uploads/images/bg1.png');">
                     <div style='top: 0; left: 0; margin: 0 auto; max-width: 1106px; opacity: 1;'>
-                        <div class="bg-white border bd-transparent pl-4 pl-8-md pr-8-md pr-4" style="padding-top: 52px">
+                        <div class="bg-white border bd-transparent pl-4 pl-8-md pr-8-md pr-4" style="padding-top: 20px">
+                            <asp:Label ID="Label1" runat="server" style="display:none"></asp:Label>
                             <%--pl-4 pl-8-md pr-8-md pr-4--%>
                             <div class="row">
                                 <div class="cell-lg-6 pr-4-lg">
+                                    <asp:PlaceHolder ID="ph_quick_entry_info" runat="server" Visible="false">
+                                        <div class="quick-entry-section">
+                                            <div class="quick-entry-section-title">Thông tin từ barcode</div>
+                                            <div class="quick-entry-section-help">Seri gốc được lấy trực tiếp từ máy quét.</div>
+                                        </div>
+                                    </asp:PlaceHolder>
                                     <div class="mt-3">
                                         <label class="fg-red fw-600">Số seri</label>
                                         <asp:TextBox ID="txt_so_seri" runat="server" data-role="input"></asp:TextBox>
                                     </div>
+                                    <asp:PlaceHolder ID="ph_quick_entry_quantity" runat="server" Visible="false">
+                                        <div class="quick-entry-section mt-4">
+                                            <div class="quick-entry-section-title">Số lượng sản phẩm muốn tạo</div>
+                                            <div class="quick-entry-section-help">Mỗi sản phẩm sẽ tạo một record riêng với số lượng tồn là 1.</div>
+                                            <label class="fg-red fw-600">Số lượng</label>
+                                            <asp:TextBox ID="txt_quick_quantity" runat="server" Text="1" MaxLength="5" TextMode="Number" data-role="input"></asp:TextBox>
+                                            <div id="quickSerialPreview" class="mt-3" style="display:none"></div>
+                                            <div class="mt-3">
+                                                <label class="fw-600">Ngày nhập</label>
+                                                <asp:TextBox ID="txt_quick_date" runat="server" TextMode="Date" data-role="input"></asp:TextBox>
+                                            </div>
+                                        </div>
+                                    </asp:PlaceHolder>
+                                    <asp:PlaceHolder ID="ph_quick_entry_common_start" runat="server" Visible="false">
+                                        <div class="quick-entry-section-title">Thông tin dùng chung cho tất cả sản phẩm</div>
+                                        <div class="quick-entry-section-help">Các trường bên dưới sẽ được copy vào từng record được tạo.</div>
+                                    </asp:PlaceHolder>
                                     <div class="mt-3">
-                                        <label class="fg-red fw-600">Tên sản phẩm</label>
+                                        <label class="fg-red fw-600">Tên sản phẩm <small>(dùng chung)</small></label>
                                         <asp:TextBox ID="txt_name" runat="server" data-role="input" MaxLength="100"></asp:TextBox>
                                     </div>
                                     <div class="mt-3">
-                                        <label class="fw-600">Ảnh sản phẩm</label>
+                                        <label class="fw-600">Ảnh sản phẩm <small>(dùng chung)</small></label>
                                         <input type="file" id="fileInput" onchange="uploadFile()" data-role="file" data-button-title="<span class='mif-file-upload'></span>" />
                                         <div id="message" runat="server"></div>
                                         <div id="uploadedFilePath"></div>
@@ -133,25 +220,25 @@
                                         <asp:CheckBox runat="server" ID="check_hangthanhly" Text="Hàng thanh lý"></asp:CheckBox>
                                     </div>
                                     <div class="mt-3">
-                                        <label class="fw-600">Hãng sản phẩm</label>
+                                        <label class="fw-600">Hãng sản phẩm <small>(dùng chung)</small></label>
                                         <div>
                                             <asp:DropDownList ID="DropDownList1" runat="server" data-role="select"></asp:DropDownList>
                                         </div>
                                     </div>
                                     <div class="mt-3">
-                                        <label class="fw-600">Nhóm sản phẩm</label>
+                                        <label class="fw-600">Nhóm sản phẩm <small>(dùng chung)</small></label>
                                         <div>
                                             <asp:DropDownList ID="DropDownList2" runat="server" data-role="select"></asp:DropDownList>
                                         </div>
                                     </div>
                                     <div class="mt-3">
-                                        <label class="fw-600">Đơn vị tính</label>
+                                        <label class="fw-600">Đơn vị tính <small>(dùng chung)</small></label>
                                         <div>
                                             <asp:DropDownList ID="DropDownList3" runat="server" data-role="select"></asp:DropDownList>
                                         </div>
                                     </div>
                                     <div class="mt-3">
-                                        <label class="fw-600">Model</label>
+                                        <label class="fw-600">Model <small>(dùng chung)</small></label>
                                         <asp:TextBox ID="txt_model" runat="server" data-role="input" MaxLength="100"></asp:TextBox>
                                     </div>
 
@@ -160,29 +247,32 @@
                                 </div>
                                 <div class="cell-lg-6 pl-4-lg">
                                     <div class="mt-3">
-                                        <label class="fw-600">Thông số kỹ thuật</label>
+                                         <label class="fw-600">Thông số kỹ thuật <small>(dùng chung)</small></label>
                                         <CKEditor:CKEditorControl ID="txt_thongso" runat="server" Height="100px" Width="100%" CustomConfig="/ckeditor/config-basic.js"></CKEditor:CKEditorControl>
                                         <%--<asp:TextBox ID="txt_thongso" data-role="textarea" runat="server" TextMode="MultiLine"></asp:TextBox>--%>
                                     </div>
                                     <asp:PlaceHolder ID="PlaceHolder1" runat="server" Visible="false">
                                         <div class="mt-3">
-                                            <label class="fw-600">Giá nhập</label>
+                                             <label class="fw-600">Giá nhập <small>(dùng chung)</small></label>
                                             <asp:TextBox ID="txt_gianhap" onfocus="AutoSelect(this)" MaxLength="14" oninput="format_sotien_new(this)" runat="server" data-role="input" Text="0"></asp:TextBox>
                                         </div>
                                     </asp:PlaceHolder>
                                     <div class="mt-3">
-                                        <label class="fw-600">Giá bán</label>
+                                         <label class="fw-600">Giá bán <small>(dùng chung)</small></label>
                                         <asp:TextBox ID="txt_giaban" onfocus="AutoSelect(this)" MaxLength="14" oninput="format_sotien_new(this)" runat="server" data-role="input" Text="0"></asp:TextBox>
                                     </div>
 
                                     <div class="mt-3">
-                                        <label class="fw-600">Ghi chú</label>
+                                         <label class="fw-600">Ghi chú <small>(dùng chung)</small></label>
                                         <asp:TextBox ID="txt_ghichu" runat="server" data-role="input"></asp:TextBox>
                                     </div>
                                 </div>
                             </div>
                             <div class="mt-6 mb-20 text-right">
                                 <asp:Button ID="but_add_edit" runat="server" Text="" CssClass="button success" OnClick="but_add_edit_Click" />
+                                <a href="#" class="button alert ml-2" id="close_add" runat="server" onserverclick="but_close_form_add_Click" title="Đóng">
+                                    <span class="mif mif-cross"></span> Đóng
+                                </a>
                             </div>
                             <div class="mb-20"></div>
                         </div>
@@ -408,6 +498,9 @@
                         <li data-role="hint" data-hint-position="top" data-hint-text="Xóa">
                             <asp:LinkButton ID="but_xoa" OnClick="but_xoa_Click" runat="server"><span class="mif-bin"></span></asp:LinkButton>
                         </li>
+                        <li data-role="hint" data-hint-position="top" data-hint-text="Quét barcode bằng camera">
+                            <a href="javascript:openCameraScanner();"><span class="mif-camera"></span></a>
+                        </li>
 
                         <%--<li data-role="hint" data-hint-position="top" data-hint-text="Lọc">
                             <asp:LinkButton ID="but_show_form_loc" runat="server" OnClick="but_show_form_loc_Click"><span class="mif-filter"></span></asp:LinkButton>
@@ -453,6 +546,7 @@
                         </small>
                         <asp:LinkButton data-role="hint" data-hint-position="top" data-hint-text="Lùi" ID="but_quaylai1" OnClick="but_quaylai_Click" runat="server" CssClass="button small light"><span class="mif-chevron-left"></span></asp:LinkButton>
                         <asp:LinkButton data-role="hint" data-hint-position="top" data-hint-text="Tới" ID="but_xemtiep1" OnClick="but_xemtiep_Click" runat="server" CssClass="button small light"><span class="mif-chevron-right"></span></asp:LinkButton>
+                        <a data-role="hint" data-hint-position="top" data-hint-text="Quét barcode bằng camera" href="javascript:openCameraScanner();" class="button small light"><span class="mif-camera"></span></a>
                     </div>
                     <div class="clr-bc"></div>
                 </div>
@@ -580,12 +674,15 @@
     <asp:LinkButton ID="but_sao_chep" OnClientClick="return confirm('Bạn có chắc chắn muốn sao chép sản phẩm này?');" OnClick="but_sao_chep_Click" CommandArgument='<%#Eval("id") %>' runat="server">Sao chép</asp:LinkButton>
 </li>
                                                             
-                                                            <li>
-                                                                <asp:LinkButton ID="but_show_form_nhaphang" OnClick="but_show_form_nhaphang_Click" CommandArgument='<%#Eval("id") %>' runat="server">Nhập hàng</asp:LinkButton>
-                                                            </li>
-                                                            <li>
-                                                                <a href="javascript:void(0)" onclick="showQRCode('<%#Eval("id") %>', '<%#Eval("so_seri") %>')">Mã QR</a>
-                                                            </li>
+                                                             <li>
+                                                                 <asp:LinkButton ID="but_show_form_nhaphang" OnClick="but_show_form_nhaphang_Click" CommandArgument='<%#Eval("id") %>' runat="server">Nhập hàng</asp:LinkButton>
+                                                             </li>
+                                                             <li>
+                                                                 <a href='<%# ResolveUrl("~/admin/quan-ly-bao-gia/Default.aspx?tao-bao-gia=" + Eval("id")) %>'>Tạo báo giá cho sản phẩm này</a>
+                                                             </li>
+                                                             <li>
+                                                                 <a href="javascript:void(0)" onclick="showQRCode('<%#Eval("id") %>', '<%#Eval("so_seri") %>')">Mã QR</a>
+                                                             </li>
                                                             <li>
                                                                 <asp:LinkButton ID="but_xoa_item" OnClientClick="return confirm('Bạn có chắc chắn muốn xóa sản phẩm này?');" OnClick="but_xoa_item_Click" CommandArgument='<%#Eval("id") %>' runat="server" CssClass="fg-red">Xóa</asp:LinkButton>
                                                             </li>
@@ -733,6 +830,20 @@
         </div>
     </div>
 
+    <div id="cameraBarcodeModal" style="display:none; position:fixed; inset:0; z-index:1060; background:rgba(15,23,42,.78);">
+        <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:min(92vw,520px); background:#fff; border-radius:16px; padding:20px; box-shadow:0 24px 70px rgba(0,0,0,.3);">
+            <div class="d-flex flex-justify-between flex-align-center mb-3">
+                <div class="text-bold text-upper">Quét barcode bằng camera</div>
+                <button type="button" class="button alert small" onclick="closeCameraScanner()"><span class="mif-cross"></span></button>
+            </div>
+            <div style="position:relative; overflow:hidden; background:#0f172a; border-radius:10px; aspect-ratio:4/3;">
+                <video id="cameraBarcodeVideo" autoplay muted playsinline style="width:100%; height:100%; object-fit:cover;"></video>
+                <div style="position:absolute; left:12%; right:12%; top:35%; height:30%; border:2px solid #22c55e; border-radius:8px; box-shadow:0 0 0 999px rgba(15,23,42,.2);"></div>
+            </div>
+            <div id="cameraBarcodeStatus" class="mt-3 text-muted">Đưa một mã vạch vào gần khung xanh, để phần vạch chiếm phần lớn khung hình.</div>
+        </div>
+    </div>
+
     <script>
         function showQRCode(id, seri) {
             if (!id) {
@@ -748,5 +859,195 @@
             document.getElementById('qrSeriLabel').innerText = 'Seri: ' + (seri ? seri : 'Không có');
             document.getElementById('qrModal').style.display = 'block';
         }
+    </script>
+    <script src="https://unpkg.com/@zxing/browser@0.1.5/umd/zxing-browser.min.js"></script>
+    <script type="text/javascript">
+        (function () {
+            var scanBuffer = "";
+            var scanTimer = null;
+            var scanStartedAt = 0;
+            var scanMinLength = 4;
+            var scanGap = 70;
+            var cameraStream = null;
+            var cameraDetector = null;
+            var cameraReader = null;
+            var cameraControls = null;
+            var cameraScanActive = false;
+
+            function getQuickElement(id) {
+                return document.getElementById(id);
+            }
+
+            function getQuickElementBySuffix(id) {
+                return document.querySelector('[id$="_' + id + '"]') || document.getElementById(id);
+            }
+
+            window.updateQuickSerialPreview = function () {
+                var serialInput = getQuickElement('<%= txt_so_seri.ClientID %>');
+                var quantityInput = getQuickElementBySuffix('txt_quick_quantity');
+                var preview = document.getElementById('quickSerialPreview');
+                if (!serialInput || !quantityInput || !preview) return;
+
+                var baseSerial = serialInput.value.trim();
+                var quantity = parseInt(quantityInput.value, 10);
+                if (!baseSerial || !quantity || quantity < 1) {
+                    preview.style.display = 'none';
+                    preview.innerHTML = '';
+                    return;
+                }
+
+                quantity = Math.min(quantity, 1000);
+                var html = '<div class="fg-green fw-600">Danh sách seri sẽ tạo (' + quantity + ' sản phẩm)</div>';
+                html += '<div style="max-height:150px; overflow:auto; background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:8px 12px; margin-top:7px; font-family:Consolas,monospace; font-size:12px;">';
+                for (var i = 1; i <= quantity; i++) {
+                    html += '<div>' + i + '. ' + (i === 1 ? baseSerial : baseSerial + '-' + i) + '</div>';
+                }
+                html += '</div>';
+                preview.innerHTML = html;
+                preview.style.display = 'block';
+            };
+
+            function submitScannedBarcode(value) {
+                var hiddenBarcode = getQuickElementBySuffix('txt_quick_barcode');
+                var openButton = getQuickElementBySuffix('but_open_quick_entry');
+                if (!hiddenBarcode || !openButton) return;
+                hiddenBarcode.value = value;
+                __doPostBack(openButton.name, '');
+            }
+
+            function stopCameraStream() {
+                cameraScanActive = false;
+                if (cameraControls && cameraControls.stop) {
+                    cameraControls.stop();
+                    cameraControls = null;
+                }
+                cameraReader = null;
+                if (cameraStream) {
+                    cameraStream.getTracks().forEach(function (track) { track.stop(); });
+                    cameraStream = null;
+                }
+                var video = document.getElementById('cameraBarcodeVideo');
+                if (video) video.srcObject = null;
+            }
+
+            window.closeCameraScanner = function () {
+                stopCameraStream();
+                var modal = document.getElementById('cameraBarcodeModal');
+                if (modal) modal.style.display = 'none';
+            };
+
+            function detectCameraBarcode(video, status) {
+                if (!cameraScanActive || !cameraDetector) return;
+                cameraDetector.detect(video).then(function (barcodes) {
+                    if (!cameraScanActive) return;
+                    if (barcodes.length > 0 && barcodes[0].rawValue) {
+                        var value = barcodes[0].rawValue.trim();
+                        status.innerText = 'Đã nhận barcode: ' + value;
+                        stopCameraStream();
+                        document.getElementById('cameraBarcodeModal').style.display = 'none';
+                        submitScannedBarcode(value);
+                        return;
+                    }
+                    window.setTimeout(function () { detectCameraBarcode(video, status); }, 120);
+                }).catch(function () {
+                    if (cameraScanActive)
+                        window.setTimeout(function () { detectCameraBarcode(video, status); }, 250);
+                });
+            }
+
+            window.openCameraScanner = function () {
+                var modal = document.getElementById('cameraBarcodeModal');
+                var video = document.getElementById('cameraBarcodeVideo');
+                var status = document.getElementById('cameraBarcodeStatus');
+                if (!modal || !video || !status) return;
+                modal.style.display = 'block';
+                status.innerText = 'Đang khởi động camera...';
+
+                if (typeof window.BarcodeDetector !== 'function' && !window.ZXingBrowser) {
+                    status.innerText = 'Trình duyệt này chưa hỗ trợ quét barcode bằng camera. Hãy dùng Chrome mới hoặc máy quét USB.';
+                    return;
+                }
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    status.innerText = 'Trình duyệt không hỗ trợ truy cập camera.';
+                    return;
+                }
+
+                stopCameraStream();
+                if (typeof window.BarcodeDetector !== 'function') {
+                    cameraScanActive = true;
+                    status.innerText = 'Đang khởi động bộ đọc barcode...';
+                    cameraReader = new ZXingBrowser.BrowserMultiFormatReader();
+                    Promise.resolve(cameraReader.decodeFromConstraints({
+                        video: {
+                            facingMode: { ideal: 'environment' },
+                            width: { ideal: 1920 },
+                            height: { ideal: 1080 }
+                        },
+                        audio: false
+                    }, video, function (result, error, controls) {
+                        if (controls) cameraControls = controls;
+                        if (!cameraScanActive || !result) return;
+                        var value = result.getText().trim();
+                        status.innerText = 'Đã nhận barcode: ' + value;
+                        stopCameraStream();
+                        modal.style.display = 'none';
+                        submitScannedBarcode(value);
+                    })).catch(function () {
+                        status.innerText = 'Không thể khởi động bộ đọc barcode bằng camera.';
+                    });
+                    return;
+                }
+
+                cameraDetector = new BarcodeDetector();
+                navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: { ideal: 'environment' },
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 }
+                    },
+                    audio: false
+                })
+                    .then(function (stream) {
+                        cameraStream = stream;
+                        video.srcObject = stream;
+                        cameraScanActive = true;
+                        status.innerText = 'Đưa một mã vạch vào gần khung xanh, để phần vạch chiếm phần lớn khung hình...';
+                        if (cameraDetector) {
+                            detectCameraBarcode(video, status);
+                        }
+                    })
+                    .catch(function () {
+                        status.innerText = 'Không thể mở camera. Hãy cấp quyền camera cho localhost.';
+                    });
+            };
+
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter') {
+                    var elapsed = scanStartedAt ? Date.now() - scanStartedAt : 99999;
+                    if (scanBuffer.length >= scanMinLength && elapsed <= 1200) {
+                        event.preventDefault();
+                        submitScannedBarcode(scanBuffer);
+                    }
+                    scanBuffer = '';
+                    scanStartedAt = 0;
+                    return;
+                }
+
+                if (event.key.length !== 1 || event.ctrlKey || event.altKey || event.metaKey) return;
+                if (!scanStartedAt) scanStartedAt = Date.now();
+                scanBuffer += event.key;
+                if (scanTimer) clearTimeout(scanTimer);
+                scanTimer = setTimeout(function () {
+                    scanBuffer = '';
+                    scanStartedAt = 0;
+                }, scanGap);
+            });
+
+            document.addEventListener('input', function (event) {
+                if (event.target && (event.target.id.indexOf('txt_quick_quantity') !== -1 || event.target.id === '<%= txt_so_seri.ClientID %>')) {
+                    window.updateQuickSerialPreview();
+                }
+            });
+        })();
     </script>
 </asp:Content>
