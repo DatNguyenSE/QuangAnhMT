@@ -558,13 +558,6 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
 
             using (dbDataContext db = new dbDataContext())
             {
-                if (db.KhoSanPham_tbs.Any(p => p.so_seri == barcode))
-                {
-                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                        thongbao_class.metro_dialog("Barcode đã tồn tại", "Số seri " + barcode + " đã có trong kho, không mở form tạo mới.", "false", "false", "OK", "alert", ""), true);
-                    return;
-                }
-
                 reset_control_add_edit();
                 BindProductSourceDropDowns(db, null);
             }
@@ -899,26 +892,61 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             return;
         }
 
+        long baseNumber;
+        if (!long.TryParse(baseSerial, NumberStyles.None, CultureInfo.InvariantCulture, out baseNumber))
+        {
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
+                thongbao_class.metro_dialog("Barcode không hợp lệ", "Mã seri phải là chuỗi số để có thể tăng tuần tự.", "false", "false", "OK", "alert", ""), true);
+            return;
+        }
+
         DateTime ngayNhap;
         if (!DateTime.TryParseExact(quickDate.Text.Trim(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out ngayNhap))
             ngayNhap = DateTime.Today;
 
+        // Giữ số 0 ở đầu (nếu có), nhưng vẫn cho phép mã mở rộng độ dài khi vượt giới hạn.
+        int serialWidth = baseSerial.Length;
         var serials = Enumerable.Range(1, quantity)
-            .Select(i => i == 1 ? baseSerial : baseSerial + "-" + i)
+            .Select(i =>
+            {
+                long serialNumber;
+                try
+                {
+                    serialNumber = checked(baseNumber + i - 1L);
+                }
+                catch (OverflowException)
+                {
+                    return null;
+                }
+
+                string serial = serialNumber.ToString(CultureInfo.InvariantCulture);
+                return serial.Length < serialWidth ? serial.PadLeft(serialWidth, '0') : serial;
+            })
             .ToList();
+
+        if (serials.Any(p => p == null))
+        {
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
+                thongbao_class.metro_dialog("Số seri không hợp lệ", "Dãy seri vượt quá giới hạn số cho phép.", "false", "false", "OK", "alert", ""), true);
+            return;
+        }
 
         var duplicateSerials = db.KhoSanPham_tbs
             .Where(p => serials.Contains(p.so_seri))
             .Select(p => p.so_seri)
+            .Distinct()
             .ToList();
-        if (duplicateSerials.Count > 0)
+        var duplicateSet = new HashSet<string>(duplicateSerials, StringComparer.Ordinal);
+        var newSerials = serials.Where(p => !duplicateSet.Contains(p)).ToList();
+
+        if (newSerials.Count == 0)
         {
             ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                thongbao_class.metro_dialog("Không thể tạo sản phẩm", "Các số seri sau đã tồn tại: " + string.Join(", ", duplicateSerials), "false", "false", "OK", "alert", ""), true);
+                thongbao_class.metro_dialog("Không thể tạo sản phẩm", "Tất cả " + quantity.ToString("#,##0") + " số seri đã có trong kho: " + string.Join(", ", duplicateSerials), "false", "false", "OK", "alert", ""), true);
             return;
         }
 
-        foreach (string serial in serials)
+        foreach (string serial in newSerials)
         {
             KhoSanPham_tb product = new KhoSanPham_tb();
             product.sanpham_tuychon = false;
@@ -952,8 +980,15 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
         show_main();
         up_main.Update();
         up_add.Update();
+        string resultMessage = "Đã tạo " + newSerials.Count.ToString("#,##0") + " sản phẩm.";
+        if (duplicateSerials.Count > 0)
+        {
+            resultMessage += "<br/><br/>Bỏ qua " + duplicateSerials.Count.ToString("#,##0") + " seri đã có trong kho: " + string.Join(", ", duplicateSerials.Take(20));
+            if (duplicateSerials.Count > 20)
+                resultMessage += "...";
+        }
         ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-            thongbao_class.metro_notifi("Nhập kho thành công", "Đã tạo " + quantity.ToString("#,##0") + " sản phẩm.", "1600", "success"), true);
+            thongbao_class.metro_dialog("Nhập kho thành công", resultMessage, "false", "false", "OK", "alert", ""), true);
     }
     #endregion
 

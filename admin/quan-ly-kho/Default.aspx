@@ -899,8 +899,17 @@
                 quantity = Math.min(quantity, 1000);
                 var html = '<div class="fg-green fw-600">Danh sách seri sẽ tạo (' + quantity + ' sản phẩm)</div>';
                 html += '<div style="max-height:150px; overflow:auto; background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:8px 12px; margin-top:7px; font-family:Consolas,monospace; font-size:12px;">';
+                var baseNumber = parseInt(baseSerial, 10);
+                if (isNaN(baseNumber) || String(baseNumber) !== baseSerial.replace(/^0+(?=\d)/, '')) {
+                    preview.innerHTML = '<div class="fg-red">Mã seri phải là chuỗi số.</div>';
+                    preview.style.display = 'block';
+                    return;
+                }
+                var serialWidth = baseSerial.length;
                 for (var i = 1; i <= quantity; i++) {
-                    html += '<div>' + i + '. ' + (i === 1 ? baseSerial : baseSerial + '-' + i) + '</div>';
+                    var serial = String(baseNumber + i - 1);
+                    while (serial.length < serialWidth) serial = '0' + serial;
+                    html += '<div>' + i + '. ' + serial + '</div>';
                 }
                 html += '</div>';
                 preview.innerHTML = html;
