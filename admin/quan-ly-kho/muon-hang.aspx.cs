@@ -760,25 +760,35 @@ public partial class admin_quan_ly_kho_muon_hang : System.Web.UI.Page
             DateTime _ngaytao = DateTime.Now;
             string _nguoitao = mahoa_cl.giaima_Bcorn(Session["taikhoan"].ToString());
             string tenChuongTrinh = TxtTenChuongTrinhf.Text;
-
-            
+            string addEditMode = Convert.ToString(ViewState["add_edit"]);
 
             Int64 _soLuongMuon = Number_cl.Check_Int64(txt_soluongmuon.Text.Trim());
             #endregion
 
             using (dbDataContext db = new dbDataContext())
             {
-                var hoTen = db.taikhoan_tbs.Where(p=>p.taikhoan.Contains(_nguoitao)).FirstOrDefault();
+                var hoTen = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == _nguoitao);
+                string nguoiMuon = hoTen == null ? _nguoitao : (hoTen.hoten ?? _nguoitao);
 
                 #region Kiểm tra ngoại lệ.
-                if (_id_hang == "")
+                if (string.IsNullOrEmpty(_id_hang))
                 {
                     ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng chọn sản phẩm.", "false", "false", "OK", "alert", ""), true);
                     return;
                 }
-                if (_soLuongMuon == 0)
+                if (_soLuongMuon <= 0)
                 {
                     ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng nhập số lượng mượn.", "false", "false", "OK", "alert", ""), true);
+                    return;
+                }
+                if (_soLuongMuon > Int32.MaxValue)
+                {
+                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Số lượng mượn quá lớn.", "false", "false", "OK", "alert", ""), true);
+                    return;
+                }
+                if (string.IsNullOrEmpty(addEditMode))
+                {
+                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Form đã hết phiên. Vui lòng đóng và mở lại form tạo phiếu.", "false", "false", "OK", "alert", ""), true);
                     return;
                 }
 
@@ -786,14 +796,25 @@ public partial class admin_quan_ly_kho_muon_hang : System.Web.UI.Page
                 #region Kiểm tra tồn
 
                 // 2. Lấy số lượng tồn kho từ bảng kho
-                var soLuongTon = db.KhoSanPham_tbs
-                    .Where(x => x.id.ToString() == _id_hang)
-                    .Select(x => x.soluong_hientai)
-                    .FirstOrDefault();
+                long idHangValue;
+                if (!long.TryParse(_id_hang, out idHangValue))
+                {
+                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Sản phẩm được chọn không hợp lệ.", "false", "false", "OK", "alert", ""), true);
+                    return;
+                }
+
+                var sanPham = db.KhoSanPham_tbs.FirstOrDefault(x => x.id == idHangValue);
+                if (sanPham == null)
+                {
+                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Không tìm thấy sản phẩm trong kho.", "false", "false", "OK", "alert", ""), true);
+                    return;
+                }
+
+                var soLuongTon = sanPham.soluong_hientai ?? 0;
 
                 // 3. Tính tồn kho thực tế
 
-                int? soLuongConLaiThucTe = soLuongTon - Convert.ToInt32(_soLuongMuon);
+                long soLuongConLaiThucTe = soLuongTon - _soLuongMuon;
 
                 if (soLuongConLaiThucTe < 0)
                 {
@@ -804,7 +825,7 @@ public partial class admin_quan_ly_kho_muon_hang : System.Web.UI.Page
                 #endregion
 
                 string id_phieuMuon = "";
-                if (ViewState["add_edit"].ToString() == "add")
+                if (addEditMode == "add")
                 {
                     #region thêm mới
                     var phieuMuonKho = db.PhieuMuonHang_tbs.Where(p => p.id.ToString() == id_phieuMuon).ToList();
@@ -812,7 +833,7 @@ public partial class admin_quan_ly_kho_muon_hang : System.Web.UI.Page
                     {
                         PhieuMuonHang_tb _ob = new PhieuMuonHang_tb();
                         _ob.ngaytao = _ngaytao;
-                        _ob.nguoitao = hoTen.hoten ?? "";
+                        _ob.nguoitao = nguoiMuon;
                         _ob.tenchuongtrinh = tenChuongTrinh ?? "";
                         db.PhieuMuonHang_tbs.InsertOnSubmit(_ob);
                         db.SubmitChanges();
@@ -847,7 +868,7 @@ public partial class admin_quan_ly_kho_muon_hang : System.Web.UI.Page
                     addDetailPhieu.id_sanpham = _id_hang;
                     addDetailPhieu.NgayMuon = DateTime.Now;
                     addDetailPhieu.SoLuongMuon = Convert.ToInt32(_soLuongMuon);
-                    addDetailPhieu.NguoiMuon = hoTen.hoten ?? ""; ;
+                    addDetailPhieu.NguoiMuon = nguoiMuon;
 
                     db.PhieuMuonHang_ChiTiet_tbs.InsertOnSubmit(addDetailPhieu);
                     db.SubmitChanges();
@@ -872,6 +893,7 @@ public partial class admin_quan_ly_kho_muon_hang : System.Web.UI.Page
             else
                 _tk = "";
             Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Không thể tạo phiếu mượn", HttpUtility.JavaScriptStringEncode(_ex.Message), "false", "false", "OK", "alert", ""), true);
         }
     }
     

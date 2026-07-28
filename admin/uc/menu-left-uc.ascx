@@ -175,6 +175,12 @@
                 <span class="caption">Thống kê bán hàng</span>
             </a>
         </li>
+        <li class="">
+            <a href="/admin/thong-ke/cong-no-khach-hang.aspx">
+                <span class="icon"><span class="mif-calculator2"></span></span>
+                <span class="caption">Công nợ khách hàng</span>
+            </a>
+        </li>
         <li class="<%=a9 %>">
             <a href="/admin/quan-ly-cong-viec/default.aspx">
                 <span class="icon"><span class="mif-clipboard"></span></span>

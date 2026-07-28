@@ -330,6 +330,10 @@ public partial class admin_theo_doi_hang_da_ban_Default : System.Web.UI.Page
 
                 if (bg != null && ct != null)
                 {
+                    ViewState["detail_baogiaId"] = baogiaId;
+                    ViewState["detail_productId"] = productId;
+                    SetProductDetailEditMode(false);
+
                     // Populate Product Info
                     if (sp != null)
                     {
@@ -354,10 +358,22 @@ public partial class admin_theo_doi_hang_da_ban_Default : System.Web.UI.Page
                      lbl_detail_seri_do_l1.Text = string.IsNullOrWhiteSpace(ct.Seri_Do_L1) ? "Không rõ" : ct.Seri_Do_L1;
                      lbl_detail_id_khachhang_do_l1.Text = string.IsNullOrWhiteSpace(ct.Id_khacHang_do_L1) ? "Không rõ" : ct.Id_khacHang_do_L1;
                      lbl_detail_ngaydo_l1.Text = ct.NgayDo_L1.HasValue ? ct.NgayDo_L1.Value.ToString("dd/MM/yyyy HH:mm") : "Không rõ";
-                     lbl_detail_seri_do_l2.Text = string.IsNullOrWhiteSpace(ct.Seri_Do_L2) ? "Không rõ" : ct.Seri_Do_L2;
-                     lbl_detail_id_khachhang_do_l2.Text = string.IsNullOrWhiteSpace(ct.Id_khacHang_do_L2) ? "Không rõ" : ct.Id_khacHang_do_L2;
-                     lbl_detail_ngaydo_l2.Text = ct.NgayDo_L2.HasValue ? ct.NgayDo_L2.Value.ToString("dd/MM/yyyy HH:mm") : "Không rõ";
-                     lbl_detail_mota.Text = string.IsNullOrWhiteSpace(ct.Mota) ? "Không rõ" : ct.Mota;
+                         lbl_detail_seri_do_l2.Text = string.IsNullOrWhiteSpace(ct.Seri_Do_L2) ? "Không rõ" : ct.Seri_Do_L2;
+                         lbl_detail_id_khachhang_do_l2.Text = string.IsNullOrWhiteSpace(ct.Id_khacHang_do_L2) ? "Không rõ" : ct.Id_khacHang_do_L2;
+                         lbl_detail_ngaydo_l2.Text = ct.NgayDo_L2.HasValue ? ct.NgayDo_L2.Value.ToString("dd/MM/yyyy HH:mm") : "Không rõ";
+                         lbl_detail_mota.Text = string.IsNullOrWhiteSpace(ct.Mota) ? "Không rõ" : ct.Mota;
+
+                         txt_edit_detail_model.Text = sp == null ? "" : sp.model;
+                         txt_edit_detail_thongso.Text = sp == null ? "" : sp.thongso_kythuat;
+                         txt_edit_detail_makichhoat.Text = ct.MaKichHoat;
+                         txt_edit_detail_thangbaohanh.Text = ct.Thang_BaoHanh;
+                         txt_edit_detail_seri_do_l1.Text = ct.Seri_Do_L1;
+                         txt_edit_detail_id_khachhang_do_l1.Text = ct.Id_khacHang_do_L1;
+                         txt_edit_detail_ngaydo_l1.Text = ct.NgayDo_L1.HasValue ? ct.NgayDo_L1.Value.ToString("yyyy-MM-ddTHH:mm") : "";
+                         txt_edit_detail_seri_do_l2.Text = ct.Seri_Do_L2;
+                         txt_edit_detail_id_khachhang_do_l2.Text = ct.Id_khacHang_do_L2;
+                         txt_edit_detail_ngaydo_l2.Text = ct.NgayDo_L2.HasValue ? ct.NgayDo_L2.Value.ToString("yyyy-MM-ddTHH:mm") : "";
+                         txt_edit_detail_mota.Text = ct.Mota;
 
                      // Populate Customer Details
                      lbl_detail_tenkh.Text = bg.ten_khachhang;
@@ -478,6 +494,144 @@ lbl_detail_tongdonhang_saugiam.Text = totalSauGiamAll.ToString("#,##0");
     protected void but_close_detail_Click(object sender, EventArgs e)
     {
         pn_detail.Visible = false;
+        SetProductDetailEditMode(false);
+    }
+
+    private void SetProductDetailEditMode(bool editing)
+    {
+        pn_detail_edit_actions.Visible = editing;
+        btn_edit_product_detail.Visible = !editing;
+        pn_edit_detail_model.Visible = editing;
+        pn_edit_detail_makichhoat.Visible = editing;
+        pn_edit_detail_thangbaohanh.Visible = editing;
+        pn_edit_detail_seri_do_l1.Visible = editing;
+        pn_edit_detail_id_khachhang_do_l1.Visible = editing;
+        pn_edit_detail_ngaydo_l1.Visible = editing;
+        pn_edit_detail_seri_do_l2.Visible = editing;
+        pn_edit_detail_id_khachhang_do_l2.Visible = editing;
+        pn_edit_detail_ngaydo_l2.Visible = editing;
+        pn_edit_detail_mota.Visible = editing;
+        pn_edit_detail_thongso.Visible = editing;
+
+        lbl_detail_model.Visible = !editing;
+        lbl_detail_makichhoat.Visible = !editing;
+        lbl_detail_thangbaohanh.Visible = !editing;
+        lbl_detail_seri_do_l1.Visible = !editing;
+        lbl_detail_id_khachhang_do_l1.Visible = !editing;
+        lbl_detail_ngaydo_l1.Visible = !editing;
+        lbl_detail_seri_do_l2.Visible = !editing;
+        lbl_detail_id_khachhang_do_l2.Visible = !editing;
+        lbl_detail_ngaydo_l2.Visible = !editing;
+        lbl_detail_mota.Visible = !editing;
+        lbl_detail_thongso.Visible = !editing;
+    }
+
+    protected void btn_edit_product_detail_Click(object sender, EventArgs e)
+    {
+        if (ViewState["detail_baogiaId"] != null && ViewState["detail_productId"] != null)
+        {
+            LoadEditableProductDetailValues(
+                ViewState["detail_baogiaId"].ToString(),
+                ViewState["detail_productId"].ToString());
+            SetProductDetailEditMode(true);
+        }
+    }
+
+    protected void btn_cancel_product_detail_Click(object sender, EventArgs e)
+    {
+        SetProductDetailEditMode(false);
+    }
+
+    protected void btn_save_product_detail_Click(object sender, EventArgs e)
+    {
+        if (ViewState["detail_baogiaId"] == null || ViewState["detail_productId"] == null)
+            return;
+
+        string baogiaId = ViewState["detail_baogiaId"].ToString();
+        string productId = ViewState["detail_productId"].ToString();
+        DateTime parsedDate;
+
+        using (var db = new dbDataContext())
+        {
+            var ct = db.BaoGia_ChiTiet_tbs.FirstOrDefault(p => p.id_baogia == baogiaId && p.id_sanpham == productId);
+            long productIdValue;
+            long.TryParse(productId, out productIdValue);
+            var sp = db.KhoSanPham_tbs.FirstOrDefault(p => p.id == productIdValue);
+
+            if (ct == null)
+                return;
+
+            if (sp != null)
+            {
+                sp.model = txt_edit_detail_model.Text.Trim();
+                sp.thongso_kythuat = txt_edit_detail_thongso.Text.Trim();
+            }
+
+            ct.MaKichHoat = txt_edit_detail_makichhoat.Text.Trim();
+            ct.Thang_BaoHanh = txt_edit_detail_thangbaohanh.Text.Trim();
+            ct.Seri_Do_L1 = txt_edit_detail_seri_do_l1.Text.Trim();
+            ct.Id_khacHang_do_L1 = txt_edit_detail_id_khachhang_do_l1.Text.Trim();
+            ct.NgayDo_L1 = DateTime.TryParse(txt_edit_detail_ngaydo_l1.Text, out parsedDate) ? (DateTime?)parsedDate : null;
+            ct.Seri_Do_L2 = txt_edit_detail_seri_do_l2.Text.Trim();
+            ct.Id_khacHang_do_L2 = txt_edit_detail_id_khachhang_do_l2.Text.Trim();
+            ct.NgayDo_L2 = DateTime.TryParse(txt_edit_detail_ngaydo_l2.Text, out parsedDate) ? (DateTime?)parsedDate : null;
+            ct.Mota = txt_edit_detail_mota.Text.Trim();
+
+            db.SubmitChanges();
+        }
+
+        SetProductDetailEditMode(false);
+        show_main();
+        RefreshEditableProductDetailLabels(baogiaId, productId);
+    }
+
+    private void LoadEditableProductDetailValues(string baogiaId, string productId)
+    {
+        using (var db = new dbDataContext())
+        {
+            long productIdValue;
+            long.TryParse(productId, out productIdValue);
+            var ct = db.BaoGia_ChiTiet_tbs.FirstOrDefault(p => p.id_baogia == baogiaId && p.id_sanpham == productId);
+            var sp = db.KhoSanPham_tbs.FirstOrDefault(p => p.id == productIdValue);
+            if (ct == null) return;
+
+            // Luôn lấy lại dữ liệu hiện tại trước khi mở form để ô không sửa vẫn giữ nguyên.
+            txt_edit_detail_model.Text = sp == null ? "" : sp.model;
+            txt_edit_detail_thongso.Text = sp == null ? "" : sp.thongso_kythuat;
+            txt_edit_detail_makichhoat.Text = ct.MaKichHoat;
+            txt_edit_detail_thangbaohanh.Text = ct.Thang_BaoHanh;
+            txt_edit_detail_seri_do_l1.Text = ct.Seri_Do_L1;
+            txt_edit_detail_id_khachhang_do_l1.Text = ct.Id_khacHang_do_L1;
+            txt_edit_detail_ngaydo_l1.Text = ct.NgayDo_L1.HasValue ? ct.NgayDo_L1.Value.ToString("yyyy-MM-ddTHH:mm") : "";
+            txt_edit_detail_seri_do_l2.Text = ct.Seri_Do_L2;
+            txt_edit_detail_id_khachhang_do_l2.Text = ct.Id_khacHang_do_L2;
+            txt_edit_detail_ngaydo_l2.Text = ct.NgayDo_L2.HasValue ? ct.NgayDo_L2.Value.ToString("yyyy-MM-ddTHH:mm") : "";
+            txt_edit_detail_mota.Text = ct.Mota;
+        }
+    }
+
+    private void RefreshEditableProductDetailLabels(string baogiaId, string productId)
+    {
+        using (var db = new dbDataContext())
+        {
+            long productIdValue;
+            long.TryParse(productId, out productIdValue);
+            var ct = db.BaoGia_ChiTiet_tbs.FirstOrDefault(p => p.id_baogia == baogiaId && p.id_sanpham == productId);
+            var sp = db.KhoSanPham_tbs.FirstOrDefault(p => p.id == productIdValue);
+            if (ct == null) return;
+
+            lbl_detail_model.Text = sp == null || string.IsNullOrWhiteSpace(sp.model) ? "Không rõ" : sp.model;
+            lbl_detail_thongso.Text = sp == null || string.IsNullOrWhiteSpace(sp.thongso_kythuat) ? "Không rõ" : sp.thongso_kythuat;
+            lbl_detail_makichhoat.Text = string.IsNullOrWhiteSpace(ct.MaKichHoat) ? "Không rõ" : ct.MaKichHoat;
+            lbl_detail_thangbaohanh.Text = string.IsNullOrWhiteSpace(ct.Thang_BaoHanh) ? "Không rõ" : ct.Thang_BaoHanh;
+            lbl_detail_seri_do_l1.Text = string.IsNullOrWhiteSpace(ct.Seri_Do_L1) ? "Không rõ" : ct.Seri_Do_L1;
+            lbl_detail_id_khachhang_do_l1.Text = string.IsNullOrWhiteSpace(ct.Id_khacHang_do_L1) ? "Không rõ" : ct.Id_khacHang_do_L1;
+            lbl_detail_ngaydo_l1.Text = ct.NgayDo_L1.HasValue ? ct.NgayDo_L1.Value.ToString("dd/MM/yyyy HH:mm") : "Không rõ";
+            lbl_detail_seri_do_l2.Text = string.IsNullOrWhiteSpace(ct.Seri_Do_L2) ? "Không rõ" : ct.Seri_Do_L2;
+            lbl_detail_id_khachhang_do_l2.Text = string.IsNullOrWhiteSpace(ct.Id_khacHang_do_L2) ? "Không rõ" : ct.Id_khacHang_do_L2;
+            lbl_detail_ngaydo_l2.Text = ct.NgayDo_L2.HasValue ? ct.NgayDo_L2.Value.ToString("dd/MM/yyyy HH:mm") : "Không rõ";
+            lbl_detail_mota.Text = string.IsNullOrWhiteSpace(ct.Mota) ? "Không rõ" : ct.Mota;
+        }
     }
 
     protected void btn_edit_warranty_Click(object sender, EventArgs e)

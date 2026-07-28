@@ -1085,6 +1085,8 @@
     </script>
     <script type="text/javascript">
         (function () {
+            var warrantyCameraStream = null;
+            var warrantyCameraDetector = null;
             var warrantyCameraReader = null;
             var warrantyCameraControls = null;
             var warrantyCameraActive = false;
@@ -1096,6 +1098,11 @@
                     warrantyCameraControls = null;
                 }
                 warrantyCameraReader = null;
+                warrantyCameraDetector = null;
+                if (warrantyCameraStream) {
+                    warrantyCameraStream.getTracks().forEach(function (track) { track.stop(); });
+                    warrantyCameraStream = null;
+                }
                 var video = document.getElementById('warrantyCameraVideo');
                 if (video) video.srcObject = null;
             }
@@ -1122,6 +1129,25 @@
                 __doPostBack(targetSearch.name, '');
             }
 
+            function detectWarrantyBarcode(video, status) {
+                if (!warrantyCameraActive || !warrantyCameraDetector) return;
+                warrantyCameraDetector.detect(video).then(function (barcodes) {
+                    if (!warrantyCameraActive) return;
+                    if (barcodes.length > 0 && barcodes[0].rawValue) {
+                        var value = barcodes[0].rawValue.trim();
+                        status.innerText = 'Đã nhận barcode: ' + value;
+                        stopWarrantyCamera();
+                        document.getElementById('warrantyCameraModal').style.display = 'none';
+                        submitWarrantyCameraBarcode(value);
+                        return;
+                    }
+                    window.setTimeout(function () { detectWarrantyBarcode(video, status); }, 120);
+                }).catch(function () {
+                    if (warrantyCameraActive)
+                        window.setTimeout(function () { detectWarrantyBarcode(video, status); }, 250);
+                });
+            }
+
             window.openWarrantyCameraScanner = function () {
                 var modal = document.getElementById('warrantyCameraModal');
                 var video = document.getElementById('warrantyCameraVideo');
@@ -1132,7 +1158,7 @@
                 status.innerText = 'Đang khởi động camera...';
                 stopWarrantyCamera();
 
-                if (!window.ZXingBrowser) {
+                if (typeof window.BarcodeDetector !== 'function' && !window.ZXingBrowser) {
                     status.innerText = 'Không tải được bộ đọc barcode. Hãy kiểm tra kết nối Internet.';
                     return;
                 }
@@ -1141,24 +1167,46 @@
                     return;
                 }
 
-                warrantyCameraReader = new ZXingBrowser.BrowserMultiFormatReader();
-                warrantyCameraActive = true;
-                warrantyCameraReader.decodeFromConstraints({
+                if (typeof window.BarcodeDetector !== 'function') {
+                    warrantyCameraActive = true;
+                    status.innerText = 'Đang khởi động bộ đọc barcode...';
+                    warrantyCameraReader = new ZXingBrowser.BrowserMultiFormatReader();
+                    Promise.resolve(warrantyCameraReader.decodeFromConstraints({
+                        video: {
+                            facingMode: { ideal: 'environment' },
+                            width: { ideal: 1920 },
+                            height: { ideal: 1080 }
+                        },
+                        audio: false
+                    }, video, function (result, error, controls) {
+                        if (controls) warrantyCameraControls = controls;
+                        if (!warrantyCameraActive || !result) return;
+
+                        var value = result.getText().trim();
+                        status.innerText = 'Đã nhận barcode: ' + value;
+                        stopWarrantyCamera();
+                        modal.style.display = 'none';
+                        submitWarrantyCameraBarcode(value);
+                    })).catch(function () {
+                        status.innerText = 'Không thể mở camera. Hãy cấp quyền camera cho trang web.';
+                    });
+                    return;
+                }
+
+                warrantyCameraDetector = new BarcodeDetector();
+                navigator.mediaDevices.getUserMedia({
                     video: {
                         facingMode: { ideal: 'environment' },
                         width: { ideal: 1920 },
                         height: { ideal: 1080 }
                     },
                     audio: false
-                }, video, function (result, error, controls) {
-                    if (controls) warrantyCameraControls = controls;
-                    if (!warrantyCameraActive || !result) return;
-
-                    var value = result.getText().trim();
-                    status.innerText = 'Đã nhận barcode: ' + value;
-                    stopWarrantyCamera();
-                    modal.style.display = 'none';
-                    submitWarrantyCameraBarcode(value);
+                }).then(function (stream) {
+                    warrantyCameraStream = stream;
+                    video.srcObject = stream;
+                    warrantyCameraActive = true;
+                    status.innerText = 'Đưa một mã vạch vào gần khung xanh, để phần vạch chiếm phần lớn khung hình...';
+                    detectWarrantyBarcode(video, status);
                 }).catch(function () {
                     status.innerText = 'Không thể mở camera. Hãy cấp quyền camera cho trang web.';
                 });
@@ -1190,15 +1238,13 @@
         // --- BARCODE SCANNER LISTENER ---
         var barcodeBuffer = "";
         var barcodeTimeout = null;
+        var barcodeStartedAt = 0;
+        var barcodeGap = 70;
 
         document.addEventListener("keydown", function (e) {
-            var activeElement = document.activeElement;
-            if (activeElement && (activeElement.tagName === "INPUT" || activeElement.tagName === "TEXTAREA" || activeElement.tagName === "SELECT")) {
-                return; // Đang gõ vào textbox khác thì bỏ qua
-            }
-
             if (e.key === 'Enter') {
-                if (barcodeBuffer.length >= 4) { // Chuỗi mã vạch thường dài hơn 4 ký tự
+                var elapsed = barcodeStartedAt ? Date.now() - barcodeStartedAt : 99999;
+                if (barcodeBuffer.length >= 4 && elapsed <= 1200) {
                     e.preventDefault(); 
                     var searchDesktop = document.getElementById('<%= txt_timkiem.ClientID %>');
                     var searchMobile = document.getElementById('<%= txt_timkiem1.ClientID %>');
@@ -1217,15 +1263,15 @@
                     }
                 }
                 barcodeBuffer = "";
-            } else if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) { 
+                barcodeStartedAt = 0;
+            } else if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+                if (!barcodeStartedAt) barcodeStartedAt = Date.now();
                 barcodeBuffer += e.key;
-                if (barcodeTimeout) {
-                    clearTimeout(barcodeTimeout);
-                }
-                // Nếu khoảng cách giữa 2 lần gõ > 50ms -> là người gõ chứ k phải máy quét -> xóa buffer
+                if (barcodeTimeout) clearTimeout(barcodeTimeout);
                 barcodeTimeout = setTimeout(function () {
                     barcodeBuffer = "";
-                }, 50); 
+                    barcodeStartedAt = 0;
+                }, barcodeGap);
             }
         });
         // --------------------------------

@@ -1,4 +1,4 @@
-﻿<%@ Page Title="Theo dõi hàng đã bán" Language="C#" MasterPageFile="~/admin/MasterPageAdmin.master" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="admin_theo_doi_hang_da_ban_Default" %>
+<%@ Page Title="Theo dõi hàng đã bán" Language="C#" MasterPageFile="~/admin/MasterPageAdmin.master" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="admin_theo_doi_hang_da_ban_Default" %>
 
 <%@ Register Assembly="AjaxControlToolkit" Namespace="AjaxControlToolkit" TagPrefix="ajaxToolkit" %>
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="Server">
@@ -64,6 +64,11 @@
             font-size: 14px;
             font-weight: 600;
         }
+        .product-edit-input {
+            width: 100%;
+            margin-top: 5px;
+            font-size: 13px;
+        }
     </style>
 </asp:Content>
 
@@ -116,8 +121,15 @@
                                 <div class="cell-md-5 pr-2-md">
                                     <!-- Product Card -->
                                     <div class="border bd-default p-4 mb-4 bg-light" style="border-radius: 8px;">
-                                        <div class="text-bold fg-darkBlue mb-3" style="font-size: 15px; border-bottom: 2px solid #1d4ed8; padding-bottom: 5px;">
+                                        <div class="text-bold fg-darkBlue mb-3 d-flex flex-justify-between flex-align-center" style="font-size: 15px; border-bottom: 2px solid #1d4ed8; padding-bottom: 5px;">
                                             <span class="mif-open-book mr-1"></span> THÔNG TIN SẢN PHẨM
+                                            <span>
+                                                <asp:LinkButton ID="btn_edit_product_detail" runat="server" CssClass="button small info" OnClick="btn_edit_product_detail_Click"><span class="mif-pencil"></span> Chỉnh sửa</asp:LinkButton>
+                                                <asp:Panel ID="pn_detail_edit_actions" runat="server" Visible="false" style="display:inline-block;">
+                                                    <asp:LinkButton ID="btn_save_product_detail" runat="server" CssClass="button small success" OnClick="btn_save_product_detail_Click"><span class="mif-checkmark"></span> Lưu</asp:LinkButton>
+                                                    <asp:LinkButton ID="btn_cancel_product_detail" runat="server" CssClass="button small secondary" OnClick="btn_cancel_product_detail_Click"><span class="mif-cross"></span> Hủy</asp:LinkButton>
+                                                </asp:Panel>
+                                            </span>
                                         </div>
                                         <div class="text-center mb-3">
                                             <asp:Image ID="img_detail_sp" runat="server" CssClass="img-fluid border" style="max-height: 150px; object-fit: contain; border-radius: 4px;" />
@@ -126,54 +138,65 @@
                                             <small class="modal-label">Tên sản phẩm</small>
                                             <div class="modal-value text-bold"><asp:Label ID="lbl_detail_tensp" runat="server"></asp:Label></div>
                                         </div>
-                                         <div class="mt-1" style="border-bottom: 1px solid #f5f5f5; padding-bottom: 4px;">
-                                             <small class="fg-dark fw-600" style="display: inline-block; width: 130px;">Model:</small>
-                                             <span class="ml-1"><asp:Label ID="lbl_detail_model" runat="server"></asp:Label></span>
-                                         </div>
+                                          <div class="mt-1" style="border-bottom: 1px solid #f5f5f5; padding-bottom: 4px;">
+                                              <small class="fg-dark fw-600" style="display: inline-block; width: 130px;">Model:</small>
+                                              <span class="ml-1"><asp:Label ID="lbl_detail_model" runat="server"></asp:Label></span>
+                                              <asp:Panel ID="pn_edit_detail_model" runat="server" Visible="false"><asp:TextBox ID="txt_edit_detail_model" runat="server" CssClass="product-edit-input"></asp:TextBox></asp:Panel>
+                                          </div>
                                          <div class="mt-1" style="border-bottom: 1px solid #f5f5f5; padding-bottom: 4px;">
                                              <small class="fg-dark fw-600" style="display: inline-block; width: 130px;">Số Seri (Serial):</small>
                                              <span class="ml-1"><asp:Label ID="lbl_detail_seri" runat="server"></asp:Label></span>
                                          </div>
-                                         <div class="mt-1" style="border-bottom: 1px solid #f5f5f5; padding-bottom: 4px;">
-                                             <small class="fg-dark fw-600" style="display: inline-block; width: 130px;">Mã KH (Kích hoạt):</small>
-                                             <span class="ml-1"><asp:Label ID="lbl_detail_makichhoat" runat="server"></asp:Label></span>
+                                          <div class="mt-1" style="border-bottom: 1px solid #f5f5f5; padding-bottom: 4px;">
+                                              <small class="fg-dark fw-600" style="display: inline-block; width: 130px;">Mã KH (Kích hoạt):</small>
+                                              <span class="ml-1"><asp:Label ID="lbl_detail_makichhoat" runat="server"></asp:Label></span>
+                                              <asp:Panel ID="pn_edit_detail_makichhoat" runat="server" Visible="false"><asp:TextBox ID="txt_edit_detail_makichhoat" runat="server" CssClass="product-edit-input"></asp:TextBox></asp:Panel>
+                                          </div>
+                                          <div class="mt-1" style="border-bottom: 1px solid #f5f5f5; padding-bottom: 4px;">
+                                              <small class="fg-dark fw-600" style="display: inline-block; width: 130px;">Bảo hành (tháng):</small>
+                                              <span class="ml-1"><asp:Label ID="lbl_detail_thangbaohanh" runat="server"></asp:Label></span>
+                                              <asp:Panel ID="pn_edit_detail_thangbaohanh" runat="server" Visible="false"><asp:TextBox ID="txt_edit_detail_thangbaohanh" runat="server" CssClass="product-edit-input" type="number"></asp:TextBox></asp:Panel>
+                                          </div>
+                                          <div class="mt-1" style="border-bottom: 1px solid #f5f5f5; padding-bottom: 4px;">
+                                              <small class="fg-dark fw-600" style="display: inline-block; width: 130px;">Seri đổi lần 1:</small>
+                                              <span class="ml-1"><asp:Label ID="lbl_detail_seri_do_l1" runat="server"></asp:Label></span>
+                                              <asp:Panel ID="pn_edit_detail_seri_do_l1" runat="server" Visible="false"><asp:TextBox ID="txt_edit_detail_seri_do_l1" runat="server" CssClass="product-edit-input"></asp:TextBox></asp:Panel>
+                                          </div>
+                                          <div class="mt-1" style="border-bottom: 1px solid #f5f5f5; padding-bottom: 4px;">
+                                              <small class="fg-dark fw-600" style="display: inline-block; width: 130px;">Mã KH đổi lần 1:</small>
+                                              <span class="ml-1"><asp:Label ID="lbl_detail_id_khachhang_do_l1" runat="server"></asp:Label></span>
+                                              <asp:Panel ID="pn_edit_detail_id_khachhang_do_l1" runat="server" Visible="false"><asp:TextBox ID="txt_edit_detail_id_khachhang_do_l1" runat="server" CssClass="product-edit-input"></asp:TextBox></asp:Panel>
+                                          </div>
+                                          <div class="mt-1" style="border-bottom: 1px solid #f5f5f5; padding-bottom: 4px;">
+                                              <small class="fg-dark fw-600" style="display: inline-block; width: 130px;">Ngày đổi lần 1:</small>
+                                              <span class="ml-1"><asp:Label ID="lbl_detail_ngaydo_l1" runat="server"></asp:Label></span>
+                                              <asp:Panel ID="pn_edit_detail_ngaydo_l1" runat="server" Visible="false"><asp:TextBox ID="txt_edit_detail_ngaydo_l1" runat="server" CssClass="product-edit-input" type="datetime-local"></asp:TextBox></asp:Panel>
+                                          </div>
+                                          <div class="mt-1" style="border-bottom: 1px solid #f5f5f5; padding-bottom: 4px;">
+                                              <small class="fg-dark fw-600" style="display: inline-block; width: 130px;">Seri đổi lần 2:</small>
+                                              <span class="ml-1"><asp:Label ID="lbl_detail_seri_do_l2" runat="server"></asp:Label></span>
+                                              <asp:Panel ID="pn_edit_detail_seri_do_l2" runat="server" Visible="false"><asp:TextBox ID="txt_edit_detail_seri_do_l2" runat="server" CssClass="product-edit-input"></asp:TextBox></asp:Panel>
+                                          </div>
+                                          <div class="mt-1" style="border-bottom: 1px solid #f5f5f5; padding-bottom: 4px;">
+                                              <small class="fg-dark fw-600" style="display: inline-block; width: 130px;">Mã KH đổi lần 2:</small>
+                                              <span class="ml-1"><asp:Label ID="lbl_detail_id_khachhang_do_l2" runat="server"></asp:Label></span>
+                                              <asp:Panel ID="pn_edit_detail_id_khachhang_do_l2" runat="server" Visible="false"><asp:TextBox ID="txt_edit_detail_id_khachhang_do_l2" runat="server" CssClass="product-edit-input"></asp:TextBox></asp:Panel>
+                                          </div>
+                                          <div class="mt-1" style="border-bottom: 1px solid #f5f5f5; padding-bottom: 4px;">
+                                              <small class="fg-dark fw-600" style="display: inline-block; width: 130px;">Ngày đổi lần 2:</small>
+                                              <span class="ml-1"><asp:Label ID="lbl_detail_ngaydo_l2" runat="server"></asp:Label></span>
+                                              <asp:Panel ID="pn_edit_detail_ngaydo_l2" runat="server" Visible="false"><asp:TextBox ID="txt_edit_detail_ngaydo_l2" runat="server" CssClass="product-edit-input" type="datetime-local"></asp:TextBox></asp:Panel>
+                                          </div>
+                                          <div class="mt-2">
+                                              <small class="fg-dark fw-600 d-block mb-1">Mô tả</small>
+                                              <div class="modal-value text-muted" style="font-size: 12px;"><asp:Label ID="lbl_detail_mota" runat="server"></asp:Label></div>
+                                              <asp:Panel ID="pn_edit_detail_mota" runat="server" Visible="false"><asp:TextBox ID="txt_edit_detail_mota" runat="server" CssClass="product-edit-input" TextMode="MultiLine" Rows="3"></asp:TextBox></asp:Panel>
+                                          </div>
+                                          <div class="mt-2">
+                                              <small class="fg-dark fw-600 d-block mb-1">Thông số kỹ thuật</small>
+                                              <div class="modal-value text-muted" style="font-size: 12px; border-bottom: none;"><asp:Label ID="lbl_detail_thongso" runat="server"></asp:Label></div>
+                                              <asp:Panel ID="pn_edit_detail_thongso" runat="server" Visible="false"><asp:TextBox ID="txt_edit_detail_thongso" runat="server" CssClass="product-edit-input" TextMode="MultiLine" Rows="4"></asp:TextBox></asp:Panel>
                                          </div>
-                                         <div class="mt-1" style="border-bottom: 1px solid #f5f5f5; padding-bottom: 4px;">
-                                             <small class="fg-dark fw-600" style="display: inline-block; width: 130px;">Bảo hành (tháng):</small>
-                                             <span class="ml-1"><asp:Label ID="lbl_detail_thangbaohanh" runat="server"></asp:Label></span>
-                                         </div>
-                                         <div class="mt-1" style="border-bottom: 1px solid #f5f5f5; padding-bottom: 4px;">
-                                             <small class="fg-dark fw-600" style="display: inline-block; width: 130px;">Seri đổi lần 1:</small>
-                                             <span class="ml-1"><asp:Label ID="lbl_detail_seri_do_l1" runat="server"></asp:Label></span>
-                                         </div>
-                                         <div class="mt-1" style="border-bottom: 1px solid #f5f5f5; padding-bottom: 4px;">
-                                             <small class="fg-dark fw-600" style="display: inline-block; width: 130px;">Mã KH đổi lần 1:</small>
-                                             <span class="ml-1"><asp:Label ID="lbl_detail_id_khachhang_do_l1" runat="server"></asp:Label></span>
-                                         </div>
-                                         <div class="mt-1" style="border-bottom: 1px solid #f5f5f5; padding-bottom: 4px;">
-                                             <small class="fg-dark fw-600" style="display: inline-block; width: 130px;">Ngày đổi lần 1:</small>
-                                             <span class="ml-1"><asp:Label ID="lbl_detail_ngaydo_l1" runat="server"></asp:Label></span>
-                                         </div>
-                                         <div class="mt-1" style="border-bottom: 1px solid #f5f5f5; padding-bottom: 4px;">
-                                             <small class="fg-dark fw-600" style="display: inline-block; width: 130px;">Seri đổi lần 2:</small>
-                                             <span class="ml-1"><asp:Label ID="lbl_detail_seri_do_l2" runat="server"></asp:Label></span>
-                                         </div>
-                                         <div class="mt-1" style="border-bottom: 1px solid #f5f5f5; padding-bottom: 4px;">
-                                             <small class="fg-dark fw-600" style="display: inline-block; width: 130px;">Mã KH đổi lần 2:</small>
-                                             <span class="ml-1"><asp:Label ID="lbl_detail_id_khachhang_do_l2" runat="server"></asp:Label></span>
-                                         </div>
-                                         <div class="mt-1" style="border-bottom: 1px solid #f5f5f5; padding-bottom: 4px;">
-                                             <small class="fg-dark fw-600" style="display: inline-block; width: 130px;">Ngày đổi lần 2:</small>
-                                             <span class="ml-1"><asp:Label ID="lbl_detail_ngaydo_l2" runat="server"></asp:Label></span>
-                                         </div>
-                                         <div class="mt-2">
-                                             <small class="fg-dark fw-600 d-block mb-1">Mô tả</small>
-                                             <div class="modal-value text-muted" style="font-size: 12px;"><asp:Label ID="lbl_detail_mota" runat="server"></asp:Label></div>
-                                         </div>
-                                         <div class="mt-2">
-                                             <small class="fg-dark fw-600 d-block mb-1">Thông số kỹ thuật</small>
-                                             <div class="modal-value text-muted" style="font-size: 12px; border-bottom: none;"><asp:Label ID="lbl_detail_thongso" runat="server"></asp:Label></div>
-                                        </div>
                                     </div>
 
                                     <!-- Salesperson Card -->
@@ -430,7 +453,7 @@
                                                             </button>
                                                             <ul class="d-menu place-right" data-role="dropdown">
                                                                 <li><asp:LinkButton ID="btn_view" runat="server" OnClick="btn_view_Click" CommandArgument='<%# Eval("baogiaId") + "|" + Eval("productId") %>'>Xem chi tiết</asp:LinkButton></li>
-                                                                <li><asp:LinkButton ID="btn_edit_warranty" runat="server" OnClick="btn_edit_warranty_Click" CommandArgument='<%# Eval("baogiaId") + "|" + Eval("productId") %>'>Chỉnh sửa</asp:LinkButton></li>
+                                                                <li><asp:LinkButton ID="btn_edit_warranty" runat="server" OnClick="btn_edit_warranty_Click" CommandArgument='<%# Eval("baogiaId") + "|" + Eval("productId") %>'>Chỉnh thời gian bảo hành</asp:LinkButton></li>
                                                             </ul>
                                                         </div>
                                                     </td>
