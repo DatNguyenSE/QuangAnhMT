@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -39,6 +39,41 @@ public partial class admin_uc_menu_top_uc : System.Web.UI.UserControl
                 {
                     show_soluong_thongbao(db);
                     lay_thongtin_nguoidung(db);
+                }
+
+                string _tkAdminCheck = Session["taikhoan"] as string;
+                if (!string.IsNullOrEmpty(_tkAdminCheck))
+                    _tkAdminCheck = mahoa_cl.giaima_Bcorn(_tkAdminCheck);
+
+                if (_tkAdminCheck == "admin")
+                {
+                    ph_qr_admin.Visible = true;
+                    string domain = HttpContext.Current.Request.Url.GetLeftPart(UriPartial.Authority);
+                    string qrFileName = "qr_admin_" + domain.Replace("http://", "").Replace("https://", "").Replace(":", "_") + ".png";
+                    string qrPath = Server.MapPath("~/uploads/images/" + qrFileName);
+                    
+                    try 
+                    {
+                        if (!System.IO.Directory.Exists(Server.MapPath("~/uploads/images/")))
+                            System.IO.Directory.CreateDirectory(Server.MapPath("~/uploads/images/"));
+
+                        if (!System.IO.File.Exists(qrPath))
+                        {
+                            string qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" + HttpUtility.UrlEncode(domain + "/admin/default.aspx");
+                            using (System.Net.WebClient wc = new System.Net.WebClient())
+                            {
+                                wc.DownloadFile(qrUrl, qrPath);
+                            }
+                        }
+                    } 
+                    catch { } // fall silent if internet is down or permission denied
+
+                    img_qr_admin.ImageUrl = "/uploads/images/" + qrFileName;
+                    btn_download_qr.HRef = "/uploads/images/" + qrFileName;
+                }
+                else
+                {
+                    ph_qr_admin.Visible = false;
                 }
 
 

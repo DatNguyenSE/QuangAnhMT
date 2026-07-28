@@ -1,4 +1,4 @@
-﻿<%@ Control Language="C#" AutoEventWireup="true" CodeFile="menu-top-uc.ascx.cs" Inherits="admin_uc_menu_top_uc" %>
+<%@ Control Language="C#" AutoEventWireup="true" CodeFile="menu-top-uc.ascx.cs" Inherits="admin_uc_menu_top_uc" %>
 
 <div data-role="charms" data-position="right" id="thongbao-charms" style="width: 320px; background-color: #fff; overflow: auto;" class="p-0 m-0 shadow-1">
     <div style="height: 52px; line-height: 55px" class="bg-orange fg-white">
@@ -150,6 +150,12 @@
             </ul>
         </div>--%>
 
+        <asp:PlaceHolder ID="ph_qr_admin" runat="server" Visible="false">
+            <a href="#" onclick="Metro.dialog.open('#modal_qr_admin'); return false;" class="app-bar-item" title="Tạo mã QR trang">
+                <span class="mif-qrcode mif-lg"></span>
+            </a>
+        </asp:PlaceHolder>
+
         <asp:UpdatePanel ID="UpdatePanel1" runat="server" UpdateMode="Conditional">
             <ContentTemplate>
                 <asp:LinkButton ID="but_show_form_thongbao" OnClick="but_show_form_thongbao_Click" OnClientClick="Metro.getPlugin('#thongbao-charms', 'charms').toggle()" CssClass="app-bar-item" runat="server">
@@ -161,6 +167,21 @@
                 <asp:Timer ID="Timer1" runat="server" Interval="5000" OnTick="Timer1_Tick"></asp:Timer>
             </ContentTemplate>
         </asp:UpdatePanel>
+
+    <div class="dialog" data-role="dialog" id="modal_qr_admin" data-width="400" data-close-button="true">
+        <div class="dialog-title">Mã QR Đăng Nhập Admin</div>
+        <div class="dialog-content text-center">
+            <p>Quét mã QR dưới đây để truy cập nhanh trang quản trị:</p>
+            <div class="p-2 border bd-light" style="display:inline-block;">
+                <asp:Image ID="img_qr_admin" runat="server" Width="300" Height="300" />
+            </div>
+            <br />
+            <a id="btn_download_qr" runat="server" class="button primary mt-4" download="QR_Admin.png"><span class="mif-download"></span> Tải xuống QR Code</a>
+        </div>
+        <div class="dialog-actions text-right">
+            <button type="button" class="button js-dialog-close">Đóng</button>
+        </div>
+    </div>
 
         <div class="app-bar-container">
             <a href="#" class="app-bar-item">
