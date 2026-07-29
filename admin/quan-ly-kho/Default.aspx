@@ -1,4 +1,4 @@
-﻿<%@ Page Title="Quản lý kho" Language="C#" MasterPageFile="~/admin/MasterPageAdmin.master" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="admin_quan_ly_kho_Default" %>
+<%@ Page Title="Quản lý kho" Language="C#" MasterPageFile="~/admin/MasterPageAdmin.master" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="admin_quan_ly_kho_Default" %>
 <%@ Register Assembly="CKEditor.NET" Namespace="CKEditor.NET" TagPrefix="CKEditor" %>
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="Server">
     <style>
@@ -69,6 +69,18 @@
             color: #9a3412;
             font-family: Consolas, monospace;
             font-weight: 700;
+        }
+
+        .dung-chung-text {
+            display: none;
+        }
+
+        .quick-entry-panel .dung-chung-text {
+            display: inline;
+        }
+
+        .quick-entry-panel .seri-label-toggle {
+            color: #ce352c !important;
         }
 
         @media (max-width: 639px) {
@@ -173,7 +185,7 @@
                                         </div>
                                     </asp:PlaceHolder>
                                     <div class="mt-3">
-                                        <label class="fg-red fw-600">Số seri</label>
+                                        <label class="fw-600 seri-label-toggle">Số seri</label>
                                         <asp:TextBox ID="txt_so_seri" runat="server" data-role="input"></asp:TextBox>
                                     </div>
                                     <asp:PlaceHolder ID="ph_quick_entry_quantity" runat="server" Visible="false">
@@ -194,11 +206,11 @@
                                         <div class="quick-entry-section-help">Các trường bên dưới sẽ được copy vào từng record được tạo.</div>
                                     </asp:PlaceHolder>
                                     <div class="mt-3">
-                                        <label class="fg-red fw-600">Tên sản phẩm <small>(dùng chung)</small></label>
+                                        <label class="fg-red fw-600">Tên sản phẩm <small class="dung-chung-text">(dùng chung)</small></label>
                                         <asp:TextBox ID="txt_name" runat="server" data-role="input" MaxLength="100"></asp:TextBox>
                                     </div>
                                     <div class="mt-3">
-                                        <label class="fw-600">Ảnh sản phẩm <small>(dùng chung)</small></label>
+                                        <label class="fw-600">Ảnh sản phẩm <small class="dung-chung-text">(dùng chung)</small></label>
                                         <input type="file" id="fileInput" onchange="uploadFile()" data-role="file" data-button-title="<span class='mif-file-upload'></span>" />
                                         <div id="message" runat="server"></div>
                                         <div id="uploadedFilePath"></div>
@@ -220,25 +232,25 @@
                                         <asp:CheckBox runat="server" ID="check_hangthanhly" Text="Hàng thanh lý"></asp:CheckBox>
                                     </div>
                                     <div class="mt-3">
-                                        <label class="fw-600">Hãng sản phẩm <small>(dùng chung)</small></label>
+                                        <label class="fw-600">Hãng sản phẩm <small class="dung-chung-text">(dùng chung)</small></label>
                                         <div>
                                             <asp:DropDownList ID="DropDownList1" runat="server" data-role="select"></asp:DropDownList>
                                         </div>
                                     </div>
                                     <div class="mt-3">
-                                        <label class="fw-600">Nhóm sản phẩm <small>(dùng chung)</small></label>
+                                        <label class="fw-600">Nhóm sản phẩm <small class="dung-chung-text">(dùng chung)</small></label>
                                         <div>
                                             <asp:DropDownList ID="DropDownList2" runat="server" data-role="select"></asp:DropDownList>
                                         </div>
                                     </div>
                                     <div class="mt-3">
-                                        <label class="fw-600">Đơn vị tính <small>(dùng chung)</small></label>
+                                        <label class="fw-600">Đơn vị tính <small class="dung-chung-text">(dùng chung)</small></label>
                                         <div>
                                             <asp:DropDownList ID="DropDownList3" runat="server" data-role="select"></asp:DropDownList>
                                         </div>
                                     </div>
                                     <div class="mt-3">
-                                        <label class="fw-600">Model <small>(dùng chung)</small></label>
+                                        <label class="fw-600">Model <small class="dung-chung-text">(dùng chung)</small></label>
                                         <asp:TextBox ID="txt_model" runat="server" data-role="input" MaxLength="100"></asp:TextBox>
                                     </div>
 
@@ -247,23 +259,23 @@
                                 </div>
                                 <div class="cell-lg-6 pl-4-lg">
                                     <div class="mt-3">
-                                         <label class="fw-600">Thông số kỹ thuật <small>(dùng chung)</small></label>
+                                         <label class="fw-600">Thông số kỹ thuật <small class="dung-chung-text">(dùng chung)</small></label>
                                         <CKEditor:CKEditorControl ID="txt_thongso" runat="server" Height="100px" Width="100%" CustomConfig="/ckeditor/config-basic.js"></CKEditor:CKEditorControl>
                                         <%--<asp:TextBox ID="txt_thongso" data-role="textarea" runat="server" TextMode="MultiLine"></asp:TextBox>--%>
                                     </div>
                                     <asp:PlaceHolder ID="PlaceHolder1" runat="server" Visible="false">
                                         <div class="mt-3">
-                                             <label class="fw-600">Giá nhập <small>(dùng chung)</small></label>
+                                             <label class="fw-600">Giá nhập <small class="dung-chung-text">(dùng chung)</small></label>
                                             <asp:TextBox ID="txt_gianhap" onfocus="AutoSelect(this)" MaxLength="14" oninput="format_sotien_new(this)" runat="server" data-role="input" Text="0"></asp:TextBox>
                                         </div>
                                     </asp:PlaceHolder>
                                     <div class="mt-3">
-                                         <label class="fw-600">Giá bán <small>(dùng chung)</small></label>
+                                         <label class="fw-600">Giá bán <small class="dung-chung-text">(dùng chung)</small></label>
                                         <asp:TextBox ID="txt_giaban" onfocus="AutoSelect(this)" MaxLength="14" oninput="format_sotien_new(this)" runat="server" data-role="input" Text="0"></asp:TextBox>
                                     </div>
 
                                     <div class="mt-3">
-                                         <label class="fw-600">Ghi chú <small>(dùng chung)</small></label>
+                                         <label class="fw-600">Ghi chú <small class="dung-chung-text">(dùng chung)</small></label>
                                         <asp:TextBox ID="txt_ghichu" runat="server" data-role="input"></asp:TextBox>
                                     </div>
                                 </div>

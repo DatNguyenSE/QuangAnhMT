@@ -756,11 +756,11 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
 
                 #region Kiểm tra ngoại lệ.
 
-                if (_so_seri == "")
-                {
-                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng nhập số seri.", "false", "false", "OK", "alert", ""), true);
-                    return;
-                }
+                // if (_so_seri == "")
+                // {
+                //     ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng nhập số seri.", "false", "false", "OK", "alert", ""), true);
+                //     return;
+                // }
                 if (_tensp == "")
                 {
                     ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng nhập tên sản phẩm.", "false", "false", "OK", "alert", ""), true);
@@ -771,11 +771,14 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
 
                 if (ViewState["add_edit"].ToString() == "add")
                 {
-                    var q_seri = db.KhoSanPham_tbs.FirstOrDefault(p => p.so_seri == _so_seri);
-                    if (q_seri != null)
+                    if (!string.IsNullOrEmpty(_so_seri))
                     {
-                        ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Số seri này đã tồn tại.", "false", "false", "OK", "alert", ""), true);
-                        return;
+                        var q_seri = db.KhoSanPham_tbs.FirstOrDefault(p => p.so_seri == _so_seri);
+                        if (q_seri != null)
+                        {
+                            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Số seri này đã tồn tại.", "false", "false", "OK", "alert", ""), true);
+                            return;
+                        }
                     }
                     #region thêm mới
                     KhoSanPham_tb _ob = new KhoSanPham_tb();
@@ -815,11 +818,14 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                     var q_edit = db.KhoSanPham_tbs.FirstOrDefault(p => p.id == editId);
                     if (q_edit != null)
                     {
-                        var q_seri = db.KhoSanPham_tbs.FirstOrDefault(p => p.so_seri == _so_seri && p.id != editId);
-                        if (q_seri != null)
+                        if (!string.IsNullOrEmpty(_so_seri))
                         {
-                            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Số seri này đã tồn tại.", "false", "false", "OK", "alert", ""), true);
-                            return;
+                            var q_seri = db.KhoSanPham_tbs.FirstOrDefault(p => p.so_seri == _so_seri && p.id != editId);
+                            if (q_seri != null)
+                            {
+                                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Số seri này đã tồn tại.", "false", "false", "OK", "alert", ""), true);
+                                return;
+                            }
                         }
 
                         #region kiểm tra ngoại lệ. sau đó cập nhật
