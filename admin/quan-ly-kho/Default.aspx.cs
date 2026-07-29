@@ -798,7 +798,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                     _ob.ghichu = _ghichu;
                     _ob.ngaytao = _ngaytao;
                     _ob.nguoitao = _nguoitao;
-                    _ob.soluong_hientai = 0;
+                    _ob.soluong_hientai = string.IsNullOrEmpty(_so_seri) ? 0 : 1;
                     db.KhoSanPham_tbs.InsertOnSubmit(_ob);
                     db.SubmitChanges();
                     #endregion

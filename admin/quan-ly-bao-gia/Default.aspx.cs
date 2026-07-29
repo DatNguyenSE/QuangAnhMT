@@ -2213,8 +2213,6 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                 var dm = db.BaoGia_tbs.FirstOrDefault(p => p.id == _id);
                 if (dm != null)
                 {
-                    if (dm.trangthai != "Đã ký HĐ")
-                    {
                         if (check_login_cl.CheckQuyen(db, ViewState["taikhoan"].ToString(), "18"))//quyền sửa toàn bộ
                         {
                         }
@@ -2227,9 +2225,24 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                             }
                         }
 
+                        string _idbg = dm.id.ToString();
+
+                        // Nếu báo giá đã ký hợp đồng (đã bán), khi xóa/trả hàng cần hoàn lại số lượng tồn kho
+                        if (dm.trangthai == "Đã ký HĐ")
+                        {
+                            var chiTiet = db.BaoGia_ChiTiet_tbs.Where(p => p.id_baogia == _idbg).ToList();
+                            foreach (var ct in chiTiet)
+                            {
+                                var sanPhamKho = db.KhoSanPham_tbs.FirstOrDefault(k => k.id.ToString() == ct.id_sanpham);
+                                if (sanPhamKho != null)
+                                {
+                                    sanPhamKho.soluong_hientai += ct.soluong;
+                                }
+                            }
+                        }
+
                         db.BaoGia_tbs.DeleteOnSubmit(dm);
 
-                        string _idbg = dm.id.ToString();
                         var q = db.BaoGia_ChiTiet_tbs.Where(p => p.id_baogia == _idbg);
                         foreach (var t in q)
                         {
@@ -2247,14 +2260,11 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                         }
 
                         db.SubmitChanges();
-                        ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Xóa báo giá thành công", "2000", "success"), true);
+                        
+                        string successMsg = button.ID == "lnkKhachTraHang" ? "Khách trả hàng thành công. Đã hoàn lại số lượng sản phẩm vào kho." : "Xóa báo giá thành công";
+                        ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", successMsg, "2000", "success"), true);
                         show_main();
                         up_main.Update();
-                    }
-                    else
-                    {
-                        ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Không thể xóa báo giá đã ký HĐ.", "false", "false", "OK", "alert", ""), true);
-                    }
                 }
             }
         }

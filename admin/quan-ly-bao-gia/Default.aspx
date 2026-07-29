@@ -1097,6 +1097,11 @@
 
                                                             </li>
                                                             <li>
+                                                                <asp:LinkButton ID="lnkKhachTraHang" Visible='<%# Eval("trangthai").ToString() == "Đã ký HĐ" %>' OnClick="lnk_xoadong_Click" CommandArgument='<%# Eval("id") %>' OnClientClick="return confirm('Xác nhận Khách trả hàng? (Báo giá này sẽ bị xóa và số lượng sản phẩm được hoàn lại vào kho)');" runat="server">
+                                                                    <span class="fg-orange">Khách trả hàng</span>
+                                                                </asp:LinkButton>
+                                                            </li>
+                                                            <li>
                                                                 <asp:LinkButton ID="lnkDelete" OnClick="lnk_xoadong_Click" CommandArgument='<%# Eval("id") %>' OnClientClick="return confirm('Bạn có chắc chắn muốn xóa phiếu báo giá này?');" runat="server">
                                                                     <span class="fg-red">Xóa</span>
                                                                 </asp:LinkButton>
