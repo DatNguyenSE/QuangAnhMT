@@ -14,6 +14,8 @@ public partial class admin_theo_doi_hang_da_ban_Default : System.Web.UI.Page
         public string productName { get; set; }
         public string productModel { get; set; }
         public string productSerial { get; set; }
+        public string serialReplacement1 { get; set; }
+        public string serialReplacement2 { get; set; }
         public string productImage { get; set; }
         public int quantity { get; set; }
         public long price { get; set; }
@@ -125,6 +127,8 @@ public partial class admin_theo_doi_hang_da_ban_Default : System.Web.UI.Page
                         productName = sp != null ? sp.ten : "Sản phẩm tự chọn",
                         productModel = sp != null ? sp.model : "",
                         productSerial = sp != null ? sp.so_seri : "",
+                        serialReplacement1 = ct.Seri_Do_L1,
+                        serialReplacement2 = ct.Seri_Do_L2,
                         productImage = sp != null ? sp.anh : "",
                         quantity = ct.soluong ?? 0,
                         price = ct.giaban_taithoidiemnay ?? 0,
@@ -152,6 +156,8 @@ public partial class admin_theo_doi_hang_da_ban_Default : System.Web.UI.Page
                         p.productName.Contains(key) ||
                         p.productModel.Contains(key) ||
                         p.productSerial.Contains(key) ||
+                        p.serialReplacement1.Contains(key) ||
+                        p.serialReplacement2.Contains(key) ||
                         p.tenKhachHang.Contains(key) ||
                         p.sdtKhachHang.Contains(key) ||
                         (hasBaoGiaId && p.baogiaId == searchBaoGiaId));

@@ -165,6 +165,61 @@
         </ProgressTemplate>
     </asp:UpdateProgress>
 
+    <asp:UpdatePanel ID="up_chinhsuasoluong" runat="server" UpdateMode="Conditional">
+        <ContentTemplate>
+            <asp:Panel ID="pn_chinhsuasoluong" runat="server" Visible="false" DefaultButton="but_luu_chinhsuasoluong">
+                <div style="position: fixed; width: 100%; height: 52px; background-color: none; top: 0; left: 0; z-index: 1041!important;">
+                    <div style='top: 0; left: 0px; margin: 0 auto; max-width: 550px; opacity: 1;'>
+                        <div style='position: absolute; right: 18px; top: 14px; z-index: 1040!important'>
+                            <a href='#' class='fg-white d-inline' id="A_close_chinhsuasoluong" runat="server" onserverclick="but_close_form_chinhsuasoluong_Click" title='Đóng'>
+                                <span class='mif mif-cross mif-2x fg-red fg-lightRed-hover'></span>
+                            </a>
+                        </div>
+                        <div class="bg-white pl-4 pl-8-md pr-8-md pr-4" style="height: 52px;">
+                            <div class="pt-4 text-upper text-bold">
+                                CHỈNH SỬA SỐ LƯỢNG
+                            </div>
+                            <hr />
+                        </div>
+                    </div>
+                </div>
+                <div style="position: fixed; width: 100%; height: 100%; top: 0; left: 0; overflow: auto; z-index: 1040!important; background-image: url('/uploads/images/bg1.png');">
+                    <div style='top: 0; left: 0; margin: 0 auto; max-width: 556px; opacity: 1;'>
+                        <div class="bg-white border bd-transparent pl-4 pl-8-md pr-8-md pr-4" style="padding-top: 52px">
+                            <div class="row">
+                                <div class="cell-lg-12">
+                                    <div class="mt-3">
+                                        <label class="fw-600">Tên sản phẩm</label>
+                                        <div>
+                                            <asp:Label ID="Label_ten_chinhsuasoluong" runat="server" Text=""></asp:Label>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3">
+                                        <label class="fg-red fw-600">Số lượng tồn kho</label>
+                                        <asp:TextBox ID="txt_chinhsuasoluong" onfocus="AutoSelect(this)" MaxLength="14" oninput="format_sotien_new(this)" runat="server" data-role="input"></asp:TextBox>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-6 mb-20 text-right">
+                                <asp:Button ID="but_luu_chinhsuasoluong" runat="server" Text="Lưu thay đổi" CssClass="button success" OnClick="but_luu_chinhsuasoluong_Click" />
+                            </div>
+                            <div class="mb-20"></div>
+                        </div>
+                    </div>
+                </div>
+            </asp:Panel>
+        </ContentTemplate>
+    </asp:UpdatePanel>
+    <asp:UpdateProgress ID="UpdateProgress_chinhsuasoluong" runat="server" AssociatedUpdatePanelID="up_chinhsuasoluong">
+        <ProgressTemplate>
+            <div class="bg-dark fixed-top h-100 w-100" style="opacity: 0.9; z-index: 99999!important">
+                <div style="padding-top: 45vh;">
+                    <div class="mx-auto color-style activity-atom" data-role="activity" data-type="atom" data-style="color" data-role-activity="true"><span class="electron"></span><span class="electron"></span><span class="electron"></span></div>
+                </div>
+            </div>
+        </ProgressTemplate>
+    </asp:UpdateProgress>
+
     <asp:UpdatePanel ID="up_add" runat="server" UpdateMode="Conditional">
 
         <ContentTemplate>
@@ -579,9 +634,7 @@
                                         <th style="width: 160px; min-width: 160px;">Sản phẩm</th>
                                       <%--  <th style="width: 120px; min-width: 120px;">Số seri</th>--%>
                                         <th style="width: 1px; min-width: 1px;">VAT</th>
-                                        <th style="width: 1px; min-width: 1px;">ĐVT</th>
-                                        
-                                        <th style="width: 1px; min-width: 1px;">Tồn</th>
+                                        <th style="width: 180px; min-width: 180px; white-space: nowrap;">Tồn , tổng tồn: <%=ViewState["tong_ton"] %></th>
                                         <th style="width: 1px; min-width: 1px;">Giá lẻ</th>
                                         <asp:PlaceHolder ID="PlaceHolder4" runat="server" Visible="false">
                                             <th style="width: 1px; min-width: 1px;">Giá nhập</th>
@@ -649,7 +702,6 @@
                                                         <span class="mif mif-checkmark fg-green"></span>
                                                     </asp:PlaceHolder>
                                                 </td>
-                                                <td><%#Eval("DVT").ToString().ToUpper() %></td>
                                                 <td><b><%#Eval("soluong_hientai","{0:#,##0}") %></b></td>
                                                 <td class="text-right"><%#Eval("giabanle","{0:#,##0}") %>
                                                     <div><small>x <%#Eval("soluong_hientai") %></small></div>
@@ -690,6 +742,9 @@
                                                                  <asp:LinkButton ID="but_show_form_nhaphang" OnClick="but_show_form_nhaphang_Click" CommandArgument='<%#Eval("id") %>' runat="server">Nhập hàng</asp:LinkButton>
                                                              </li>
                                                              <li>
+                                                                 <asp:LinkButton ID="but_show_form_chinhsuasoluong" OnClick="but_show_form_chinhsuasoluong_Click" CommandArgument='<%#Eval("id") %>' runat="server">Chỉnh sửa số lượng</asp:LinkButton>
+                                                             </li>
+                                                             <li>
                                                                  <a href='<%# ResolveUrl("~/admin/quan-ly-bao-gia/Default.aspx?tao-bao-gia=" + Eval("id")) %>'>Tạo báo giá cho sản phẩm này</a>
                                                              </li>
                                                              <li>
@@ -713,7 +768,7 @@
                                     </asp:Repeater>
                                     <tr>
                                         <td class=" bg-white"></td>
-                                        <td colspan="7" class="text-bold text-right">TỔNG TÀI SẢN</td>
+                                        <td colspan="6" class="text-bold text-right">TỔNG TÀI SẢN</td>
                                         <td class="text-center text-bold"><%=ViewState["tong_ton"] %></td>
                                         <td class="text-right text-bold"><%=ViewState["tong_giale"] %></td>
                                         <td class="text-right text-bold">
@@ -726,7 +781,7 @@
                                     <asp:PlaceHolder ID="PlaceHolder3" runat="server" Visible="false">
                                         <tr>
                                             <td class=" bg-white"></td>
-                                            <td colspan="7" class="text-bold text-right">LÃI GỘP (NẾU BÁN HẾT)</td>
+                                            <td colspan="6" class="text-bold text-right">LÃI GỘP (NẾU BÁN HẾT)</td>
                                             <td colspan="3" class="text-right text-bold"><%=ViewState["tong_laigop"] %></td>
                                             <td colspan="5"></td>
                                         </tr>

@@ -1942,6 +1942,65 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
         up_nhaphang.Update();
     }
 
+    protected void but_show_form_chinhsuasoluong_Click(object sender, EventArgs e)
+    {
+        check_login_cl.check_login_admin("12", "12");
+        using (dbDataContext db = new dbDataContext())
+        {
+            LinkButton button = (LinkButton)sender;
+            string _id = button.CommandArgument;
+            long? productId = TryGetId(_id);
+            var q = db.KhoSanPham_tbs.FirstOrDefault(p => p.id == productId);
+            if (q != null)
+            {
+                ViewState["id_edit_soluong"] = _id;
+                Label_ten_chinhsuasoluong.Text = q.ten;
+                txt_chinhsuasoluong.Text = q.soluong_hientai.HasValue ? q.soluong_hientai.Value.ToString("#,##0") : "0";
+            }
+            else
+                ViewState["id_edit_soluong"] = null;
+        }
+        pn_chinhsuasoluong.Visible = true;
+        up_chinhsuasoluong.Update();
+    }
+
+    protected void but_close_form_chinhsuasoluong_Click(object sender, EventArgs e)
+    {
+        pn_chinhsuasoluong.Visible = false;
+        up_chinhsuasoluong.Update();
+    }
+
+    protected void but_luu_chinhsuasoluong_Click(object sender, EventArgs e)
+    {
+        check_login_cl.check_login_admin("12", "12");
+        if (ViewState["id_edit_soluong"] != null)
+        {
+            try
+            {
+                using (dbDataContext db = new dbDataContext())
+                {
+                    long? productId = TryGetId(ViewState["id_edit_soluong"].ToString());
+                    var q = db.KhoSanPham_tbs.FirstOrDefault(p => p.id == productId);
+                    if (q != null)
+                    {
+                        int _new_soluong = Number_cl.Check_Int(txt_chinhsuasoluong.Text.Trim());
+                        q.soluong_hientai = _new_soluong;
+                        db.SubmitChanges();
+                        ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Cập nhật số lượng thành công.", "1000", "success"), true);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Lỗi", "Có lỗi xảy ra: " + ex.Message, "false", "false", "OK", "alert", ""), true);
+            }
+        }
+        pn_chinhsuasoluong.Visible = false;
+        up_chinhsuasoluong.Update();
+        show_main();
+        up_main.Update();
+    }
+
 
     protected void but_nhaphang_Click(object sender, EventArgs e)
     {

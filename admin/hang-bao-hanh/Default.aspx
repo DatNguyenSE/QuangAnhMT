@@ -443,6 +443,7 @@
                                                          <asp:TextBox ID="txt_ghichu_chuagiao" runat="server" data-role="input"></asp:TextBox>
                                                     </div>--%>
                                                     <div class="text-right mt-4 pt-4 border-top bd-lightGray">
+                                                         <asp:HyperLink ID="hl_in_tem" runat="server" Text="IN TEM (K80)" CssClass="button warning small" Target="_blank" Visible="false" />
                                                          <asp:Button ID="but_add_edit" runat="server" Text="TẠO / CẬP NHẬT PHIẾU" CssClass="button success small" OnClick="but_add_edit_Click" />
                                                          <asp:Button ID="Button1" runat="server" Text="XÁC NHẬN ĐÃ TRẢ HÀNG" CssClass="button primary small" OnClick="but_daban_Click" />
                                                     </div>

@@ -606,9 +606,9 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
         txt_sdt.Text = ""; txt_ten_kh.Text = ""; txt_diachi_kh.Text = "";
         
         // Repeater2 is removed
-        // Repeater2.DataSource = null;
         // Repeater2.DataBind();
         ViewState["add_edit"] = null;
+        hl_in_tem.Visible = false;
         txt_name.Text = ""; txt_anh1.Text = ""; txt_anh2.Text = ""; txt_anh3.Text = ""; img_anh1.ImageUrl = "/uploads/images/no-image.png"; img_anh2.ImageUrl = "/uploads/images/no-image.png"; img_anh3.ImageUrl = "/uploads/images/no-image.png";
         
         // Clear Single Product fields
@@ -806,10 +806,14 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
                 ViewState["thanhtien_vat_chitiet"] = tongVAT.ToString("#,##0");
 
                 ViewState["donhang_saugiamgia"] = TongSauGiam_ChiTiet + TongChiPhiSuaChua - giamGiaDacBiet + tongVAT;
+
+                hl_in_tem.Visible = true;
+                hl_in_tem.NavigateUrl = "InTemBaoHanh.aspx?id=" + _idbg;
             }
             else
             {
                 // Reset fields
+                hl_in_tem.Visible = false;
                 txt_name.Text = ""; txt_sl_chitiet.Text = "1"; txt_sotien_baohanh1.Text = "0"; txt_seri.Text = ""; txt_thoihan_baohanh.Text = ""; txt_ghichu_sanpham.Text = "";
                 txt_anh1.Text = ""; txt_anh2.Text = ""; txt_anh3.Text = ""; img_anh1.ImageUrl = "/uploads/images/no-image.png"; img_anh2.ImageUrl = "/uploads/images/no-image.png"; img_anh3.ImageUrl = "/uploads/images/no-image.png"; ddl_huongxuly.SelectedIndex = 0;
                 txt_noisua.Text = ""; txt_madoitac.Text = ""; txt_ngaymangsua.Text = ""; txt_slmangsua.Text = ""; txt_ngaysuave.Text = ""; txt_slsuave.Text = ""; txt_congnodoitac.Text = "0";

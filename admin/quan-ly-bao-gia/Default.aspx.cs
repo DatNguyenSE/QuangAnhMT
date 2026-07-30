@@ -1824,6 +1824,9 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                     #endregion
                     // Không tải lại bảng danh sách ở đây. Người dùng đang ở trong modal;
                     // tải lại up_main làm chạy lại toàn bộ thống kê và khiến bước nhập SP chậm.
+                    // NHƯNG theo yêu cầu mới: tải lại danh sách sau khi tạo báo giá.
+                    show_main();
+                    up_main.Update();
                     PlaceHolder1.Visible = true;
                     up_add.Update();
                     ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Xử lý thành công.", "1000", "warning"), true);
@@ -1990,6 +1993,9 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                         #region cập nhật dữ liệu và update hiển thị
                         load_edit(db, _ob.id.ToString());
                         // Chỉ cập nhật modal, tránh chạy lại toàn bộ danh sách và thống kê.
+                        // NHƯNG Cập nhật lại danh sách bên ngoài sau khi sửa.
+                        show_main();
+                        up_main.Update();
                         up_add.Update();
                         ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Xử lý thành công", "1000", "warning"), true);
                         #endregion
