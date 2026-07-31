@@ -512,7 +512,13 @@
                                                         <asp:TextBox ID="txt_giamgia_phantram" Text="0" onfocus="AutoSelect(this)" MaxLength="4" runat="server" data-role="input"></asp:TextBox>
                                                     </div>
                                                 </div>
-                                                <div class="cell-lg-4 pl-2-lg pr-2-lg">
+                                                <div class="cell-lg-3 pl-2-lg pr-2-lg">
+                                                    <div class="mt-2">
+                                                        <small class="fg-red fw-600">Giá bán</small>
+                                                        <asp:TextBox ID="txt_giaban" onfocus="AutoSelect(this)" oninput="format_sotien_new(this)" runat="server" data-role="input"></asp:TextBox>
+                                                    </div>
+                                                </div>
+                                                <div class="cell-lg-3 pl-2-lg pr-2-lg">
                                                     <div class="mt-2">
                                                         <small class="fg-red fw-600">Số seri</small>
                                                         <div class="d-flex">
@@ -520,13 +526,13 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div class="cell-lg-3 pl-2-lg pr-2-lg">
+                                                <div class="cell-lg-2 pl-2-lg pr-2-lg">
                                                     <div class="mt-2">
-                                                        <small class="fg-red fw-600">Bảo hành / tháng</small>
+                                                        <small class="fg-red fw-600">Bảo hành</small>
                                                         <asp:TextBox ID="txt_baohanh_thang" runat="server" data-role="input"></asp:TextBox>
                                                     </div>
                                                 </div>
-                                                <div class="cell-lg-5 pl-2-lg pr-2-lg">
+                                                <div class="cell-lg-4 pl-2-lg pr-2-lg">
                                                     <div class="mt-2">
                                                         <small class="fg-red fw-600">Diễn giải</small>
                                                         <asp:TextBox ID="txt_diengiai" runat="server" data-role="input"></asp:TextBox>

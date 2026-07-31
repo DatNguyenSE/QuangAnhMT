@@ -2524,9 +2524,19 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
         {
             var product = db.KhoSanPham_tbs
                 .Where(p => p.id == productId)
-                .Select(p => p.so_seri)
+                .Select(p => new { p.so_seri, p.giabanle })
                 .FirstOrDefault();
-            txt_so_seri.Text = product ?? "";
+            
+            if (product != null)
+            {
+                txt_so_seri.Text = product.so_seri ?? "";
+                txt_giaban.Text = string.Format("{0:N0}", product.giabanle ?? 0).Replace(",", ".");
+            }
+            else
+            {
+                txt_so_seri.Text = "";
+                txt_giaban.Text = "0";
+            }
         }
         up_add.Update();
     }
@@ -2599,14 +2609,11 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                 //    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Trong kho chỉ còn " + _soluong_hientai + " sản phẩm này.", "false", "false", "OK", "alert", ""), true);
                 //    return;
                 //}
-                var q_chitiet = db.BaoGia_ChiTiet_tbs.FirstOrDefault(p => p.id_baogia == _idbg);
+                var q_chitiet = db.BaoGia_ChiTiet_tbs.FirstOrDefault(p => p.id_baogia == _idbg && p.id_sanpham == _idsp);
                 if (q_chitiet != null)
                 {
-                    if (q_chitiet.id_sanpham == _idsp)
-                    {
-                        ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Sản phẩm này đã được thêm vào bào giá này. Bạn có thể xóa hoặc cập nhật số lượng nếu muốn.", "false", "false", "OK", "alert", ""), true);
-                        return;
-                    }
+                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Sản phẩm này đã được thêm vào báo giá này. Bạn có thể xóa hoặc cập nhật số lượng nếu muốn.", "false", "false", "OK", "alert", ""), true);
+                    return;
                 }
 
 
@@ -2615,8 +2622,11 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                 _ob.id_baogia = _idbg;
                 _ob.id_sanpham = _idsp;
                 _ob.soluong = _soluong_xuat;
-                _ob.giaban_taithoidiemnay = q_sp.giabanle;
-                _ob.thanhtien = _soluong_xuat * q_sp.giabanle;
+                
+                long _giaban_nhap = Number_cl.Check_Int64(txt_giaban.Text.Replace(".", "").Replace(",", ""));
+                
+                _ob.giaban_taithoidiemnay = _giaban_nhap;
+                _ob.thanhtien = _soluong_xuat * _giaban_nhap;
                 _ob.giamgia_phantram = _giamgia_phantram;
 
                 decimal _giamgia_he_so = _giamgia_phantram / 100;
@@ -2639,6 +2649,7 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                 txt_so_seri.Text = "";
                 txt_baohanh_thang.Text = "";
                 txt_diengiai.Text = "";
+                txt_giaban.Text = "0";
                 #endregion
 
                 update_baogia(db, _idbg);

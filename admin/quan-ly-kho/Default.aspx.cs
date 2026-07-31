@@ -87,7 +87,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
         try
         {
             ResetButtonCss();//button chọn ngày nhanh
-            txt_show.Text = "30";
+            txt_show.Text = "100";
             ViewState["current_page_qlkho"] = "1";
 
 
@@ -317,7 +317,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                     .ThenBy(p => p.Nhom)
                     .ThenBy(p => p.TenSP);
                 // Xử lý số record mỗi trang
-                int show = Number_cl.Check_Int(txt_show.Text.Trim()); if (show <= 0) show = 30;
+                int show = Number_cl.Check_Int(txt_show.Text.Trim()); if (show <= 0) show = 100;
                 //xử lý trang hiện tại. Đảm bảo current_page không nhỏ hơn 1 và không lớn hơn total_page
                 int current_page = int.Parse(ViewState["current_page_qlkho"].ToString()); int total_page = number_of_page_class.return_total_page(_Tong_Record, show); if (total_page == 0) total_page = 1; if (current_page > total_page) current_page = total_page; if (current_page < 1) current_page = 1;
                 ViewState["total_page"] = total_page;

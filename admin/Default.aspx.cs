@@ -19,7 +19,7 @@ public partial class admin_Default : System.Web.UI.Page
             {
                 using (dbDataContext db = new dbDataContext())
                 {
-                    DateTime _dt = DateTime.Now;
+                    DateTime _dt = DateTime.Now.AddMinutes(5);
 
                     #region chấm công
                     string _tk = ViewState["taikhoan"].ToString();
@@ -137,7 +137,7 @@ public partial class admin_Default : System.Web.UI.Page
         {
             Button button = (Button)sender;
             string tk = button.CommandArgument;
-            var q = db.ChamCong_tbs.FirstOrDefault(p => p.taikhoan == tk && p.ngaychamcong.Value.Date == DateTime.Now.Date);
+            var q = db.ChamCong_tbs.FirstOrDefault(p => p.taikhoan == tk && p.ngaychamcong.Value.Date == DateTime.Now.AddMinutes(5).Date);
             if (q != null)
             {
                 q.xacnhan_vaoca = true;
@@ -168,7 +168,7 @@ public partial class admin_Default : System.Web.UI.Page
             using (dbDataContext db = new dbDataContext())
             {
                 #region liên quan tới chấm công
-                var q_check = db.ChamCong_tbs.FirstOrDefault(p => p.taikhoan == ViewState["taikhoan"].ToString() && p.ngaychamcong.Value.Date == DateTime.Now.Date);
+                var q_check = db.ChamCong_tbs.FirstOrDefault(p => p.taikhoan == ViewState["taikhoan"].ToString() && p.ngaychamcong.Value.Date == DateTime.Now.AddMinutes(5).Date);
                 if (q_check != null)
                 {
                     if (q_check.baoraca == null)//đã báo vào nhưng chưa báo ra
@@ -205,7 +205,7 @@ public partial class admin_Default : System.Web.UI.Page
                 //hiển thị ds hôm nay
                 var q_homnay = from cc in db.ChamCong_tbs
                                join tk in db.taikhoan_tbs on cc.taikhoan equals tk.taikhoan
-                               where cc.ngaychamcong.Value.Date == DateTime.Now.Date
+                               where cc.ngaychamcong.Value.Date == DateTime.Now.AddMinutes(5).Date
                                select new
                                {
                                    cc.taikhoan,
