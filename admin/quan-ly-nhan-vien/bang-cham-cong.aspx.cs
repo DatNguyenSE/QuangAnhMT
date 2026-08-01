@@ -26,12 +26,160 @@ public partial class admin_quan_ly_nhan_vien_bang_cham_cong : System.Web.UI.Page
 
         using (dbDataContext db = new dbDataContext())
         {
+            bool canEditAttendance = check_login_cl.CheckQuyen(db, _tk, "15");
+            btn_edit_attendance.Visible = canEditAttendance;
 
-            DateTime _dautuan = dt_cl.return_ngaydauthang(DateTime.Now.Month.ToString(), DateTime.Now.Year.ToString());
-            TextBox3.Text = _dautuan.ToShortDateString();
-            DateTime _cuoituan = dt_cl.return_ngaycuoithang(DateTime.Now.Month.ToString(), DateTime.Now.Year.ToString());
-            Label24.Text = "Từ " + _dautuan.ToShortDateString() + " đến " + _cuoituan.ToShortDateString();
-            main_bangdiemdanh(db, _dautuan, _cuoituan);
+            if (!IsPostBack)
+            {
+                DateTime _dautuan = dt_cl.return_ngaydauthang(DateTime.Now.Month.ToString(), DateTime.Now.Year.ToString());
+                TextBox3.Text = _dautuan.ToShortDateString();
+                txt_edit_attendance_date.Text = _dautuan.ToString("dd/MM/yyyy");
+                LoadAttendanceAccounts(db);
+            }
+
+            DateTime _ngayHienThi;
+            if (!DateTime.TryParse(TextBox3.Text, out _ngayHienThi))
+                _ngayHienThi = DateTime.Now;
+
+            DateTime _dautuanHienThi = dt_cl.return_ngaydauthang(_ngayHienThi.Month.ToString(), _ngayHienThi.Year.ToString());
+            DateTime _cuoituanHienThi = dt_cl.return_ngaycuoithang(_ngayHienThi.Month.ToString(), _ngayHienThi.Year.ToString());
+            Label24.Text = "Từ " + _dautuanHienThi.ToShortDateString() + " đến " + _cuoituanHienThi.ToShortDateString();
+            main_bangdiemdanh(db, _dautuanHienThi, _cuoituanHienThi);
+        }
+    }
+
+    private void LoadAttendanceAccounts(dbDataContext db)
+    {
+        ddl_edit_attendance_account.DataSource = db.taikhoan_tbs
+            .Where(p => p.phanloai == "Nhân viên" || p.phanloai == "Quản trị")
+            .Select(p => new { p.taikhoan, p.hoten })
+            .OrderBy(p => p.hoten)
+            .ToList();
+        ddl_edit_attendance_account.DataTextField = "hoten";
+        ddl_edit_attendance_account.DataValueField = "taikhoan";
+        ddl_edit_attendance_account.DataBind();
+    }
+
+    private bool TryGetAttendanceDate(out DateTime attendanceDate)
+    {
+        return DateTime.TryParseExact(
+            txt_edit_attendance_date.Text.Trim(),
+            "dd/MM/yyyy",
+            System.Globalization.CultureInfo.InvariantCulture,
+            System.Globalization.DateTimeStyles.None,
+            out attendanceDate);
+    }
+
+    private void EnsureAttendanceEditPermission()
+    {
+        check_login_cl.check_login_admin("15", "15");
+    }
+
+    protected void btn_edit_attendance_Click(object sender, EventArgs e)
+    {
+        EnsureAttendanceEditPermission();
+        pn_edit_attendance.Visible = !pn_edit_attendance.Visible;
+        lbl_edit_attendance_message.Text = "";
+    }
+
+    protected void btn_add_attendance_Click(object sender, EventArgs e)
+    {
+        EnsureAttendanceEditPermission();
+        DateTime attendanceDate;
+        if (!TryGetAttendanceDate(out attendanceDate))
+        {
+            lbl_edit_attendance_message.Text = "Ngày chấm công không hợp lệ. Vui lòng nhập theo định dạng dd/MM/yyyy.";
+            lbl_edit_attendance_message.CssClass = "d-block mt-1 fg-red";
+            return;
+        }
+
+        string account = ddl_edit_attendance_account.SelectedValue;
+        using (dbDataContext db = new dbDataContext())
+        {
+            var employee = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == account);
+            if (employee == null)
+            {
+                SetAttendanceEditMessage("Không tìm thấy tài khoản cần chấm công.", false);
+                return;
+            }
+
+            bool alreadyExists = db.ChamCong_tbs.Any(p => p.taikhoan == account
+                && p.ngaychamcong.HasValue
+                && p.ngaychamcong.Value.Date == attendanceDate.Date);
+            if (alreadyExists)
+            {
+                SetAttendanceEditMessage("Tài khoản này đã có ngày chấm công được chọn.", false);
+                return;
+            }
+
+            long currentBasicSalary = employee.LuongCoBan ?? 0;
+            ChamCong_tb attendance = new ChamCong_tb
+            {
+                taikhoan = account,
+                ngaychamcong = attendanceDate.Date.AddHours(8),
+                baoraca = attendanceDate.Date.AddHours(17),
+                LCB_hientai = currentBasicSalary,
+                LuongNgay_ChamCong = currentBasicSalary / 26,
+                xacnhan_vaoca = true
+            };
+            db.ChamCong_tbs.InsertOnSubmit(attendance);
+            db.SubmitChanges();
+            SetAttendanceEditMessage("Đã thêm ngày chấm công. Tiền đã được tính lại theo ngày công mới.", true);
+        }
+
+        RefreshAttendanceTable();
+    }
+
+    protected void btn_delete_attendance_Click(object sender, EventArgs e)
+    {
+        EnsureAttendanceEditPermission();
+        DateTime attendanceDate;
+        if (!TryGetAttendanceDate(out attendanceDate))
+        {
+            lbl_edit_attendance_message.Text = "Ngày chấm công không hợp lệ. Vui lòng nhập theo định dạng dd/MM/yyyy.";
+            lbl_edit_attendance_message.CssClass = "d-block mt-1 fg-red";
+            return;
+        }
+
+        string account = ddl_edit_attendance_account.SelectedValue;
+        using (dbDataContext db = new dbDataContext())
+        {
+            var attendanceRecords = db.ChamCong_tbs
+                .Where(p => p.taikhoan == account
+                    && p.ngaychamcong.HasValue
+                    && p.ngaychamcong.Value.Date == attendanceDate.Date)
+                .ToList();
+            if (attendanceRecords.Count == 0)
+            {
+                SetAttendanceEditMessage("Không có ngày chấm công nào để xóa.", false);
+                return;
+            }
+
+            db.ChamCong_tbs.DeleteAllOnSubmit(attendanceRecords);
+            db.SubmitChanges();
+            SetAttendanceEditMessage("Đã xóa ngày chấm công. Tiền đã được tính lại theo ngày công còn lại.", true);
+        }
+
+        RefreshAttendanceTable();
+    }
+
+    private void SetAttendanceEditMessage(string message, bool success)
+    {
+        lbl_edit_attendance_message.Text = message;
+        lbl_edit_attendance_message.CssClass = success ? "d-block mt-1 fg-green" : "d-block mt-1 fg-red";
+    }
+
+    private void RefreshAttendanceTable()
+    {
+        using (dbDataContext db = new dbDataContext())
+        {
+            DateTime displayDate;
+            if (!DateTime.TryParse(TextBox3.Text, out displayDate))
+                displayDate = DateTime.Now;
+            DateTime startDate = dt_cl.return_ngaydauthang(displayDate.Month.ToString(), displayDate.Year.ToString());
+            DateTime endDate = dt_cl.return_ngaycuoithang(displayDate.Month.ToString(), displayDate.Year.ToString());
+            Label24.Text = "Từ " + startDate.ToShortDateString() + " đến " + endDate.ToShortDateString();
+            main_bangdiemdanh(db, startDate, endDate);
         }
     }
     protected void TextBox3_TextChanged(object sender, EventArgs e)//chọn ngày ngẫu nhiên sau đó tính ngày đầu tuần và ngày cuối tuần

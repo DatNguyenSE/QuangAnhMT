@@ -6,6 +6,12 @@
             font-size: 15px !important;
         }
 
+        .attendance-edit-panel {
+            border: 1px solid #d8e0e8;
+            border-radius: 4px;
+            background: #f8fafc;
+        }
+
             .bcorn-fix-title-table th:nth-child(1),
             .bcorn-fix-title-table td:nth-child(1),
             .bcorn-fix-title-table th:nth-child(2),
@@ -33,6 +39,35 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="mt-2 mb-3">
+                        <asp:LinkButton ID="btn_edit_attendance" runat="server" CssClass="button warning" OnClick="btn_edit_attendance_Click" Visible="false">
+                            <span class="mif-pencil mr-1"></span> Chỉnh sửa chấm công
+                        </asp:LinkButton>
+                    </div>
+
+                    <asp:Panel ID="pn_edit_attendance" runat="server" CssClass="attendance-edit-panel p-3 mb-3" Visible="false">
+                        <div class="text-bold mb-2">Chỉnh sửa ngày chấm công</div>
+                        <div class="row flex-align-end">
+                            <div class="cell-lg-4 cell-md-5 mb-2">
+                                <label class="fw-600">Tài khoản</label>
+                                <asp:DropDownList ID="ddl_edit_attendance_account" runat="server" CssClass="w-100"></asp:DropDownList>
+                            </div>
+                            <div class="cell-lg-3 cell-md-4 mb-2">
+                                <label class="fw-600">Ngày chấm công</label>
+                                <asp:TextBox ID="txt_edit_attendance_date" runat="server" MaxLength="10" data-role="calendar-picker" data-outside="true" data-dialog-mode="true" data-week-start="1" data-locale="vi-VN" data-format="DD/MM/YYYY" data-input-format="DD/MM/YYYY" data-clear-button="false"></asp:TextBox>
+                            </div>
+                            <div class="cell-lg-5 cell-md-3 mb-2">
+                                <asp:LinkButton ID="btn_add_attendance" runat="server" CssClass="button success mr-1" OnClick="btn_add_attendance_Click" OnClientClick="return confirm('Thêm ngày chấm công cho tài khoản này?');">
+                                    <span class="mif-plus mr-1"></span> Thêm ngày công
+                                </asp:LinkButton>
+                                <asp:LinkButton ID="btn_delete_attendance" runat="server" CssClass="button alert" OnClick="btn_delete_attendance_Click" OnClientClick="return confirm('Xóa ngày chấm công của tài khoản này? Tiền sẽ được tính lại.');">
+                                    <span class="mif-bin mr-1"></span> Xóa ngày công
+                                </asp:LinkButton>
+                            </div>
+                        </div>
+                        <asp:Label ID="lbl_edit_attendance_message" runat="server" CssClass="d-block mt-1"></asp:Label>
+                    </asp:Panel>
                 </div>
 
 
