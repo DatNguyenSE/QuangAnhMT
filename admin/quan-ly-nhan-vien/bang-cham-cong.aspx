@@ -22,7 +22,7 @@
             }
     </style>
 </asp:Content>
-<asp:Content ID="Content2" ContentPlaceHolderID="main" runat="Server">
+    <asp:Content ID="Content2" ContentPlaceHolderID="main" runat="Server">
     <asp:UpdatePanel ID="UpdatePanel2" runat="server" UpdateMode="Conditional">
         <ContentTemplate>
             <div class="p-3">
@@ -44,7 +44,23 @@
                         <asp:LinkButton ID="btn_edit_attendance" runat="server" CssClass="button warning" OnClick="btn_edit_attendance_Click" Visible="false">
                             <span class="mif-pencil mr-1"></span> Chỉnh sửa chấm công
                         </asp:LinkButton>
+                        <asp:LinkButton ID="btn_export_attendance" runat="server" CssClass="button info ml-1" OnClick="btn_export_attendance_Click" Visible="false">
+                            <span class="mif-file-excel mr-1"></span> Xuất Excel chấm công
+                        </asp:LinkButton>
                     </div>
+
+                    <asp:Panel ID="pn_export_attendance" runat="server" CssClass="attendance-edit-panel p-3 mb-3" Visible="false">
+                        <div class="text-bold mb-2">Chọn nhân viên cần xuất file</div>
+                        <div class="d-flex flex-align-end">
+                            <div style="min-width: 280px; max-width: 420px; width: 100%;" class="mr-2">
+                                <label class="fw-600">Nhân viên</label>
+                                <asp:DropDownList ID="ddl_export_attendance_account" runat="server" CssClass="w-100"></asp:DropDownList>
+                            </div>
+                            <asp:LinkButton ID="btn_export_attendance_confirm" runat="server" CssClass="button info" OnClick="btn_export_attendance_confirm_Click">
+                                <span class="mif-download mr-1"></span> Tải file Excel
+                            </asp:LinkButton>
+                        </div>
+                    </asp:Panel>
 
                     <asp:Panel ID="pn_edit_attendance" runat="server" CssClass="attendance-edit-panel p-3 mb-3" Visible="false">
                         <div class="text-bold mb-2">Chỉnh sửa ngày chấm công</div>

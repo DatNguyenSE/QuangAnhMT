@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 using System.Text;
 using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
+using NPOI.SS.UserModel;
+using NPOI.XSSF.UserModel;
 
 public partial class admin_quan_ly_nhan_vien_bang_cham_cong : System.Web.UI.Page
 {
@@ -28,6 +31,9 @@ public partial class admin_quan_ly_nhan_vien_bang_cham_cong : System.Web.UI.Page
         {
             bool canEditAttendance = check_login_cl.CheckQuyen(db, _tk, "15");
             btn_edit_attendance.Visible = canEditAttendance;
+            btn_export_attendance.Visible = canEditAttendance;
+            if (canEditAttendance)
+                ScriptManager.GetCurrent(Page).RegisterPostBackControl(btn_export_attendance_confirm);
 
             if (!IsPostBack)
             {
@@ -50,14 +56,19 @@ public partial class admin_quan_ly_nhan_vien_bang_cham_cong : System.Web.UI.Page
 
     private void LoadAttendanceAccounts(dbDataContext db)
     {
-        ddl_edit_attendance_account.DataSource = db.taikhoan_tbs
+        var accounts = db.taikhoan_tbs
             .Where(p => p.phanloai == "Nhân viên" || p.phanloai == "Quản trị")
             .Select(p => new { p.taikhoan, p.hoten })
             .OrderBy(p => p.hoten)
             .ToList();
+        ddl_edit_attendance_account.DataSource = accounts;
         ddl_edit_attendance_account.DataTextField = "hoten";
         ddl_edit_attendance_account.DataValueField = "taikhoan";
         ddl_edit_attendance_account.DataBind();
+        ddl_export_attendance_account.DataSource = accounts;
+        ddl_export_attendance_account.DataTextField = "hoten";
+        ddl_export_attendance_account.DataValueField = "taikhoan";
+        ddl_export_attendance_account.DataBind();
     }
 
     private bool TryGetAttendanceDate(out DateTime attendanceDate)
@@ -161,6 +172,140 @@ public partial class admin_quan_ly_nhan_vien_bang_cham_cong : System.Web.UI.Page
         }
 
         RefreshAttendanceTable();
+    }
+
+    protected void btn_export_attendance_Click(object sender, EventArgs e)
+    {
+        EnsureAttendanceEditPermission();
+        pn_export_attendance.Visible = !pn_export_attendance.Visible;
+    }
+
+    protected void btn_export_attendance_confirm_Click(object sender, EventArgs e)
+    {
+        EnsureAttendanceEditPermission();
+
+        string account = ddl_export_attendance_account.SelectedValue;
+        DateTime displayDate;
+        if (!DateTime.TryParse(TextBox3.Text, out displayDate))
+            displayDate = DateTime.Now;
+
+        DateTime startDate = dt_cl.return_ngaydauthang(displayDate.Month.ToString(), displayDate.Year.ToString()).Date;
+        DateTime endDate = dt_cl.return_ngaycuoithang(displayDate.Month.ToString(), displayDate.Year.ToString()).Date;
+
+        using (dbDataContext db = new dbDataContext())
+        {
+            var employee = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == account);
+            if (employee == null)
+            {
+                SetAttendanceEditMessage("Không tìm thấy tài khoản cần xuất dữ liệu.", false);
+                return;
+            }
+
+            var attendanceRecords = db.ChamCong_tbs
+                .Where(p => p.taikhoan == account
+                    && p.ngaychamcong.HasValue
+                    && p.ngaychamcong.Value.Date >= startDate
+                    && p.ngaychamcong.Value.Date <= endDate)
+                .OrderBy(p => p.ngaychamcong)
+                .ToList();
+
+            long basicSalary = attendanceRecords.Sum(p => p.LuongNgay_ChamCong ?? 0);
+            int workingDays = attendanceRecords
+                .Where(p => p.ngaychamcong.HasValue)
+                .Select(p => p.ngaychamcong.Value.Date)
+                .Distinct()
+                .Count();
+            decimal allowanceRatio = workingDays / 26m;
+            long travelAllowance = (long)Math.Round((employee.PhuCap_Xangxe ?? 0) * allowanceRatio, MidpointRounding.AwayFromZero);
+            long mealAllowance = (long)Math.Round((employee.PhuCap_AnUong ?? 0) * allowanceRatio, MidpointRounding.AwayFromZero);
+            long phoneAllowance = (long)Math.Round((employee.PhuCap_DienThoai ?? 0) * allowanceRatio, MidpointRounding.AwayFromZero);
+            long responsibilityAllowance = (long)Math.Round((employee.PhuCap_TrachNhiem ?? 0) * allowanceRatio, MidpointRounding.AwayFromZero);
+
+            XSSFWorkbook workbook = new XSSFWorkbook();
+            ISheet sheet = workbook.CreateSheet("Chấm công");
+            ICellStyle titleStyle = workbook.CreateCellStyle();
+            IFont titleFont = workbook.CreateFont();
+            titleFont.IsBold = true;
+            titleStyle.SetFont(titleFont);
+
+            int rowIndex = 0;
+            IRow employeeRow = sheet.CreateRow(rowIndex++);
+            employeeRow.CreateCell(0).SetCellValue("Nhân viên");
+            employeeRow.CreateCell(1).SetCellValue((employee.hoten ?? "") + " (" + employee.taikhoan + ")");
+            employeeRow.GetCell(0).CellStyle = titleStyle;
+            employeeRow.GetCell(1).CellStyle = titleStyle;
+
+            IRow periodRow = sheet.CreateRow(rowIndex++);
+            periodRow.CreateCell(0).SetCellValue("Kỳ chấm công");
+            periodRow.CreateCell(1).SetCellValue(startDate.ToString("dd/MM/yyyy") + " - " + endDate.ToString("dd/MM/yyyy"));
+            periodRow.GetCell(0).CellStyle = titleStyle;
+            periodRow.GetCell(1).CellStyle = titleStyle;
+            rowIndex++;
+
+            IRow summaryTitle = sheet.CreateRow(rowIndex++);
+            summaryTitle.CreateCell(0).SetCellValue("TỔNG QUÁT THÁNG");
+            summaryTitle.GetCell(0).CellStyle = titleStyle;
+            IRow summaryHeader = sheet.CreateRow(rowIndex++);
+            string[] summaryHeaders = { "Ngày công", "Lương ngày công", "Xăng xe", "Ăn trưa", "Điện thoại", "Trách nhiệm", "Tổng thu nhập cố định" };
+            for (int i = 0; i < summaryHeaders.Length; i++)
+            {
+                summaryHeader.CreateCell(i).SetCellValue(summaryHeaders[i]);
+                summaryHeader.GetCell(i).CellStyle = titleStyle;
+            }
+            long fixedIncome = basicSalary + travelAllowance + mealAllowance + phoneAllowance + responsibilityAllowance;
+            IRow summaryRow = sheet.CreateRow(rowIndex++);
+            long[] summaryValues = { workingDays, basicSalary, travelAllowance, mealAllowance, phoneAllowance, responsibilityAllowance, fixedIncome };
+            for (int i = 0; i < summaryValues.Length; i++)
+                summaryRow.CreateCell(i).SetCellValue(summaryValues[i]);
+            rowIndex++;
+
+            IRow calendarTitle = sheet.CreateRow(rowIndex++);
+            calendarTitle.CreateCell(0).SetCellValue("THEO DÕI NGÀY LÀM VIỆC");
+            calendarTitle.GetCell(0).CellStyle = titleStyle;
+            IRow calendarHeader = sheet.CreateRow(rowIndex++);
+            calendarHeader.CreateCell(0).SetCellValue("Ngày trong tháng");
+            calendarHeader.GetCell(0).CellStyle = titleStyle;
+            int calendarColumn = 1;
+            for (DateTime currentDate = startDate; currentDate <= endDate; currentDate = currentDate.AddDays(1))
+            {
+                calendarHeader.CreateCell(calendarColumn).SetCellValue(currentDate.ToString("dd/MM"));
+                calendarHeader.GetCell(calendarColumn).CellStyle = titleStyle;
+                calendarColumn++;
+            }
+
+            IRow calendarRow = sheet.CreateRow(rowIndex++);
+            calendarRow.CreateCell(0).SetCellValue("Chấm công");
+            calendarRow.GetCell(0).CellStyle = titleStyle;
+            calendarColumn = 1;
+            for (DateTime currentDate = startDate; currentDate <= endDate; currentDate = currentDate.AddDays(1))
+            {
+                var attendance = attendanceRecords.FirstOrDefault(p => p.ngaychamcong.HasValue && p.ngaychamcong.Value.Date == currentDate.Date);
+                string attendanceText = "";
+                if (attendance != null)
+                {
+                    string startTime = attendance.ngaychamcong.Value.ToString("HH'h'mm");
+                    string endTime = attendance.baoraca.HasValue ? attendance.baoraca.Value.ToString("HH'h'mm") : "";
+                    attendanceText = "Có [" + startTime + "]" + (string.IsNullOrEmpty(endTime) ? "" : "-[" + endTime + "]");
+                }
+                calendarRow.CreateCell(calendarColumn++).SetCellValue(attendanceText);
+            }
+            rowIndex++;
+
+            for (int i = 0; i < calendarColumn; i++)
+                sheet.AutoSizeColumn(i);
+
+            using (MemoryStream stream = new MemoryStream())
+            {
+                workbook.Write(stream);
+                Response.Clear();
+                Response.Buffer = true;
+                Response.ContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                Response.AddHeader("Content-Disposition", "attachment;filename=ChamCong_" + account + "_" + startDate.ToString("yyyyMM") + ".xlsx");
+                Response.BinaryWrite(stream.ToArray());
+                Response.Flush();
+                HttpContext.Current.ApplicationInstance.CompleteRequest();
+            }
+        }
     }
 
     private void SetAttendanceEditMessage(string message, bool success)
