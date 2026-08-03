@@ -73,7 +73,15 @@
                                 <label class="fw-600">Ngày chấm công</label>
                                 <asp:TextBox ID="txt_edit_attendance_date" runat="server" MaxLength="10" data-role="calendar-picker" data-outside="true" data-dialog-mode="true" data-week-start="1" data-locale="vi-VN" data-format="DD/MM/YYYY" data-input-format="DD/MM/YYYY" data-clear-button="false"></asp:TextBox>
                             </div>
-                            <div class="cell-lg-5 cell-md-3 mb-2">
+                            <div class="cell-lg-2 cell-md-3 mb-2">
+                                <label class="fw-600">Giờ vào ca</label>
+                                <asp:TextBox ID="txt_edit_attendance_start_time" runat="server" TextMode="Time" CssClass="w-100"></asp:TextBox>
+                            </div>
+                            <div class="cell-lg-2 cell-md-3 mb-2">
+                                <label class="fw-600">Giờ ra ca</label>
+                                <asp:TextBox ID="txt_edit_attendance_end_time" runat="server" TextMode="Time" CssClass="w-100"></asp:TextBox>
+                            </div>
+                            <div class="cell-lg-3 cell-md-12 mb-2">
                                 <asp:LinkButton ID="btn_add_attendance" runat="server" CssClass="button success mr-1" OnClick="btn_add_attendance_Click" OnClientClick="return confirm('Thêm ngày chấm công cho tài khoản này?');">
                                     <span class="mif-plus mr-1"></span> Thêm ngày công
                                 </asp:LinkButton>

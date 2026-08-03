@@ -40,6 +40,7 @@ public partial class admin_quan_ly_nhan_vien_bang_cham_cong : System.Web.UI.Page
                 DateTime _dautuan = dt_cl.return_ngaydauthang(DateTime.Now.Month.ToString(), DateTime.Now.Year.ToString());
                 TextBox3.Text = _dautuan.ToShortDateString();
                 txt_edit_attendance_date.Text = _dautuan.ToString("dd/MM/yyyy");
+                SetDefaultAttendanceTimes();
                 LoadAttendanceAccounts(db);
             }
 
@@ -81,6 +82,24 @@ public partial class admin_quan_ly_nhan_vien_bang_cham_cong : System.Web.UI.Page
             out attendanceDate);
     }
 
+    private bool TryGetAttendanceTime(string value, out TimeSpan attendanceTime)
+    {
+        return TimeSpan.TryParseExact(
+            value.Trim(),
+            "hh\\:mm",
+            System.Globalization.CultureInfo.InvariantCulture,
+            System.Globalization.TimeSpanStyles.None,
+            out attendanceTime);
+    }
+
+    private void SetDefaultAttendanceTimes()
+    {
+        if (string.IsNullOrWhiteSpace(txt_edit_attendance_start_time.Text))
+            txt_edit_attendance_start_time.Text = "08:00";
+        if (string.IsNullOrWhiteSpace(txt_edit_attendance_end_time.Text))
+            txt_edit_attendance_end_time.Text = "17:00";
+    }
+
     private void EnsureAttendanceEditPermission()
     {
         check_login_cl.check_login_admin("15", "15");
@@ -89,6 +108,7 @@ public partial class admin_quan_ly_nhan_vien_bang_cham_cong : System.Web.UI.Page
     protected void btn_edit_attendance_Click(object sender, EventArgs e)
     {
         EnsureAttendanceEditPermission();
+        SetDefaultAttendanceTimes();
         pn_edit_attendance.Visible = !pn_edit_attendance.Visible;
         lbl_edit_attendance_message.Text = "";
     }
@@ -101,6 +121,15 @@ public partial class admin_quan_ly_nhan_vien_bang_cham_cong : System.Web.UI.Page
         {
             lbl_edit_attendance_message.Text = "Ngày chấm công không hợp lệ. Vui lòng nhập theo định dạng dd/MM/yyyy.";
             lbl_edit_attendance_message.CssClass = "d-block mt-1 fg-red";
+            return;
+        }
+
+        TimeSpan startTime;
+        TimeSpan endTime;
+        if (!TryGetAttendanceTime(txt_edit_attendance_start_time.Text, out startTime)
+            || !TryGetAttendanceTime(txt_edit_attendance_end_time.Text, out endTime))
+        {
+            SetAttendanceEditMessage("Giờ vào ca hoặc giờ ra ca không hợp lệ. Vui lòng nhập theo định dạng HH:mm.", false);
             return;
         }
 
@@ -127,8 +156,8 @@ public partial class admin_quan_ly_nhan_vien_bang_cham_cong : System.Web.UI.Page
             ChamCong_tb attendance = new ChamCong_tb
             {
                 taikhoan = account,
-                ngaychamcong = attendanceDate.Date.AddHours(8),
-                baoraca = attendanceDate.Date.AddHours(17),
+                ngaychamcong = attendanceDate.Date.Add(startTime),
+                baoraca = attendanceDate.Date.Add(endTime),
                 LCB_hientai = currentBasicSalary,
                 LuongNgay_ChamCong = currentBasicSalary / 26,
                 xacnhan_vaoca = true
