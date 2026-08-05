@@ -7,7 +7,7 @@ using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 using NPOI.SS.UserModel;
-using NPOI.XSSF.UserModel;
+using NPOI.HSSF.UserModel;
 
 public partial class admin_quan_ly_nhan_vien_bang_cham_cong : System.Web.UI.Page
 {
@@ -250,7 +250,8 @@ public partial class admin_quan_ly_nhan_vien_bang_cham_cong : System.Web.UI.Page
             long phoneAllowance = (long)Math.Round((employee.PhuCap_DienThoai ?? 0) * allowanceRatio, MidpointRounding.AwayFromZero);
             long responsibilityAllowance = (long)Math.Round((employee.PhuCap_TrachNhiem ?? 0) * allowanceRatio, MidpointRounding.AwayFromZero);
 
-            XSSFWorkbook workbook = new XSSFWorkbook();
+            // Dùng định dạng Excel 97-2003 để các máy/Excel đời cũ vẫn mở được.
+            HSSFWorkbook workbook = new HSSFWorkbook();
             ISheet sheet = workbook.CreateSheet("Chấm công");
             ICellStyle titleStyle = workbook.CreateCellStyle();
             IFont titleFont = workbook.CreateFont();
@@ -328,8 +329,8 @@ public partial class admin_quan_ly_nhan_vien_bang_cham_cong : System.Web.UI.Page
                 workbook.Write(stream);
                 Response.Clear();
                 Response.Buffer = true;
-                Response.ContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-                Response.AddHeader("Content-Disposition", "attachment;filename=ChamCong_" + account + "_" + startDate.ToString("yyyyMM") + ".xlsx");
+                Response.ContentType = "application/vnd.ms-excel";
+                Response.AddHeader("Content-Disposition", "attachment;filename=ChamCong_" + account + "_" + startDate.ToString("yyyyMM") + ".xls");
                 Response.BinaryWrite(stream.ToArray());
                 Response.Flush();
                 HttpContext.Current.ApplicationInstance.CompleteRequest();
