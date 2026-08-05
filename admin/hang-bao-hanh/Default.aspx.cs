@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
+using System.Web.Script.Serialization;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 using OfficeOpenXml;
@@ -194,6 +195,12 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
 
     protected void Page_Load(object sender, EventArgs e)
     {
+        if (Request.QueryString["action"] == "lookupWarrantyProduct")
+        {
+            HandleWarrantyProductLookup();
+            return;
+        }
+
         if (Request.QueryString["action"] == "importExcel")
         {
             HandleAjaxImport();
@@ -253,6 +260,60 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
             else
                 ViewState["id_to_home"] = null;
         }
+    }
+
+    private void HandleWarrantyProductLookup()
+    {
+        Response.Clear();
+        Response.ContentType = "application/json";
+
+        var result = new Dictionary<string, object>
+        {
+            { "success", false },
+            { "message", "Không tìm thấy sản phẩm trong kho." }
+        };
+
+        try
+        {
+            string barcode = (Request.QueryString["barcode"] ?? "").Trim();
+            if (string.IsNullOrEmpty(barcode))
+            {
+                result["message"] = "Barcode không có giá trị.";
+            }
+            else
+            {
+                using (dbDataContext db = new dbDataContext())
+                {
+                    var product = db.KhoSanPham_tbs.FirstOrDefault(p => p.so_seri == barcode);
+                    if (product != null)
+                    {
+                        string donViTinh = "";
+                        if (!string.IsNullOrEmpty(product.donvitinh))
+                        {
+                            var unit = db.DuLieuNguon_tbs.FirstOrDefault(p => p.id.ToString() == product.donvitinh);
+                            if (unit != null) donViTinh = unit.ten;
+                        }
+
+                        result["success"] = true;
+                        result["message"] = "Đã tìm thấy sản phẩm.";
+                        result["product"] = new
+                        {
+                            ten = product.ten ?? "",
+                            donvitinh = donViTinh,
+                            seri = product.so_seri ?? "",
+                            anh = product.anh ?? ""
+                        };
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            result["message"] = "Không thể tra cứu sản phẩm: " + ex.Message;
+        }
+
+        Response.Write(new JavaScriptSerializer().Serialize(result));
+        Response.End();
     }
     #region main - phân trang - tìm kiếm
 
@@ -615,6 +676,7 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
         txt_sl_chitiet.Text = "1";
         txt_sotien_baohanh1.Text = "0";
         txt_seri.Text = "";
+        txt_dvt.Text = "";
         txt_thoihan_baohanh.Text = "";
         txt_ghichu_sanpham.Text = "";
         ddl_huongxuly.SelectedIndex = 0;
@@ -733,7 +795,8 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
                 txt_name.Text = chitiet.ten;
                 txt_sl_chitiet.Text = chitiet.soluong != null ? chitiet.soluong.Value.ToString() : "1";
                 txt_sotien_baohanh1.Text = chitiet.sotien_baohanh != null ? chitiet.sotien_baohanh.Value.ToString("#,##0") : "0";
-                txt_seri.Text = chitiet.seri;
+                 txt_seri.Text = chitiet.seri;
+                 txt_dvt.Text = chitiet.donvitinh;
                 txt_thoihan_baohanh.Text = chitiet.thoi_han_baohanh;
                 txt_ghichu_sanpham.Text = chitiet.ghichu_sanpham;
                 
@@ -814,7 +877,7 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
             {
                 // Reset fields
                 hl_in_tem.Visible = false;
-                txt_name.Text = ""; txt_sl_chitiet.Text = "1"; txt_sotien_baohanh1.Text = "0"; txt_seri.Text = ""; txt_thoihan_baohanh.Text = ""; txt_ghichu_sanpham.Text = "";
+                txt_name.Text = ""; txt_sl_chitiet.Text = "1"; txt_sotien_baohanh1.Text = "0"; txt_seri.Text = ""; txt_dvt.Text = ""; txt_thoihan_baohanh.Text = ""; txt_ghichu_sanpham.Text = "";
                 txt_anh1.Text = ""; txt_anh2.Text = ""; txt_anh3.Text = ""; img_anh1.ImageUrl = "/uploads/images/no-image.png"; img_anh2.ImageUrl = "/uploads/images/no-image.png"; img_anh3.ImageUrl = "/uploads/images/no-image.png"; ddl_huongxuly.SelectedIndex = 0;
                 txt_noisua.Text = ""; txt_madoitac.Text = ""; txt_ngaymangsua.Text = ""; txt_slmangsua.Text = ""; txt_ngaysuave.Text = ""; txt_slsuave.Text = ""; txt_congnodoitac.Text = "0";
                 txt_sophieutra.Text = ""; txt_sltrakhach.Text = ""; txt_congnotrakhach.Text = "0"; ddl_trangthai_chitiet.SelectedIndex = 0; rd_trangthai_thanhtoan.SelectedIndex = 0; txt_ghichutrakhach.Text = ""; txt_ngaytrathucte.Text = "";
@@ -1154,8 +1217,9 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
                     q_chitiet.giamgia_thanhtien = (Int64)Math.Round(_giamgia_thanhtienDecimal, 0);
                     q_chitiet.TongSauGiam = q_chitiet.thanhtien - q_chitiet.giamgia_thanhtien;
                     
-                    q_chitiet.anh = string.Join(",", new[] { txt_anh1.Text.Trim(), txt_anh2.Text.Trim(), txt_anh3.Text.Trim() }.Where(s => !string.IsNullOrEmpty(s)));
-                    q_chitiet.seri = txt_seri.Text.Trim();
+                     q_chitiet.anh = string.Join(",", new[] { txt_anh1.Text.Trim(), txt_anh2.Text.Trim(), txt_anh3.Text.Trim() }.Where(s => !string.IsNullOrEmpty(s)));
+                     q_chitiet.seri = txt_seri.Text.Trim();
+                     q_chitiet.donvitinh = txt_dvt.Text.Trim();
                     q_chitiet.thoi_han_baohanh = txt_thoihan_baohanh.Text.Trim();
                     q_chitiet.ghichu_sanpham = txt_ghichu_sanpham.Text.Trim();
                     q_chitiet.huong_xuly = ddl_huongxuly.SelectedValue;

@@ -202,11 +202,12 @@
                                                 <div class="row">
                                                     <div class="cell-12 mt-2">
                                                         <small class="fg-red fw-600">Chọn từ kho</small>
-                                                        <div class="d-flex">
-                                                            <asp:DropDownList ID="DropDownList1" runat="server" CssClass="select2-dropdown"></asp:DropDownList>
-                                                            <asp:Button ID="but_check_sp" OnClick="DropDownList1_SelectedIndexChanged" runat="server" Text="Check" CssClass="button" />
-                                                        </div>
-                                                    </div>
+                                                         <div class="d-flex">
+                                                             <asp:DropDownList ID="DropDownList1" runat="server" CssClass="select2-dropdown"></asp:DropDownList>
+                                                             <asp:Button ID="but_check_sp" OnClick="DropDownList1_SelectedIndexChanged" runat="server" Text="Check" CssClass="button" />
+                                                             <button type="button" class="button info" onclick="openWarrantyProductScanner()" title="Quét barcode theo số seri"><span class="mif-camera"></span> Quét barcode</button>
+                                                         </div>
+                                                     </div>
                                                     <div class="cell-lg-12 mt-2">
                                                         <small class="fg-red fw-600">Tên sản phẩm</small>
                                                         <asp:TextBox ID="txt_name" runat="server" data-role="input" MaxLength="100"></asp:TextBox>
@@ -1042,6 +1043,19 @@
             <div id="warrantyCameraStatus" class="mt-3 text-muted">Đưa một mã barcode vào gần khung xanh, để phần vạch chiếm phần lớn khung hình.</div>
         </div>
     </div>
+    <div id="warrantyProductCameraModal" style="display:none; position:fixed; inset:0; z-index:1070; background:rgba(15,23,42,.78);">
+        <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:min(92vw,520px); background:#fff; border-radius:16px; padding:20px; box-shadow:0 24px 70px rgba(0,0,0,.3);">
+            <div class="d-flex flex-justify-between flex-align-center mb-3">
+                <div class="text-bold text-upper">Quét barcode sản phẩm</div>
+                <button type="button" class="button alert small" onclick="closeWarrantyProductScanner()"><span class="mif-cross"></span></button>
+            </div>
+            <div style="position:relative; overflow:hidden; background:#0f172a; border-radius:10px; aspect-ratio:4/3;">
+                <video id="warrantyProductCameraVideo" autoplay muted playsinline style="width:100%; height:100%; object-fit:cover;"></video>
+                <div style="position:absolute; left:8%; right:8%; top:30%; height:40%; border:2px solid #22c55e; border-radius:8px; box-shadow:0 0 0 999px rgba(15,23,42,.2);"></div>
+            </div>
+            <div id="warrantyProductCameraStatus" class="mt-3 text-muted">Đưa mã seri vào gần khung xanh để quét.</div>
+        </div>
+    </div>
     <script>
         function uploadFile(fileInput, messageId, previewId, hiddenInputId) {
             var messageDiv = document.getElementById(messageId);
@@ -1208,6 +1222,183 @@
                     warrantyCameraActive = true;
                     status.innerText = 'Đưa một mã vạch vào gần khung xanh, để phần vạch chiếm phần lớn khung hình...';
                     detectWarrantyBarcode(video, status);
+                }).catch(function () {
+                    status.innerText = 'Không thể mở camera. Hãy cấp quyền camera cho trang web.';
+                });
+            };
+        })();
+    </script>
+    <script type="text/javascript">
+        (function () {
+            var productCameraStream = null;
+            var productCameraDetector = null;
+            var productCameraReader = null;
+            var productCameraControls = null;
+            var productCameraActive = false;
+
+            function stopProductCamera() {
+                productCameraActive = false;
+                if (productCameraControls && productCameraControls.stop) {
+                    productCameraControls.stop();
+                    productCameraControls = null;
+                }
+                productCameraReader = null;
+                productCameraDetector = null;
+                if (productCameraStream) {
+                    productCameraStream.getTracks().forEach(function (track) { track.stop(); });
+                    productCameraStream = null;
+                }
+                var video = document.getElementById('warrantyProductCameraVideo');
+                if (video) video.srcObject = null;
+            }
+
+            window.closeWarrantyProductScanner = function () {
+                stopProductCamera();
+                var modal = document.getElementById('warrantyProductCameraModal');
+                if (modal) modal.style.display = 'none';
+            };
+
+            function showProductLookupMessage(message) {
+                if (window.Metro && Metro.dialog) {
+                    Metro.dialog.create({
+                        title: 'Thông báo',
+                        content: '<div>' + message + '</div>',
+                        closeButton: true,
+                        overlayClickClose: true,
+                        actions: [{ caption: 'OK', cls: 'js-dialog-close alert' }]
+                    });
+                } else {
+                    window.alert(message);
+                }
+            }
+
+            function fillWarrantyProduct(product) {
+                var name = document.getElementById('<%= txt_name.ClientID %>');
+                var unit = document.getElementById('<%= txt_dvt.ClientID %>');
+                var serial = document.getElementById('<%= txt_seri.ClientID %>');
+                var imageUrl = document.getElementById('<%= txt_anh1.ClientID %>');
+                var imagePreview = document.getElementById('<%= img_anh1.ClientID %>');
+
+                if (name) name.value = product.ten || '';
+                if (unit) unit.value = product.donvitinh || '';
+                if (serial) serial.value = product.seri || '';
+                if (imageUrl) imageUrl.value = product.anh || '';
+                if (imagePreview) imagePreview.src = product.anh || '/uploads/images/no-image.png';
+            }
+
+            function lookupWarrantyProduct(value) {
+                var barcode = (value || '').trim();
+                if (!barcode) return;
+
+                var status = document.getElementById('warrantyProductCameraStatus');
+                if (status) status.innerText = 'Đang kiểm tra seri trong kho...';
+
+                fetch(window.location.pathname + '?action=lookupWarrantyProduct&barcode=' + encodeURIComponent(barcode), {
+                    credentials: 'same-origin',
+                    cache: 'no-store'
+                }).then(function (response) {
+                    return response.json();
+                }).then(function (data) {
+                    window.closeWarrantyProductScanner();
+                    if (data.success && data.product) {
+                        fillWarrantyProduct(data.product);
+                        showProductLookupMessage('Đã tìm thấy sản phẩm và tự điền thông tin. Anh/chị vẫn có thể chỉnh sửa trước khi lưu.');
+                    } else {
+                        showProductLookupMessage('Không tìm thấy sản phẩm theo mã barcode này. Vui lòng nhập thủ công.');
+                    }
+                }).catch(function () {
+                    window.closeWarrantyProductScanner();
+                    showProductLookupMessage('Không thể kiểm tra barcode. Vui lòng nhập thông tin sản phẩm thủ công.');
+                });
+            }
+
+            function detectProductBarcode(video, status) {
+                if (!productCameraActive || !productCameraDetector) return;
+                productCameraDetector.detect(video).then(function (barcodes) {
+                    if (!productCameraActive) return;
+                    if (barcodes.length > 0 && barcodes[0].rawValue) {
+                        lookupWarrantyProduct(barcodes[0].rawValue);
+                        stopProductCamera();
+                        return;
+                    }
+                    window.setTimeout(function () { detectProductBarcode(video, status); }, 120);
+                }).catch(function () {
+                    if (productCameraActive)
+                        window.setTimeout(function () { detectProductBarcode(video, status); }, 250);
+                });
+            }
+
+            window.openWarrantyProductScanner = function () {
+                var modal = document.getElementById('warrantyProductCameraModal');
+                var video = document.getElementById('warrantyProductCameraVideo');
+                var status = document.getElementById('warrantyProductCameraStatus');
+                if (!modal || !video || !status) return;
+
+                modal.style.display = 'block';
+                status.innerText = 'Đang khởi động camera...';
+                stopProductCamera();
+
+                if (typeof window.BarcodeDetector !== 'function' && !window.ZXingBrowser) {
+                    status.innerText = 'Trình duyệt chưa hỗ trợ quét barcode bằng camera.';
+                    return;
+                }
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    status.innerText = 'Trình duyệt không hỗ trợ truy cập camera.';
+                    return;
+                }
+
+                // ZXing xử lý barcode 1D ổn định hơn BarcodeDetector native trên nhiều máy cũ.
+                if (window.ZXingBrowser) {
+                    productCameraActive = true;
+                    status.innerText = 'Đang khởi động bộ đọc barcode...';
+                    productCameraReader = new ZXingBrowser.BrowserMultiFormatReader();
+                    Promise.resolve(productCameraReader.decodeFromConstraints({
+                        video: {
+                            facingMode: { ideal: 'environment' },
+                            width: { ideal: 1920 },
+                            height: { ideal: 1080 },
+                            frameRate: { ideal: 30 },
+                            focusMode: { ideal: 'continuous' }
+                        },
+                        audio: false
+                    }, video, function (result, error, controls) {
+                        if (controls) productCameraControls = controls;
+                        if (!productCameraActive || !result) return;
+                        lookupWarrantyProduct(result.getText());
+                        stopProductCamera();
+                    })).catch(function () {
+                        status.innerText = 'Không thể mở camera. Hãy cấp quyền camera cho trang web.';
+                    });
+                    return;
+                }
+
+                productCameraDetector = new BarcodeDetector();
+                navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: { ideal: 'environment' },
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 },
+                        frameRate: { ideal: 30 },
+                        focusMode: { ideal: 'continuous' }
+                    },
+                    audio: false
+                }).then(function (stream) {
+                    productCameraStream = stream;
+                    video.srcObject = stream;
+                    var track = stream.getVideoTracks && stream.getVideoTracks()[0];
+                    if (track && track.getCapabilities && track.applyConstraints) {
+                        var capabilities = track.getCapabilities();
+                        var advanced = {};
+                        if (capabilities.focusMode && capabilities.focusMode.indexOf('continuous') !== -1)
+                            advanced.focusMode = 'continuous';
+                        if (capabilities.zoom && capabilities.zoom.max > capabilities.zoom.min)
+                            advanced.zoom = Math.min(capabilities.zoom.min + 1, capabilities.zoom.max);
+                        if (Object.keys(advanced).length > 0)
+                            track.applyConstraints({ advanced: [advanced] }).catch(function () { });
+                    }
+                    productCameraActive = true;
+                    status.innerText = 'Đưa mã seri vào gần khung xanh để quét...';
+                    detectProductBarcode(video, status);
                 }).catch(function () {
                     status.innerText = 'Không thể mở camera. Hãy cấp quyền camera cho trang web.';
                 });
