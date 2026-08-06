@@ -204,7 +204,7 @@
                         </div>
                         <div class="bg-white pl-4 pl-8-md pr-8-md pr-4" style="height: 52px;">
                             <div class="pt-4 text-upper text-bold">
-                                XÁC NHẬN ĐÃ BÁN
+                                <asp:Label ID="lbl_daban_title" runat="server" Text="XÁC NHẬN ĐÃ BÁN"></asp:Label>
                             </div>
                             <hr />
                         </div>
@@ -593,7 +593,9 @@
                                                                 <td class="text-left">
                                                                     <small><%#Eval("thongso_kythuat") %></small>
                                                                 </td>
-                                                                <td class="text-right"><%#Eval("giaban_taithoidiemnay","{0:#,##0}") %></td>
+                                                                <td class="text-right">
+                                                                    <asp:TextBox data-role="input" CssClass="input-small" data-clear-button="false" ID="txt_giaban_chitiet" Width="100" MaxLength="14" runat="server" Text='<%#Eval("giaban_taithoidiemnay","{0:#,##0}") %>' onfocus="AutoSelect(this)" oninput="format_sotien_new(this)" onkeypress="if (event.keyCode==13) return false;"></asp:TextBox>
+                                                                </td>
                                                                 <td class="text-center">
                                                                     <%#Eval("DVT") %>
                                                                 </td>

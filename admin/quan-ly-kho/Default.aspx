@@ -1006,6 +1006,19 @@
                 if (video) video.srcObject = null;
             }
 
+            function optimizeCamera(video) {
+                var track = video && video.srcObject && video.srcObject.getVideoTracks ? video.srcObject.getVideoTracks()[0] : null;
+                if (!track || !track.getCapabilities || !track.applyConstraints) return;
+                var capabilities = track.getCapabilities();
+                var advanced = {};
+                if (capabilities.focusMode && capabilities.focusMode.indexOf('continuous') !== -1)
+                    advanced.focusMode = 'continuous';
+                if (capabilities.zoom && capabilities.zoom.max > capabilities.zoom.min)
+                    advanced.zoom = Math.min(capabilities.zoom.min + 1, capabilities.zoom.max);
+                if (Object.keys(advanced).length > 0)
+                    track.applyConstraints({ advanced: [advanced] }).catch(function () { });
+            }
+
             window.closeCameraScanner = function () {
                 stopCameraStream();
                 var modal = document.getElementById('cameraBarcodeModal');
@@ -1056,12 +1069,15 @@
                     Promise.resolve(cameraReader.decodeFromConstraints({
                         video: {
                             facingMode: { ideal: 'environment' },
-                            width: { ideal: 1920 },
-                            height: { ideal: 1080 }
+                            width: { min: 640, ideal: 1280, max: 1920 },
+                            height: { min: 480, ideal: 720, max: 1080 },
+                            frameRate: { ideal: 30 },
+                            focusMode: { ideal: 'continuous' }
                         },
                         audio: false
                     }, video, function (result, error, controls) {
                         if (controls) cameraControls = controls;
+                        optimizeCamera(video);
                         if (!cameraScanActive || !result) return;
                         var value = result.getText().trim();
                         status.innerText = 'Đã nhận barcode: ' + value;
@@ -1078,14 +1094,18 @@
                 navigator.mediaDevices.getUserMedia({
                     video: {
                         facingMode: { ideal: 'environment' },
-                        width: { ideal: 1920 },
-                        height: { ideal: 1080 }
+                            width: { min: 640, ideal: 1280, max: 1920 },
+                            height: { min: 480, ideal: 720, max: 1080 },
+                            frameRate: { ideal: 30 },
+                            focusMode: { ideal: 'continuous' }
                     },
                     audio: false
                 })
                     .then(function (stream) {
                         cameraStream = stream;
-                        video.srcObject = stream;
+                    video.srcObject = stream;
+                    video.play().catch(function () { });
+                    optimizeCamera(video);
                         cameraScanActive = true;
                         status.innerText = 'Đưa một mã vạch vào gần khung xanh, để phần vạch chiếm phần lớn khung hình...';
                         if (cameraDetector) {

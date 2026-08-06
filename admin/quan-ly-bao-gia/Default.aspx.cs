@@ -1949,18 +1949,20 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                         foreach (RepeaterItem item in Repeater2.Items)
                         {
                             // Tìm các điều khiển TextBox và Label từ RepeaterItem
+                            TextBox txt_giaban_chitiet = (TextBox)item.FindControl("txt_giaban_chitiet");
                             TextBox txt_sl_chitiet = (TextBox)item.FindControl("txt_sl_chitiet");
                             TextBox txt_giamgia_phantram_chitiet = (TextBox)item.FindControl("txt_giamgia_phantram_chitiet");
                             Label lbID_chitiet = (Label)item.FindControl("lbID_chitiet");
 
                             // Kiểm tra nếu cả TextBox và Label không null
-                            if (txt_sl_chitiet != null && lbID_chitiet != null)
+                            if (txt_giaban_chitiet != null && txt_sl_chitiet != null && lbID_chitiet != null)
                             {
                                 // Lấy ID và rank từ các điều khiển
                                 string _id_chitiet = lbID_chitiet.Text;
+                                long _giaban = Number_cl.Check_Int64(txt_giaban_chitiet.Text.Trim());
                                 int _sl = Number_cl.Check_Int(txt_sl_chitiet.Text.Trim());
                                 decimal _giamgia_phantram = Number_cl.Check_Decimal(txt_giamgia_phantram_chitiet.Text.Trim());
-                                if (_sl >= 0)
+                                if (_giaban >= 0 && _sl >= 0)
                                 {
                                     long detailId;
                                     var q_chitiet = long.TryParse(_id_chitiet, out detailId)
@@ -1968,6 +1970,7 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                                         : null;
                                     if (q_chitiet != null)
                                     {
+                                        q_chitiet.giaban_taithoidiemnay = _giaban;
                                         q_chitiet.soluong = _sl;
                                         q_chitiet.thanhtien = _sl * q_chitiet.giaban_taithoidiemnay;
 
@@ -2743,17 +2746,23 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                         return;
                     }
                 }
-                if (q.trangthai == "Đã ký HĐ")
-                {
-                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Báo giá này đã được bán trước đó.", "false", "false", "OK", "alert", ""), true);
-                    return;
-                }
                 if (q.trangthai == "Hết hiệu lực")
                 {
                     ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Báo giá này đã hết hiệu lực.", "false", "false", "OK", "alert", ""), true);
                     return;
                 }
-                txt_dathanhtoan.Text = tongSauThue.ToString("#,##0");
+                if (q.trangthai == "Đã ký HĐ")
+                {
+                    lbl_daban_title.Text = "THANH TOÁN CÔNG NỢ";
+                    but_daban.Text = "XÁC NHẬN THANH TOÁN";
+                    txt_dathanhtoan.Text = (q.congno ?? 0).ToString("#,##0");
+                }
+                else
+                {
+                    lbl_daban_title.Text = "XÁC NHẬN ĐÃ BÁN";
+                    but_daban.Text = "XÁC NHẬN ĐÃ BÁN";
+                    txt_dathanhtoan.Text = tongSauThue.ToString("#,##0");
+                }
             }
         }
         pn_daban.Visible = !pn_daban.Visible;
@@ -2763,6 +2772,8 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
     protected void but_close_form_daban_Click(object sender, EventArgs e)
     {
         ViewState["idbg_chitiet"] = ""; txt_dathanhtoan.Text = ""; ViewState["tongSauThue"] = 0;
+        lbl_daban_title.Text = "XÁC NHẬN ĐÃ BÁN";
+        but_daban.Text = "XÁC NHẬN ĐÃ BÁN";
         txt_dathanhtoan.Text = string.Empty;
         txt_ghichu_chuagiao.Text = string.Empty;
         txt_link_fileupload.Text = string.Empty;
@@ -2808,6 +2819,37 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                     }
                 }
 
+                // Bấm lại trên báo giá đã bán chỉ ghi nhận khoản thanh toán công nợ,
+                // không trừ kho và không tạo lại giao dịch bán hàng.
+                if (baoGia.trangthai == "Đã ký HĐ")
+                {
+                    if ((_thanhtoan <= 0) || (_thanhtoan > (baoGia.congno ?? 0)))
+                    {
+                        ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Số tiền thanh toán không hợp lệ.", "false", "false", "OK", "alert", ""), true);
+                        return;
+                    }
+
+                    var lichSuThanhToan = new LichSu_ThanhToan_tb
+                    {
+                        idbg = _idbg,
+                        sotien_thanhtoan = _thanhtoan,
+                        ngay_thanhtoan = DateTime.Now,
+                        nguoixacnhan = ViewState["taikhoan"]?.ToString()
+                    };
+                    db.LichSu_ThanhToan_tbs.InsertOnSubmit(lichSuThanhToan);
+                    baoGia.congno = (baoGia.congno ?? 0) - _thanhtoan;
+                    db.SubmitChanges();
+
+                    show_main();
+                    up_main.Update();
+                    ViewState["idbg_chitiet"] = string.Empty;
+                    pn_daban.Visible = false;
+                    txt_dathanhtoan.Text = string.Empty;
+                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
+                        thongbao_class.metro_notifi("Thông báo", "Đã ghi nhận thanh toán công nợ.", "1000", "warning"), true);
+                    return;
+                }
+
                 // Cập nhật thông tin báo giá
                 baoGia.trangthai = "Đã ký HĐ";
                 baoGia.ngayban_kyhopdong = DateTime.Now;
@@ -2825,14 +2867,14 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                 baoGia.thuongdoanhso = _thuongdoanhso;
 
                 // Thêm lịch sử thanh toán
-                var lichSuThanhToan = new LichSu_ThanhToan_tb
+                var lichSuThanhToanBan = new LichSu_ThanhToan_tb
                 {
                     idbg = _idbg,
                     sotien_thanhtoan = _thanhtoan,
                     ngay_thanhtoan = DateTime.Now,
                     nguoixacnhan = ViewState["taikhoan"]?.ToString()
                 };
-                db.LichSu_ThanhToan_tbs.InsertOnSubmit(lichSuThanhToan);
+                db.LichSu_ThanhToan_tbs.InsertOnSubmit(lichSuThanhToanBan);
 
                 #region Kiểm tra và trừ số lượng sản phẩm
                 // Lấy danh sách chi tiết báo giá

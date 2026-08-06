@@ -1122,6 +1122,19 @@
                 if (video) video.srcObject = null;
             }
 
+            function optimizeWarrantyCamera(video) {
+                var track = video && video.srcObject && video.srcObject.getVideoTracks ? video.srcObject.getVideoTracks()[0] : null;
+                if (!track || !track.getCapabilities || !track.applyConstraints) return;
+                var capabilities = track.getCapabilities();
+                var advanced = {};
+                if (capabilities.focusMode && capabilities.focusMode.indexOf('continuous') !== -1)
+                    advanced.focusMode = 'continuous';
+                if (capabilities.zoom && capabilities.zoom.max > capabilities.zoom.min)
+                    advanced.zoom = Math.min(capabilities.zoom.min + 1, capabilities.zoom.max);
+                if (Object.keys(advanced).length > 0)
+                    track.applyConstraints({ advanced: [advanced] }).catch(function () { });
+            }
+
             window.closeWarrantyCameraScanner = function () {
                 stopWarrantyCamera();
                 var modal = document.getElementById('warrantyCameraModal');
@@ -1189,12 +1202,15 @@
                     Promise.resolve(warrantyCameraReader.decodeFromConstraints({
                         video: {
                             facingMode: { ideal: 'environment' },
-                            width: { ideal: 1920 },
-                            height: { ideal: 1080 }
+                            width: { min: 640, ideal: 1280, max: 1920 },
+                            height: { min: 480, ideal: 720, max: 1080 },
+                            frameRate: { ideal: 30 },
+                            focusMode: { ideal: 'continuous' }
                         },
                         audio: false
                     }, video, function (result, error, controls) {
                         if (controls) warrantyCameraControls = controls;
+                        optimizeWarrantyCamera(video);
                         if (!warrantyCameraActive || !result) return;
 
                         var value = result.getText().trim();
@@ -1212,13 +1228,17 @@
                 navigator.mediaDevices.getUserMedia({
                     video: {
                         facingMode: { ideal: 'environment' },
-                        width: { ideal: 1920 },
-                        height: { ideal: 1080 }
+                            width: { min: 640, ideal: 1280, max: 1920 },
+                            height: { min: 480, ideal: 720, max: 1080 },
+                            frameRate: { ideal: 30 },
+                            focusMode: { ideal: 'continuous' }
                     },
                     audio: false
                 }).then(function (stream) {
                     warrantyCameraStream = stream;
                     video.srcObject = stream;
+                    video.play().catch(function () { });
+                    optimizeWarrantyCamera(video);
                     warrantyCameraActive = true;
                     status.innerText = 'Đưa một mã vạch vào gần khung xanh, để phần vạch chiếm phần lớn khung hình...';
                     detectWarrantyBarcode(video, status);
@@ -1250,6 +1270,19 @@
                 }
                 var video = document.getElementById('warrantyProductCameraVideo');
                 if (video) video.srcObject = null;
+            }
+
+            function optimizeProductCamera(video) {
+                var track = video && video.srcObject && video.srcObject.getVideoTracks ? video.srcObject.getVideoTracks()[0] : null;
+                if (!track || !track.getCapabilities || !track.applyConstraints) return;
+                var capabilities = track.getCapabilities();
+                var advanced = {};
+                if (capabilities.focusMode && capabilities.focusMode.indexOf('continuous') !== -1)
+                    advanced.focusMode = 'continuous';
+                if (capabilities.zoom && capabilities.zoom.max > capabilities.zoom.min)
+                    advanced.zoom = Math.min(capabilities.zoom.min + 1, capabilities.zoom.max);
+                if (Object.keys(advanced).length > 0)
+                    track.applyConstraints({ advanced: [advanced] }).catch(function () { });
             }
 
             window.closeWarrantyProductScanner = function () {
@@ -1355,14 +1388,15 @@
                     Promise.resolve(productCameraReader.decodeFromConstraints({
                         video: {
                             facingMode: { ideal: 'environment' },
-                            width: { ideal: 1920 },
-                            height: { ideal: 1080 },
+                            width: { min: 640, ideal: 1280, max: 1920 },
+                            height: { min: 480, ideal: 720, max: 1080 },
                             frameRate: { ideal: 30 },
                             focusMode: { ideal: 'continuous' }
                         },
                         audio: false
                     }, video, function (result, error, controls) {
                         if (controls) productCameraControls = controls;
+                        optimizeProductCamera(video);
                         if (!productCameraActive || !result) return;
                         lookupWarrantyProduct(result.getText());
                         stopProductCamera();
@@ -1374,17 +1408,19 @@
 
                 productCameraDetector = new BarcodeDetector();
                 navigator.mediaDevices.getUserMedia({
-                    video: {
-                        facingMode: { ideal: 'environment' },
-                        width: { ideal: 1920 },
-                        height: { ideal: 1080 },
-                        frameRate: { ideal: 30 },
-                        focusMode: { ideal: 'continuous' }
+                        video: {
+                            facingMode: { ideal: 'environment' },
+                            width: { min: 640, ideal: 1280, max: 1920 },
+                            height: { min: 480, ideal: 720, max: 1080 },
+                            frameRate: { ideal: 30 },
+                            focusMode: { ideal: 'continuous' }
                     },
                     audio: false
                 }).then(function (stream) {
                     productCameraStream = stream;
                     video.srcObject = stream;
+                    video.play().catch(function () { });
+                    optimizeProductCamera(video);
                     var track = stream.getVideoTracks && stream.getVideoTracks()[0];
                     if (track && track.getCapabilities && track.applyConstraints) {
                         var capabilities = track.getCapabilities();
