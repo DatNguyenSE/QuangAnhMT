@@ -620,6 +620,29 @@ public partial class admin_quan_ly_kho_muon_hang : System.Web.UI.Page
         }
     }
 
+    private void BindBorrowProductDropdown(dbDataContext db)
+    {
+        // Chỉ lấy các cột cần hiển thị và sản phẩm còn tồn; phần tìm kiếm của
+        // Metro Select sẽ tìm trên chuỗi tên đã ghép cả số seri.
+        var products = db.KhoSanPham_tbs
+            .Where(p => (p.soluong_hientai ?? 0) > 0)
+            .Select(p => new { p.id, p.ten, p.so_seri })
+            .OrderBy(p => p.ten)
+            .ToList()
+            .Select(p => new
+            {
+                p.id,
+                TenHienThi = p.ten + (string.IsNullOrWhiteSpace(p.so_seri) ? "" : " - " + p.so_seri)
+            })
+            .ToList();
+
+        DropDownList1.DataSource = products;
+        DropDownList1.DataValueField = "id";
+        DropDownList1.DataTextField = "TenHienThi";
+        DropDownList1.DataBind();
+        DropDownList1.Items.Insert(0, new ListItem("Chọn sản phẩm", ""));
+    }
+
     // Mở Form Tạo Mới
     protected void but_show_form_add_Click(object sender, EventArgs e)
     {
@@ -635,13 +658,7 @@ public partial class admin_quan_ly_kho_muon_hang : System.Web.UI.Page
 
             using (dbDataContext db = new dbDataContext())
             {
-                var data = db.KhoSanPham_tbs
-             .ToList();
-                DropDownList1.DataSource = data;
-                DropDownList1.DataValueField = "id";
-                DropDownList1.DataTextField = "ten";
-                DropDownList1.DataBind();
-                DropDownList1.Items.Insert(0, new ListItem("Chọn sản phẩm", ""));
+                BindBorrowProductDropdown(db);
 
             }
             //hiện form add_edit trong updatePanel_add
@@ -705,13 +722,7 @@ public partial class admin_quan_ly_kho_muon_hang : System.Web.UI.Page
             {
                 ViewState["id_edit"] = _id;
 
-                var data = db.KhoSanPham_tbs
-             .ToList();
-                DropDownList1.DataSource = data;
-                DropDownList1.DataValueField = "id";
-                DropDownList1.DataTextField = "ten";
-                DropDownList1.DataBind();
-                DropDownList1.Items.Insert(0, new ListItem("Chọn sản phẩm", ""));
+                BindBorrowProductDropdown(db);
 
                 TxtTenChuongTrinhf.Text = q.tenchuongtrinh;
 

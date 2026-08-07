@@ -31,7 +31,7 @@
                                     <div class="mt-3">
                                         <label class="fw-600 fg-red">Sản Phẩm Trả</label>
                                         <div>
-                                            <asp:DropDownList ID="DropDownList2" runat="server" data-role="select"></asp:DropDownList>
+                                             <asp:DropDownList ID="DropDownList2" runat="server" data-role="select" data-filter-placeholder="Tìm theo tên hoặc số seri"></asp:DropDownList>
                                         </div>
                                     </div>
                                     <div class="mt-3">
@@ -146,7 +146,7 @@
                                     <div class="mt-3">
                                         <label class="fw-600 fg-red">Sản phẩm mượn</label>
                                         <div>
-                                            <asp:DropDownList ID="DropDownList1" runat="server" data-role="select"></asp:DropDownList>
+                                             <asp:DropDownList ID="DropDownList1" runat="server" data-role="select" data-filter-placeholder="Tìm theo tên hoặc số seri"></asp:DropDownList>
                                         </div>
                                     </div>
                                     <div class="mt-3">

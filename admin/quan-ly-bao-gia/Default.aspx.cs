@@ -1640,7 +1640,7 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                     ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng nhập tên khách hàng.", "false", "false", "OK", "alert", ""), true);
                     return;
                 }
-                if (_ngayhieuluc <= 0)
+                if (_ngayhieuluc < 0)
                 {
                     ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Ngày hiệu lực không hợp lệ.", "false", "false", "OK", "alert", ""), true);
                     return;
@@ -1855,17 +1855,17 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
 
                         #region cập nhật
                         BaoGia_tb _ob = q_edit;
-                        if (q_edit.trangthai == "Đã ký HĐ")
-                        {
-                            _ob.ghichu_chuagiao = txt_ghichu_giaohang.Text;
-                            db.SubmitChanges();
-                            update_baogia(db, _ob.id.ToString());
-                            load_edit(db, _ob.id.ToString());
-                            show_main();
-                            up_main.Update();
-                            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Báo giá này đã được xác nhận đã bán. Chỉ có nội dung Ghi chú giao hàng được lưu.", "false", "false", "OK", "alert", ""), true);
-                            return;
-                        }
+                        //if (q_edit.trangthai == "Đã ký HĐ")
+                        //{
+                        //    _ob.ghichu_chuagiao = txt_ghichu_giaohang.Text;
+                        //    db.SubmitChanges();
+                        //    update_baogia(db, _ob.id.ToString());
+                        //    load_edit(db, _ob.id.ToString());
+                        //    show_main();
+                        //    up_main.Update();
+                        //    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Báo giá này đã được xác nhận đã bán. Chỉ có nội dung Ghi chú giao hàng được lưu.", "false", "false", "OK", "alert", ""), true);
+                        //    return;
+                        //}
                         string _old_sdt = q_edit.sdt_khachhang; // Lấy sđt cũ trước khi cập nhật
                         _ob.sdt_khachhang = _sdt;
                         _ob.ten_khachhang = _ten_kh;
@@ -2746,11 +2746,11 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                         return;
                     }
                 }
-                if (q.trangthai == "Hết hiệu lực")
-                {
-                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Báo giá này đã hết hiệu lực.", "false", "false", "OK", "alert", ""), true);
-                    return;
-                }
+                //if (q.trangthai == "Hết hiệu lực")
+                //{
+                //    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Báo giá này đã hết hiệu lực.", "false", "false", "OK", "alert", ""), true);
+                //    return;
+                //}
                 if (q.trangthai == "Đã ký HĐ")
                 {
                     lbl_daban_title.Text = "THANH TOÁN CÔNG NỢ";
@@ -3035,11 +3035,11 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                         return;
                     }
                 }
-                if (baoGia.trangthai == "Hết hiệu lực")
-                {
-                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Báo giá này đã hết hiệu lực.", "false", "false", "OK", "alert", ""), true);
-                    return;
-                }
+                //if (baoGia.trangthai == "Hết hiệu lực")
+                //{
+                //    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Báo giá này đã hết hiệu lực.", "false", "false", "OK", "alert", ""), true);
+                //    return;
+                //}
                 if (baoGia.congno.Value == 0)
                 {
                     ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Đã thanh toán đủ.", "false", "false", "OK", "alert", ""), true);
