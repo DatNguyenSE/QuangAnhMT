@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Globalization;
+using System.Security.Cryptography;
 using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
@@ -155,6 +156,10 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
     }
     protected void Page_Load(object sender, EventArgs e)
     {
+        // FileUpload chỉ gửi được dữ liệu khi form dùng multipart/form-data.
+        if (Page.Form != null)
+            Page.Form.Enctype = "multipart/form-data";
+
         if (!IsPostBack)
         {
 
@@ -174,6 +179,210 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             set_dulieu_macdinh();
             show_main();
 
+        }
+    }
+
+    protected void but_show_import_excel_Click(object sender, EventArgs e)
+    {
+        check_login_cl.check_login_admin("7", "7");
+        pn_import_excel.Visible = true;
+        up_import_excel.Update();
+    }
+
+    protected void but_close_import_excel_Click(object sender, EventArgs e)
+    {
+        pn_import_excel.Visible = false;
+        fu_import_excel.Attributes.Clear();
+        up_import_excel.Update();
+    }
+
+    private static string GetImportCellText(ExcelWorksheet sheet, int row, int column)
+    {
+        return (sheet.Cells[row, column].Text ?? string.Empty).Trim();
+    }
+
+    private static bool TryParseImportQuantity(string value, out int quantity)
+    {
+        quantity = 0;
+        decimal parsed;
+        if (!decimal.TryParse(value, NumberStyles.Number, CultureInfo.CurrentCulture, out parsed) &&
+            !decimal.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out parsed))
+            return false;
+
+        if (parsed < 0 || parsed != decimal.Truncate(parsed) || parsed > int.MaxValue)
+            return false;
+
+        quantity = (int)parsed;
+        return true;
+    }
+
+    private void WriteImportConsoleLog(string message)
+    {
+        string encodedMessage = HttpUtility.JavaScriptStringEncode(message ?? string.Empty);
+        Response.Write("<script>console.log(\"[Import Excel] " + encodedMessage + "\");</script>");
+        Response.Flush();
+    }
+
+    private static string GetImportFileHash(byte[] fileBytes)
+    {
+        using (SHA256 sha256 = SHA256.Create())
+        {
+            return string.Concat(sha256.ComputeHash(fileBytes).Select(b => b.ToString("x2")));
+        }
+    }
+
+    protected void but_confirm_import_excel_Click(object sender, EventArgs e)
+    {
+        check_login_cl.check_login_admin("7", "7");
+        Response.BufferOutput = false;
+        WriteImportConsoleLog("Bắt đầu nhận file...");
+
+        if (!fu_import_excel.HasFile)
+        {
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng chọn file Excel.", "false", "false", "OK", "alert", ""), true);
+            return;
+        }
+
+        byte[] fileBytes;
+        using (var uploadedStream = fu_import_excel.PostedFile.InputStream)
+        using (var buffer = new MemoryStream())
+        {
+            uploadedStream.CopyTo(buffer);
+            fileBytes = buffer.ToArray();
+        }
+
+        string importKey = "KhoSanPham_ExcelImport_" + GetImportFileHash(fileBytes);
+        string importState = Session[importKey] as string;
+        if (importState == "processing" || importState == "completed")
+        {
+            WriteImportConsoleLog("File này đã được xử lý hoặc đang được xử lý, không chạy lại.");
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "File này đã được nhập trước đó hoặc đang được xử lý. Không chạy lại để tránh tạo sản phẩm trùng.", "false", "false", "OK", "alert", ""), true);
+            return;
+        }
+
+        // Đánh dấu trước khi bắt đầu insert để lần submit lại cùng file không tạo trùng,
+        // kể cả khi request đầu tiên bị ngắt sau khi đã ghi một phần dữ liệu.
+        Session[importKey] = "processing";
+
+        string extension = Path.GetExtension(fu_import_excel.FileName);
+        if (!string.Equals(extension, ".xlsx", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(extension, ".xlsm", StringComparison.OrdinalIgnoreCase))
+        {
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Chỉ hỗ trợ file .xlsx hoặc .xlsm.", "false", "false", "OK", "alert", ""), true);
+            return;
+        }
+
+        int created = 0;
+        int skipped = 0;
+        var skippedRows = new List<string>();
+
+        try
+        {
+            // Dự án đang dùng EPPlus 7.0.1 trong Bin; phải khai báo context
+            // trước khi khởi tạo ExcelPackage để đọc được file .xlsx.
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+            using (var package = new ExcelPackage(new MemoryStream(fileBytes)))
+            {
+                var sheet = package.Workbook.Worksheets.FirstOrDefault();
+                if (sheet == null || sheet.Dimension == null || sheet.Dimension.End.Row < 4)
+                {
+                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "File Excel không có dữ liệu từ dòng 4.", "false", "false", "OK", "alert", ""), true);
+                    return;
+                }
+
+                WriteImportConsoleLog("Đã mở sheet: " + sheet.Name + ". Bắt đầu đọc từ dòng 4.");
+
+                using (dbDataContext db = new dbDataContext())
+                {
+                    int blankRows = 0;
+                    for (int row = 4; row <= sheet.Dimension.End.Row; row++)
+                    {
+                        string name = GetImportCellText(sheet, row, 3);
+                        string unit = GetImportCellText(sheet, row, 4);
+                        string quantityText = GetImportCellText(sheet, row, 5);
+
+                        if (string.IsNullOrWhiteSpace(name) && string.IsNullOrWhiteSpace(unit) && string.IsNullOrWhiteSpace(quantityText))
+                        {
+                            // Bỏ qua phần đuôi chỉ chứa định dạng của Excel. Nếu
+                            // gặp 20 dòng trống liên tiếp thì coi là hết dữ liệu.
+                            blankRows++;
+                            if (blankRows >= 20)
+                                break;
+                            continue;
+                        }
+                        blankRows = 0;
+
+                        string unitId;
+                        if (string.Equals(unit, "Cái", StringComparison.OrdinalIgnoreCase))
+                            unitId = "45";
+                        else if (string.Equals(unit, "Cặp", StringComparison.OrdinalIgnoreCase))
+                            unitId = "46";
+                        else if (string.Equals(unit, "Bộ", StringComparison.OrdinalIgnoreCase))
+                            unitId = "48";
+                        else
+                        {
+                            skipped++;
+                            skippedRows.Add("Dòng " + row + ": đơn vị tính không hợp lệ");
+                            WriteImportConsoleLog("Bỏ qua dòng " + row + ": đơn vị tính '" + unit + "' không hợp lệ.");
+                            continue;
+                        }
+
+                        int quantity;
+                        if (string.IsNullOrWhiteSpace(name) || !TryParseImportQuantity(quantityText, out quantity))
+                        {
+                            skipped++;
+                            skippedRows.Add("Dòng " + row + ": thiếu tên hoặc số lượng không hợp lệ");
+                            WriteImportConsoleLog("Bỏ qua dòng " + row + ": thiếu tên hoặc số lượng không hợp lệ.");
+                            continue;
+                        }
+
+                        var product = new KhoSanPham_tb
+                        {
+                            ten = name,
+                            donvitinh = unitId,
+                            soluong_hientai = quantity
+                        };
+                        db.KhoSanPham_tbs.InsertOnSubmit(product);
+                        created++;
+                        WriteImportConsoleLog("Đã đọc dòng " + row + ": thêm sản phẩm '" + name + "' vào hàng chờ ghi. Tổng: " + created);
+
+                        // Ghi theo batch để file lớn không giữ quá nhiều entity trong bộ nhớ.
+                        if (created % 500 == 0)
+                        {
+                            WriteImportConsoleLog("Đang ghi batch 500 sản phẩm xuống database...");
+                            db.SubmitChanges();
+                            WriteImportConsoleLog("Đã ghi xuống database " + created + " sản phẩm.");
+                        }
+                    }
+
+                    WriteImportConsoleLog("Đang ghi các sản phẩm còn lại xuống database...");
+                    db.SubmitChanges();
+                    WriteImportConsoleLog("Đã ghi xong database. Tổng sản phẩm: " + created + ". Dòng bỏ qua: " + skipped + ".");
+                }
+            }
+
+            Session[importKey] = "completed";
+            pn_import_excel.Visible = false;
+
+            string message = "Đã tạo " + created.ToString("#,##0") + " sản phẩm.";
+            if (skipped > 0)
+                message += " Bỏ qua " + skipped.ToString("#,##0") + " dòng không hợp lệ.";
+            string notifyScript = thongbao_class.metro_notifi("Thông báo", message, "3000", "warning") +
+                "window.setTimeout(function(){ window.location.reload(); }, 3200);";
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), notifyScript, true);
+        }
+        catch (Exception ex)
+        {
+            if (created > 0)
+                Session[importKey] = "completed";
+            else
+                Session.Remove(importKey);
+            string detail = skippedRows.Count > 0 ? " " + string.Join("; ", skippedRows.Take(5)) : string.Empty;
+            string errorMessage = ex.GetBaseException().Message;
+            WriteImportConsoleLog("LỖI: " + errorMessage);
+            Log_cl.Add_Log(errorMessage, ViewState["taikhoan"]?.ToString() ?? "", ex.StackTrace);
+            string safeErrorMessage = Server.HtmlEncode(errorMessage);
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Lỗi nhập Excel", "Không thể nhập file: " + safeErrorMessage + detail, "false", "false", "OK", "alert", ""), true);
         }
     }
     #region main - phân trang - tìm kiếm

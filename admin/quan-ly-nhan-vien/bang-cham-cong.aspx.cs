@@ -244,9 +244,16 @@ public partial class admin_quan_ly_nhan_vien_bang_cham_cong : System.Web.UI.Page
                 .Select(p => p.ngaychamcong.Value.Date)
                 .Distinct()
                 .Count();
+            int mealEligibleDays = attendanceRecords
+                .Where(p => p.ngaychamcong.HasValue
+                    && p.baoraca.HasValue
+                    && p.baoraca.Value - p.ngaychamcong.Value >= TimeSpan.FromHours(7.5))
+                .Select(p => p.ngaychamcong.Value.Date)
+                .Distinct()
+                .Count();
             decimal allowanceRatio = workingDays / 26m;
             long travelAllowance = (long)Math.Round((employee.PhuCap_Xangxe ?? 0) * allowanceRatio, MidpointRounding.AwayFromZero);
-            long mealAllowance = (long)Math.Round((employee.PhuCap_AnUong ?? 0) * allowanceRatio, MidpointRounding.AwayFromZero);
+            long mealAllowance = (long)Math.Round((employee.PhuCap_AnUong ?? 0) * mealEligibleDays / 26m, MidpointRounding.AwayFromZero);
             long phoneAllowance = (long)Math.Round((employee.PhuCap_DienThoai ?? 0) * allowanceRatio, MidpointRounding.AwayFromZero);
             long responsibilityAllowance = (long)Math.Round((employee.PhuCap_TrachNhiem ?? 0) * allowanceRatio, MidpointRounding.AwayFromZero);
 
@@ -482,6 +489,7 @@ public partial class admin_quan_ly_nhan_vien_bang_cham_cong : System.Web.UI.Page
         {
             // Khởi tạo các biến đếm cho từng loại trạng thái
             int tongNgayCong = 0;
+            int mealEligibleDays = 0;
             Int64 LuongCB = 0, _doanhso = 0, _doanhsoHangBaoHanh = 0, _thuongdoanhso = 0, _tongcong = 0, _phat = 0, _thucnhan = 0;
             htmlTable.Append("<tr>");
             htmlTable.Append("<td class='text-center  bg-cobalt fg-white'>" + counter + "</td>"); // Số thứ tự
@@ -500,6 +508,9 @@ public partial class admin_quan_ly_nhan_vien_bang_cham_cong : System.Web.UI.Page
                 {
                     //đếm số ngày công
                     tongNgayCong++;
+                    if (chamCong.baoraca.HasValue
+                        && chamCong.baoraca.Value - chamCong.ngaychamcong.Value >= TimeSpan.FromHours(7.5))
+                        mealEligibleDays++;
                     //cộng dồn LCB
                     LuongCB = LuongCB + chamCong.LuongNgay_ChamCong.Value;
                     htmlTable.Append("<td class='text-center'>");
@@ -544,7 +555,7 @@ public partial class admin_quan_ly_nhan_vien_bang_cham_cong : System.Web.UI.Page
             decimal heSoNgayCong = tongNgayCong / 26m;
             // Tính phụ cấp quy đổi theo tỷ lệ (làm tròn .5 lên)
             long pcXangXe = (long)Math.Round(q_nv.PhuCap_Xangxe.Value * heSoNgayCong, MidpointRounding.AwayFromZero);
-            long pcAnUong = (long)Math.Round(q_nv.PhuCap_AnUong.Value * heSoNgayCong, MidpointRounding.AwayFromZero);
+            long pcAnUong = (long)Math.Round((q_nv.PhuCap_AnUong ?? 0) * mealEligibleDays / 26m, MidpointRounding.AwayFromZero);
             long pcDienThoai = (long)Math.Round(q_nv.PhuCap_DienThoai.Value * heSoNgayCong, MidpointRounding.AwayFromZero);
             long pcTrachNhiem = (long)Math.Round(q_nv.PhuCap_TrachNhiem.Value * heSoNgayCong, MidpointRounding.AwayFromZero);
             // Hiển thị các cột phụ cấp đã quy đổi

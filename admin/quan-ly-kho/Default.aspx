@@ -545,6 +545,77 @@
         </ProgressTemplate>
     </asp:UpdateProgress>--%>
 
+    <asp:UpdatePanel ID="up_import_excel" runat="server" UpdateMode="Conditional">
+        <ContentTemplate>
+            <asp:Panel ID="pn_import_excel" runat="server" Visible="false">
+                <div style="position: fixed; width: 100%; height: 52px; top: 0; left: 0; z-index: 1041!important;">
+                    <div style="top: 0; left: 0; margin: 0 auto; max-width: 650px;">
+                        <div style="position: absolute; right: 18px; top: 14px; z-index: 1040!important;">
+                            <a href="#" class="fg-white d-inline" runat="server" id="close_import_excel" onserverclick="but_close_import_excel_Click" title="Đóng">
+                                <span class="mif mif-cross mif-2x fg-red fg-lightRed-hover"></span>
+                            </a>
+                        </div>
+                        <div class="bg-white pl-4 pl-8-md pr-8-md pr-4" style="height: 52px;">
+                            <div class="pt-4 text-upper text-bold">NHẬP SẢN PHẨM TỪ EXCEL</div>
+                            <hr />
+                        </div>
+                    </div>
+                </div>
+                <div style="position: fixed; width: 100%; height: 100%; top: 0; left: 0; overflow: auto; z-index: 1040!important; background-image: url('/uploads/images/bg1.png');">
+                    <div style="top: 0; left: 0; margin: 0 auto; max-width: 656px;">
+                        <div class="bg-white border bd-transparent pl-4 pl-8-md pr-8-md pr-4" style="padding-top: 52px;">
+                            <div class="mt-3">
+                                <label class="fw-600 fg-red">File Excel</label>
+                                <asp:FileUpload ID="fu_import_excel" runat="server" CssClass="mt-1" accept=".xlsx,.xlsm" />
+                                <small class="fg-gray">Dữ liệu bắt đầu từ dòng 4: cột C = tên, D = Cái/Cặp/Bộ, E = số lượng.</small>
+                            </div>
+                            <div class="mt-6 mb-20 text-right">
+                                <asp:Button ID="but_confirm_import_excel" runat="server" Text="XÁC NHẬN NHẬP" CssClass="button success" OnClick="but_confirm_import_excel_Click" OnClientClick="return showImportExcelLoading(this);" />
+                            </div>
+                            <div id="importExcelLoading" class="bg-dark fixed-top h-100 w-100" style="display:none; opacity:0.9; z-index:99999!important;">
+                                <div style="padding-top:45vh; text-align:center; color:#fff;">
+                                    <div class="mx-auto color-style activity-atom" data-role="activity" data-type="atom" data-style="color" data-role-activity="true">
+                                        <span class="electron"></span><span class="electron"></span><span class="electron"></span>
+                                    </div>
+                                    <div class="mt-3">Đang nhập dữ liệu, vui lòng chờ...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </asp:Panel>
+        </ContentTemplate>
+        <Triggers>
+            <asp:PostBackTrigger ControlID="but_confirm_import_excel" />
+        </Triggers>
+    </asp:UpdatePanel>
+    <script type="text/javascript">
+        function showImportExcelLoading(button) {
+            var input = document.getElementById('<%= fu_import_excel.ClientID %>');
+            if (!input || !input.value) {
+                alert('Vui lòng chọn file Excel.');
+                return false;
+            }
+            var loading = document.getElementById('importExcelLoading');
+            if (loading) loading.style.display = 'block';
+            if (button) button.disabled = true;
+
+            // FileUpload cần full postback. Không dùng __doPostBack vì
+            // PageRequestManager sẽ biến request thành AJAX và làm mất stream log.
+            var form = button && button.form ? button.form : document.forms[0];
+            var eventTarget = document.getElementById('__EVENTTARGET');
+            var eventArgument = document.getElementById('__EVENTARGUMENT');
+            if (form && eventTarget && eventArgument) {
+                eventTarget.value = button.name;
+                eventArgument.value = '';
+                window.setTimeout(function () { form.submit(); }, 0);
+                return false;
+            }
+
+            return true;
+        }
+    </script>
+
 
 
     <asp:UpdatePanel ID="up_main" runat="server" UpdateMode="Conditional">
@@ -574,6 +645,9 @@
                         </li>--%>
                         <li data-role="hint" data-hint-position="top" data-hint-text="Xuất excel">
                             <asp:LinkButton ID="but_show_form_xuat" runat="server" OnClick="but_show_form_xuat_Click"><span class="mif-file-excel"></span></asp:LinkButton>
+                        </li>
+                        <li data-role="hint" data-hint-position="top" data-hint-text="Nhập sản phẩm từ Excel">
+                            <asp:LinkButton ID="but_show_import_excel" runat="server" Visible="false" OnClick="but_show_import_excel_Click"><span class="mif mif-file-excel"></span><span class="mif-plus"></span></asp:LinkButton>
                         </li>
 
 
@@ -715,9 +789,9 @@
                                                     </td>
                                                 </asp:PlaceHolder>
 
-                                                <td><%#Eval("Hang").ToString().ToUpper() %></td>
-                                                <td><%#Eval("model").ToString().ToUpper() %></td>
-                                                <td><%#Eval("Nhom").ToString().ToUpper() %></td>
+                                                <td><%#Convert.ToString(Eval("Hang")).ToUpper() %></td>
+                                                <td><%#Convert.ToString(Eval("model")).ToUpper() %></td>
+                                                <td><%#Convert.ToString(Eval("Nhom")).ToUpper() %></td>
 
 
                                                 <%--<td style="text-align:left!important"><small><%#Eval("thongso_kythuat") %></small></td>--%>
