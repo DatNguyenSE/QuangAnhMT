@@ -175,11 +175,24 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                 _tk = "";
 
             ViewState["taikhoan"] = _tk;
+            ViewState["show_sold_products"] = false;
+            lbl_toggle_sold_products.Text = "Xem sản phẩm đã bán";
 
             set_dulieu_macdinh();
             show_main();
 
         }
+    }
+
+    protected void but_toggle_sold_products_Click(object sender, EventArgs e)
+    {
+        check_login_cl.check_login_admin("7", "7");
+        bool showSoldProducts = !Convert.ToBoolean(ViewState["show_sold_products"] ?? false);
+        ViewState["show_sold_products"] = showSoldProducts;
+        ViewState["current_page_qlkho"] = "1";
+        lbl_toggle_sold_products.Text = showSoldProducts ? "Xem sản phẩm đang tồn" : "Xem sản phẩm đã bán";
+        show_main();
+        up_main.Update();
     }
 
     protected void but_show_import_excel_Click(object sender, EventArgs e)
@@ -340,7 +353,8 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                         {
                             ten = name,
                             donvitinh = unitId,
-                            soluong_hientai = quantity
+                            soluong_hientai = quantity,
+                            daban = false
                         };
                         db.KhoSanPham_tbs.InsertOnSubmit(product);
                         created++;
@@ -417,7 +431,12 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
 
                 #region lấy dữ liệu
                 string _key = GetCurrentSearchKey();
-                var products = db.KhoSanPham_tbs.AsQueryable();
+                bool showSoldProducts = Convert.ToBoolean(ViewState["show_sold_products"] ?? false);
+                var products = db.KhoSanPham_tbs
+                    .Where(p => showSoldProducts
+                        ? p.daban == true
+                        : p.daban == false || p.daban == null)
+                    .AsQueryable();
 
                 if (!string.IsNullOrEmpty(_key))
                 {
@@ -1008,6 +1027,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                     _ob.ngaytao = _ngaytao;
                     _ob.nguoitao = _nguoitao;
                     _ob.soluong_hientai = string.IsNullOrEmpty(_so_seri) ? 0 : 1;
+                    _ob.daban = false;
                     db.KhoSanPham_tbs.InsertOnSubmit(_ob);
                     db.SubmitChanges();
                     #endregion
@@ -1181,6 +1201,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             product.ngaytao = ngayNhap;
             product.nguoitao = nguoiTao;
             product.soluong_hientai = 1;
+            product.daban = false;
             db.KhoSanPham_tbs.InsertOnSubmit(product);
         }
         db.SubmitChanges();
@@ -2194,6 +2215,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                     {
                         int _new_soluong = Number_cl.Check_Int(txt_chinhsuasoluong.Text.Trim());
                         q.soluong_hientai = _new_soluong;
+                        q.daban = _new_soluong <= 0;
                         db.SubmitChanges();
                         ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Cập nhật số lượng thành công.", "1000", "success"), true);
                     }
@@ -2246,9 +2268,10 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                         q.gianhap = _gianhap;//tự cập nhật giá nhập cho sản phẩm tại bảng Kho
                     _ob.ngaynhap = _ngaynhap;
                     _ob.nguoinhap = _nguoinhap;
-                    _ob.ton_hientai = q.soluong_hientai;//tồn trước khi nhập
-                    q.soluong_hientai = q.soluong_hientai + _soluongnhap;//tăng tồn hiện tại
-                    db.NhapXuatKho_tbs.InsertOnSubmit(_ob);
+                            _ob.ton_hientai = q.soluong_hientai;//tồn trước khi nhập
+                            q.soluong_hientai = q.soluong_hientai + _soluongnhap;//tăng tồn hiện tại
+                            q.daban = false;
+                            db.NhapXuatKho_tbs.InsertOnSubmit(_ob);
                     db.SubmitChanges();
                     show_main();
                     up_main.Update();

@@ -646,6 +646,12 @@
                         <li data-role="hint" data-hint-position="top" data-hint-text="Xuất excel">
                             <asp:LinkButton ID="but_show_form_xuat" runat="server" OnClick="but_show_form_xuat_Click"><span class="mif-file-excel"></span></asp:LinkButton>
                         </li>
+                        <li data-role="hint" data-hint-position="top" data-hint-text="Xem sản phẩm đã bán">
+                            <asp:LinkButton ID="but_toggle_sold_products" runat="server" OnClick="but_toggle_sold_products_Click">
+                                <span class="mif-checkmark"></span>
+                                <asp:Label ID="lbl_toggle_sold_products" runat="server" Text="Xem sản phẩm đã bán"></asp:Label>
+                            </asp:LinkButton>
+                        </li>
                         <li data-role="hint" data-hint-position="top" data-hint-text="Nhập sản phẩm từ Excel">
                             <asp:LinkButton ID="but_show_import_excel" runat="server" Visible="false" OnClick="but_show_import_excel_Click"><span class="mif mif-file-excel"></span><span class="mif-plus"></span></asp:LinkButton>
                         </li>

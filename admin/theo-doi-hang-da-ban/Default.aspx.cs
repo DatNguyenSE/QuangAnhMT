@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -124,7 +124,7 @@ public partial class admin_theo_doi_hang_da_ban_Default : System.Web.UI.Page
                     {
                         detailId = ct.id,
                         productId = sp != null ? sp.id.ToString() : "",
-                        productName = sp != null ? sp.ten : "Sản phẩm tự chọn",
+                        productName = sp != null ? sp.ten : ct.id_sanpham,
                         productModel = sp != null ? sp.model : "",
                         productSerial = sp != null ? sp.so_seri : "",
                         serialReplacement1 = ct.Seri_Do_L1,
@@ -161,6 +161,19 @@ public partial class admin_theo_doi_hang_da_ban_Default : System.Web.UI.Page
                         p.tenKhachHang.Contains(key) ||
                         p.sdtKhachHang.Contains(key) ||
                         (hasBaoGiaId && p.baogiaId == searchBaoGiaId));
+                }
+
+                if (!string.IsNullOrEmpty(txt_thangban.Text))
+                {
+                    string[] parts = txt_thangban.Text.Split('-');
+                    if (parts.Length == 2)
+                    {
+                        int year, month;
+                        if (int.TryParse(parts[0], out year) && int.TryParse(parts[1], out month))
+                        {
+                            rawQuery = rawQuery.Where(p => p.ngayban.HasValue && p.ngayban.Value.Year == year && p.ngayban.Value.Month == month);
+                        }
+                    }
                 }
 
                 int pageSize = Number_cl.Check_Int(txt_show.Text.Trim());
@@ -274,6 +287,19 @@ public partial class admin_theo_doi_hang_da_ban_Default : System.Web.UI.Page
         show_main();
     }
 
+    protected void txt_thangban_TextChanged(object sender, EventArgs e)
+    {
+        ViewState["current_page"] = "1";
+        show_main();
+    }
+
+    protected void btn_clear_thangban_Click(object sender, EventArgs e)
+    {
+        txt_thangban.Text = "";
+        ViewState["current_page"] = "1";
+        show_main();
+    }
+
     protected void btn_warranty_Click(object sender, EventArgs e)
     {
         ViewState["warranty_filter"] = "valid";
@@ -352,7 +378,7 @@ public partial class admin_theo_doi_hang_da_ban_Default : System.Web.UI.Page
                     else
                     {
                         img_detail_sp.ImageUrl = "/uploads/images/no-image.png";
-                        lbl_detail_tensp.Text = "Sản phẩm tự chọn";
+                        lbl_detail_tensp.Text = ct.id_sanpham;
                         lbl_detail_model.Text = "Không rõ";
                         lbl_detail_seri.Text = "Không rõ";
                         lbl_detail_thongso.Text = "Không rõ";
@@ -457,7 +483,7 @@ lbl_detail_tongdonhang_saugiam.Text = totalSauGiamAll.ToString("#,##0");
                                          where ctItem.id_baogia == baogiaId
                                          select new
                                          {
-                                             productName = spItem != null ? spItem.ten : "Sản phẩm tự chọn",
+                                             productName = spItem != null ? spItem.ten : ctItem.id_sanpham,
                                              quantity = ctItem.soluong ?? 0,
                                              itemTongSauGiam = ctItem.TongSauGiam ?? 0
                                          }).ToList();

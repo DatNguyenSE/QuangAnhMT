@@ -373,6 +373,13 @@
                             <asp:LinkButton ID="btn_all" runat="server" CssClass="button secondary warranty-filter-button" OnClick="btn_all_Click">Tất cả</asp:LinkButton>
                         </li>
                         <li>
+                            <div class="p-2 d-flex flex-align-center pl-2">
+                                <small class="pr-2 text-bold" style="white-space:nowrap;">Tháng bán:</small>
+                                <asp:TextBox ID="txt_thangban" type="month" runat="server" AutoPostBack="true" OnTextChanged="txt_thangban_TextChanged" style="height: 32px; border: 1px solid #d9d9d9; padding: 0 5px; border-radius: 4px;"></asp:TextBox>
+                                <asp:LinkButton ID="btn_clear_thangban" runat="server" CssClass="button small bg-transparent ml-1" OnClick="btn_clear_thangban_Click" style="border: none; color: #dc2626; padding: 0 5px;" title="Bỏ lọc tháng"><span class="mif-cross"></span></asp:LinkButton>
+                            </div>
+                        </li>
+                        <li>
                             <a>
                                 <small>
                                     <asp:Label ID="lbl_page_info" runat="server" Text=""></asp:Label>

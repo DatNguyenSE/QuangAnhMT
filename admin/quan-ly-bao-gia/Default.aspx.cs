@@ -2246,6 +2246,7 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                                 if (sanPhamKho != null)
                                 {
                                     sanPhamKho.soluong_hientai += ct.soluong;
+                                    sanPhamKho.daban = false;
                                 }
                             }
                         }
@@ -2908,6 +2909,7 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                             _ob.ton_hientai = sanPhamKho.soluong_hientai;//tồn trước khi xuất
                             _ob.id_baogia = _idbg;
                             sanPhamKho.soluong_hientai = sanPhamKho.soluong_hientai - chiTiet.soluong;//giảm tồn hiện tại
+                            sanPhamKho.daban = (sanPhamKho.soluong_hientai ?? 0) == 0;
                             db.NhapXuatKho_tbs.InsertOnSubmit(_ob);
                             #endregion
                         }
