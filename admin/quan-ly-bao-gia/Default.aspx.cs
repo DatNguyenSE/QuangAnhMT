@@ -10,6 +10,7 @@ using System.Security.Cryptography;
 using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
+using System.Web.Services;
 
 public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
 {
@@ -17,7 +18,7 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
     String_cl str_cl = new String_cl();
     DateTime_cl dt_cl = new DateTime_cl();
 
-    private sealed class DropdownOption
+    public class DropdownOption
     {
         public string Id { get; set; }
         public string Text { get; set; }
@@ -39,12 +40,34 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
         return customers;
     }
 
+    [WebMethod]
+    public static List<DropdownOption> SearchProductsAjax(string keyword)
+    {
+        using (dbDataContext db = new dbDataContext())
+        {
+            var q = db.KhoSanPham_tbs.AsQueryable();
+            if (!string.IsNullOrEmpty(keyword))
+            {
+                q = q.Where(p => p.ten.Contains(keyword) || p.so_seri.Contains(keyword) || p.model.Contains(keyword));
+            }
+            return q.OrderByDescending(p => p.id)
+                    .Select(p => new { p.id, p.so_seri, p.ten, p.soluong_hientai })
+                    .Take(100) // limit for fast response
+                    .ToList()
+                    .Select(p => new DropdownOption
+                    {
+                        Id = p.id.ToString(),
+                        Seri = p.so_seri,
+                        Text = p.ten + (!string.IsNullOrEmpty(p.so_seri) ? " - " + p.so_seri : "") + " <span class='fg-red'> (" + (p.soluong_hientai ?? 0) + ")</span>"
+                    }).ToList();
+        }
+    }
+
     private static List<DropdownOption> GetProducts(dbDataContext db)
     {
         var products = db.KhoSanPham_tbs
             .OrderByDescending(p => p.id)
             .Select(p => new { p.id, p.so_seri, p.ten, p.soluong_hientai })
-            .Take(1000)
             .ToList()
             .Select(p => new DropdownOption
             {
@@ -394,23 +417,58 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                 DateTime? denNgayHD = DateTime.TryParse(txt_denngay.Text, out var _den) ? _den.Date : (DateTime?)null;
                 DateTime? denNgayHDExclusive = denNgayHD.HasValue ? denNgayHD.Value.AddDays(1) : (DateTime?)null;
 
-                var list_sanpham_ban =
-                     (from ob1 in filteredQuery
-                     join ob2 in db.BaoGia_ChiTiet_tbs
-                         on ob1.id.ToString() equals ob2.id_baogia
-                     where ob1.trangthai == "Đã ký HĐ"
-                           && ob1.ngayban_kyhopdong.HasValue
-                           && (!tuNgayHD.HasValue || ob1.ngayban_kyhopdong >= tuNgayHD)
-                           && (!denNgayHDExclusive.HasValue || ob1.ngayban_kyhopdong < denNgayHDExclusive)
-                      group new { soluong = ob2.soluong ?? 0 } by ob2.id_sanpham into g
-                      join kho in db.KhoSanPham_tbs on g.Key equals kho.id.ToString()
-                      select new
-                      {
-                          id_sanpham = g.Key,
-                          tong_so_luong = g.Sum(x => x.soluong),
-                          gianhap = kho.gianhap ?? 0,
-                          tong_gia_von = (long)g.Sum(x => x.soluong) * (kho.gianhap ?? 0)
-                      }).ToList();
+                var validQuoteIds = filteredQuery
+                    .Where(ob1 => ob1.trangthai == "Đã ký HĐ"
+                               && ob1.ngayban_kyhopdong.HasValue
+                               && (!tuNgayHD.HasValue || ob1.ngayban_kyhopdong >= tuNgayHD)
+                               && (!denNgayHDExclusive.HasValue || ob1.ngayban_kyhopdong < denNgayHDExclusive))
+                    .Select(ob1 => ob1.id)
+                    .ToList()
+                    .Select(id => id.ToString())
+                    .ToList();
+
+                var chiTiets = new List<Tuple<string, int>>();
+                for (int i = 0; i < validQuoteIds.Count; i += 2000)
+                {
+                    var batchIds = validQuoteIds.Skip(i).Take(2000).ToList();
+                    var batch = db.BaoGia_ChiTiet_tbs
+                        .Where(ob2 => batchIds.Contains(ob2.id_baogia))
+                        .Select(ob2 => new { ob2.id_sanpham, soluong = ob2.soluong ?? 0 })
+                        .ToList();
+                    foreach (var b in batch) chiTiets.Add(new Tuple<string, int>(b.id_sanpham, b.soluong));
+                }
+
+                var groupedChiTiets = chiTiets
+                    .GroupBy(c => c.Item1)
+                    .Select(g => new
+                    {
+                        id_sanpham = g.Key,
+                        tong_so_luong = g.Sum(x => x.Item2)
+                    }).ToList();
+
+                var productIdsStr = groupedChiTiets.Select(g => g.id_sanpham).Distinct().ToList();
+                var productIdsLong = productIdsStr.Where(s => long.TryParse(s, out _)).Select(s => long.Parse(s)).ToList();
+
+                var khoSanPhamList = new List<Tuple<long, long>>();
+                for (int i = 0; i < productIdsLong.Count; i += 2000)
+                {
+                    var batchIds = productIdsLong.Skip(i).Take(2000).ToList();
+                    var batch = db.KhoSanPham_tbs
+                        .Where(k => batchIds.Contains(k.id))
+                        .Select(k => new { k.id, gianhap = k.gianhap ?? 0 })
+                        .ToList();
+                    foreach (var b in batch) khoSanPhamList.Add(new Tuple<long, long>(b.id, (long)b.gianhap));
+                }
+
+                var list_sanpham_ban = (from g in groupedChiTiets
+                                        join kho in khoSanPhamList on g.id_sanpham equals kho.Item1.ToString()
+                                        select new
+                                        {
+                                            id_sanpham = g.id_sanpham,
+                                            tong_so_luong = g.tong_so_luong,
+                                            gianhap = kho.Item2,
+                                            tong_gia_von = (long)g.tong_so_luong * kho.Item2
+                                        }).ToList();
 
                 if (list_sanpham_ban.Any())
                 {
@@ -2517,6 +2575,7 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
     }
 
 
+
     protected void but_chon_sanpham_Click(object sender, EventArgs e)
     {
         check_login_cl.check_login_admin("18", "19");
@@ -2909,7 +2968,7 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                             _ob.ton_hientai = sanPhamKho.soluong_hientai;//tồn trước khi xuất
                             _ob.id_baogia = _idbg;
                             sanPhamKho.soluong_hientai = sanPhamKho.soluong_hientai - chiTiet.soluong;//giảm tồn hiện tại
-                            sanPhamKho.daban = (sanPhamKho.soluong_hientai ?? 0) == 0;
+                            //sanPhamKho.daban = (sanPhamKho.soluong_hientai ?? 0) == 0; // User requested to disable auto-assignment
                             db.NhapXuatKho_tbs.InsertOnSubmit(_ob);
                             #endregion
                         }

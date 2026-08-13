@@ -432,11 +432,15 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                 #region lấy dữ liệu
                 string _key = GetCurrentSearchKey();
                 bool showSoldProducts = Convert.ToBoolean(ViewState["show_sold_products"] ?? false);
-                var products = db.KhoSanPham_tbs
-                    .Where(p => showSoldProducts
-                        ? p.daban == true
-                        : p.daban == false || p.daban == null)
-                    .AsQueryable();
+                var products = db.KhoSanPham_tbs.AsQueryable();
+                if (showSoldProducts)
+                {
+                    products = products.Where(p => p.daban == true);
+                }
+                else
+                {
+                    products = products.Where(p => p.daban == false || p.daban == null);
+                }
 
                 if (!string.IsNullOrEmpty(_key))
                 {
@@ -457,6 +461,15 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                         categoryIds.Contains(p.id_hang) ||
                         categoryIds.Contains(p.id_nhom));
                 }
+
+                // Lọc theo ngày tạo trước khi tính tổng và phân trang.
+                DateTime tuNgay;
+                if (DateTime.TryParse(txt_tungay.Text.Trim(), out tuNgay))
+                    products = products.Where(p => p.ngaytao >= tuNgay.Date);
+
+                DateTime denNgay;
+                if (DateTime.TryParse(txt_denngay.Text.Trim(), out denNgay))
+                    products = products.Where(p => p.ngaytao < denNgay.Date.AddDays(1));
 
                 var list_all = (from ob1 in products
                                 join ob2 in db.DuLieuNguon_tbs
@@ -490,15 +503,6 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                                     ob1.ngaytao,
                                     ob1.nguoitao,
                                  }).AsQueryable();
-
-                // Lọc theo ngày tạo trước khi tính tổng và phân trang.
-                DateTime tuNgay;
-                if (DateTime.TryParse(txt_tungay.Text.Trim(), out tuNgay))
-                    products = products.Where(p => p.ngaytao >= tuNgay.Date);
-
-                DateTime denNgay;
-                if (DateTime.TryParse(txt_denngay.Text.Trim(), out denNgay))
-                    products = products.Where(p => p.ngaytao < denNgay.Date.AddDays(1));
 
                 /* ////xử lý theo thời gian
                 //string _id_locthoigian = ddl_thoigian.SelectedValue;
@@ -2215,7 +2219,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                     {
                         int _new_soluong = Number_cl.Check_Int(txt_chinhsuasoluong.Text.Trim());
                         q.soluong_hientai = _new_soluong;
-                        q.daban = _new_soluong <= 0;
+                        //q.daban = _new_soluong <= 0; // User requested to disable auto-assignment
                         db.SubmitChanges();
                         ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Cập nhật số lượng thành công.", "1000", "success"), true);
                     }
