@@ -2564,12 +2564,41 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                     txt_giamgia_kh.Text = "0";
                 }
                 ViewState["customer_checked"] = true;
+
+                // Cảnh báo nợ xấu
+                try
+                {
+                    var thresholdDate = DateTime.Now.AddDays(-30);
+                    string sdt = q.sdt ?? "";
+                    string ten = q.ten ?? "";
+                    
+                    var listBanHang = db.BaoGia_tbs
+                        .Where(x => x.sdt_khachhang == sdt && x.ten_khachhang == ten && (x.congno ?? 0) > 0 && (x.ngayban_kyhopdong.HasValue || x.trangthai == "Đã ký HĐ" || x.trangthai == "Điều chỉnh công nợ"))
+                        .Select(x => new
+                        {
+                            No = x.congno ?? 0,
+                            QuaHan = ((x.ngayban_kyhopdong ?? x.ngaybaogia) < thresholdDate) ? (x.congno ?? 0) : 0L
+                        }).ToList();
+
+                    var listBaoHanh = db.HangBaoHanh_tbs
+                        .Where(x => x.sdt_khachhang == sdt && x.ten_khachhang == ten && (x.congno ?? 0) > 0 && x.trangthai == "Đã trả")
+                        .Select(x => new
+                        {
+                            No = x.congno ?? 0,
+                            QuaHan = ((x.NgayTra_ThucTe ?? x.ngaytao) < thresholdDate) ? (x.congno ?? 0) : 0L
+                        }).ToList();
+
+                    long tongNo = listBanHang.Sum(x => x.No) + listBaoHanh.Sum(x => x.No);
+                    long tongQuaHan = listBanHang.Sum(x => x.QuaHan) + listBaoHanh.Sum(x => x.QuaHan);
+
+                    if (tongNo > 20000000 && tongQuaHan > 0)
+                    {
+                        string msg = string.Format("KHÁCH HÀNG ĐANG NỢ {0:N0} đ VÀ CÓ KHOẢN NỢ QUÁ HẠN!", tongNo);
+                        ScriptManager.RegisterStartupScript(this.Page, this.GetType(), "debt_alert", "Metro.notify.create('" + msg + "', 'CẢNH BÁO', { cls: 'alert', timeout: 10000 });", true);
+                    }
+                }
+                catch { }
             }
-            //else
-            //{
-            //    txt_ten_kh.Text = "";
-            //    txt_diachi_kh.Text = "";
-            //}
         }
         up_add.Update();
     }

@@ -55,30 +55,42 @@
                 <div class="remark success">
                     <div>ĐƠN ĐÃ BÁN</div>
                     <h3><asp:Literal ID="ltr_don_ban" runat="server" /></h3>
+                    <div style="font-size: 13px; margin-top: 5px;"><asp:Literal ID="ltr_trend_don" runat="server" /></div>
                 </div>
             </div>
-            <div class="cell-lg-3 cell-md-4 cell-sm-6">
+            <div class="cell-lg-2 cell-md-4 cell-sm-6">
                 <div class="remark alert">
                     <div>TỔNG DOANH THU</div>
                     <h3><asp:Literal ID="ltr_doanhthu" runat="server" /></h3>
+                    <div style="font-size: 13px; margin-top: 5px;"><asp:Literal ID="ltr_trend_doanhthu" runat="server" /></div>
                 </div>
             </div>
-            <div class="cell-lg-3 cell-md-4 cell-sm-6">
+            <div class="cell-lg-2 cell-md-4 cell-sm-6">
                 <div class="remark info" style="border-left-color: #00bcd4;">
-                    <div>DOANH THU BẢO HÀNH</div>
+                    <div>DT BẢO HÀNH</div>
                     <h3><asp:Literal ID="ltr_doanhthubaohanh" runat="server" /></h3>
+                    <div style="font-size: 13px; margin-top: 5px;"><asp:Literal ID="ltr_trend_baohanh" runat="server" /></div>
                 </div>
             </div>
-            <div class="cell-lg-2 cell-md-6 cell-sm-6">
+            <div class="cell-lg-2 cell-md-4 cell-sm-6">
+                <div class="remark" style="border-left-color: #9c27b0;">
+                    <div>LỢI NHUẬN</div>
+                    <h3><asp:Literal ID="ltr_loinhuan" runat="server" /></h3>
+                    <div style="font-size: 13px; margin-top: 5px;"><asp:Literal ID="ltr_trend_loinhuan" runat="server" /></div>
+                </div>
+            </div>
+            <div class="cell-lg-2 cell-md-4 cell-sm-6">
                 <div class="remark primary">
                     <div>ĐÃ THANH TOÁN</div>
                     <h3><asp:Literal ID="ltr_dathanhtoan" runat="server" /></h3>
+                    <div style="font-size: 13px; margin-top: 5px;"><asp:Literal ID="ltr_trend_dathanhtoan" runat="server" /></div>
                 </div>
             </div>
-            <div class="cell-lg-2 cell-md-6 cell-sm-6">
-                <div class="remark warning">
-                    <div>CÔNG NỢ</div>
+            <div class="cell-lg-2 cell-md-4 cell-sm-6">
+                <div class="remark warning" style="cursor: pointer;" onclick="window.location.href='/admin/thong-ke/cong-no-khach-hang.aspx'" title="Chuyển đến trang Công nợ khách hàng">
+                    <div>CÔNG NỢ <span style="font-size: 11px; margin-left: 10px; font-weight: normal; opacity: 0.8;">(bấm vào để xem chi tiết)</span></div>
                     <h3><asp:Literal ID="ltr_congno" runat="server" /></h3>
+                    <div style="font-size: 13px; margin-top: 5px;"><asp:Literal ID="ltr_trend_congno" runat="server" /></div>
                 </div>
             </div>
         </div>
@@ -123,8 +135,8 @@
                                 <asp:BoundField DataField="TenSanPham" HeaderText="Sản phẩm" />
                                 <asp:BoundField DataField="SoLuong" HeaderText="SL bán" ItemStyle-CssClass="text-center" />
                                 <asp:BoundField DataField="DoanhThuText" HeaderText="Doanh thu" ItemStyle-CssClass="text-right" />
-                                <asp:BoundField DataField="GiaVonText" HeaderText="Giá vốn" ItemStyle-CssClass="text-right" />
                                 <asp:BoundField DataField="LoiNhuanText" HeaderText="Lợi nhuận" ItemStyle-CssClass="text-right" />
+                                <asp:BoundField DataField="TonKhoText" HeaderText="Tồn kho" ItemStyle-CssClass="text-center text-bold fg-red" />
                             </Columns>
                         </asp:GridView>
                     </div>

@@ -159,30 +159,17 @@
                                     <tr class="">
                                         <th style="width: 1px;">ID</th>
                                         <th style="width: 1px;">
-                                            <%--data-role="checkbox" data-style="2"--%>
                                             <input data-role="hint" data-hint-position="top" data-hint-text="Chọn/Bỏ chọn" type="checkbox" onkeypress="if (event.keyCode==13) return false;" onclick="$('.checkbox-table input[type=checkbox]').prop('checked', this.checked)">
                                         </th>
-                                        <th style="width: 140px; min-width: 140px;">Ngày<br />
-                                            Nhân viên</th>
-                                        <th style="width: 50px; min-width: 50px;">Ảnh</th>
-                                        <th style="width: 160px; min-width: 160px;">Sản phẩm</th>
-                                        <th style="width: 1px; min-width: 1px;">VAT</th>
-                                        <th style="width: 1px; min-width: 1px;">ĐVT</th>
-                                        <th style="width: 1px; min-width: 1px;">Tồn đầu</th>
-                                        <th style="width: 130px; min-width: 130px;">SL</th>
-                                        <th style="width: 1px; min-width: 1px;">Tồn cuối</th>
-                                        <asp:PlaceHolder ID="PlaceHolder4" runat="server" Visible="false">
-                                            <th style="width: 90px; min-width: 90px;">Giá<br />
-                                                Thành tiền</th>
-                                        </asp:PlaceHolder>
-
-
-                                        <th style="width: 1px; min-width: 1px;">Hãng</th>
-                                        <th style="width: 1px; min-width: 1px;">Model</th>
-                                        <th style="width: 1px; min-width: 1px;">Nhóm</th>
-
-
-                                        <%--<th style="width: 300px; min-width: 300px;">Thông số</th>--%>
+                                        <th style="width: 120px;">Ngày</th>
+                                        <th style="width: 80px;">Loại</th>
+                                        <th style="width: 50px;">Ảnh</th>
+                                        <th style="width: 180px;">Sản phẩm</th>
+                                        <th style="width: 80px; text-align: center;">Tồn đầu</th>
+                                        <th style="width: 100px; text-align: center;">Số lượng</th>
+                                        <th style="width: 80px; text-align: center;">Tồn cuối</th>
+                                        <th style="width: 100px;">Mã báo giá</th>
+                                        <th style="width: 150px;">Khách hàng</th>
                                     </tr>
                                 </thead>
 
@@ -193,18 +180,18 @@
                                                 <asp:Label ID="lbID" runat="server" Text='<%#Eval("id") %>'></asp:Label>
                                             </span>
                                             <tr>
-                                                <td class="text-center">
-                                                    <%#Eval("id") %>
-                                                </td>
-                                                <%--<td class="text-center"><%# Container.ItemIndex + 1 %></td>--%>
+                                                <td class="text-center"><%#Eval("id") %></td>
                                                 <td class="checkbox-table">
-                                                    <%--data-role="checkbox" data-style="2"--%>
-                                                    <%--<input type="checkbox" onkeypress="if (event.keyCode==13) return false;" name="check_<%#Eval("id").ToString() %>">--%>
                                                     <asp:CheckBox ID="checkID" runat="server" onkeypress="if (event.keyCode==13) return false;" />
                                                 </td>
-                                                <td class="text-left"><small><%#Eval("ngaynhap","{0:dd/MM/yyyy HH:mm}") %></small>
-
-                                                    <div class="fw-600"><%#Eval("HoTenNhanVien") %></div>
+                                                <td class="text-center"><%#Eval("ngaynhap","{0:dd/MM/yyyy HH:mm}") %></td>
+                                                <td class="text-center">
+                                                    <asp:PlaceHolder ID="PlaceHolder11" runat="server" Visible='<%#Convert.ToString(Eval("nhap_hay_xuat"))=="True" %>'>
+                                                        <span class="fg-green text-bold">Nhập</span>
+                                                    </asp:PlaceHolder>
+                                                    <asp:PlaceHolder ID="PlaceHolder12" runat="server" Visible='<%#Convert.ToString(Eval("nhap_hay_xuat"))=="False" %>'>
+                                                        <span class="fg-red text-bold">Xuất</span>
+                                                    </asp:PlaceHolder>
                                                 </td>
                                                 <td>
                                                     <div data-role="lightbox" class="c-pointer">
@@ -215,47 +202,32 @@
                                                     <%#Eval("TenSP") %>
                                                     <div>
                                                         <asp:PlaceHolder ID="PlaceHolder3" runat="server" Visible='<%# Convert.ToBoolean(Eval("hangthanhly")) %>'>
-                                                            <span class="button mini warning rounded">Hàng thanh lý</span>
+                                                            <span class="button mini warning rounded mt-1">Hàng thanh lý</span>
                                                         </asp:PlaceHolder>
                                                     </div>
                                                 </td>
-                                                <td>
-                                                    <asp:PlaceHolder ID="PlaceHolder2" runat="server" Visible='<%# Convert.ToBoolean(Eval("cohoadon")) %>'>
-                                                        <span class="mif mif-checkmark fg-green"></span>
+                                                <td class="text-center"><b><%#Eval("ton_hientai","{0:#,##0}") %></b></td>
+                                                <td class="text-center">
+                                                    <asp:PlaceHolder ID="PlaceHolder7" runat="server" Visible='<%#Convert.ToString(Eval("nhap_hay_xuat"))=="True" %>'>
+                                                        <b class="fg-green">+ <%#Eval("soluong_nhap","{0:#,##0}") %></b>
+                                                    </asp:PlaceHolder>
+                                                    <asp:PlaceHolder ID="PlaceHolder8" runat="server" Visible='<%#Convert.ToString(Eval("nhap_hay_xuat"))=="False" %>'>
+                                                        <b class="fg-red">- <%#Eval("soluong_nhap","{0:#,##0}") %></b>
                                                     </asp:PlaceHolder>
                                                 </td>
-                                                <td><%#Eval("DVT").ToString().ToUpper() %></td>
-                                                <td><b><%#Eval("ton_hientai","{0:#,##0}") %></b></td>
-
-                                                <asp:PlaceHolder ID="PlaceHolder7" runat="server" Visible='<%#Eval("nhap_hay_xuat").ToString()=="True" %>'>
-                                                    <td>
-                                                        <div data-role="hint" data-hint-position="top" data-hint-text="Nhập" class="button mini rounded success"><b>+ <%#Eval("soluong_nhap","{0:#,##0}") %></b></div>
-                                                    </td>
-                                                    <td><b><%#Eval("TonCuoi_SauNhap","{0:#,##0}") %></b></td>
-                                                </asp:PlaceHolder>
-                                                <asp:PlaceHolder ID="PlaceHolder8" runat="server" Visible='<%#Eval("nhap_hay_xuat").ToString()=="False" %>'>
-                                                    <td>
-                                                        <div data-role="hint" data-hint-position="top" data-hint-text="Xuất" class="button mini rounded warning">- <%#Eval("soluong_nhap","{0:#,##0}") %></div>
-                                                      <div><small>Xuất đơn hàng số <b><%#Eval("id_baogia") %></b></small></div>
-                                                        <div><small><%#Eval("TenKhach") %></small></div>
-                                                        <div><small><%#Eval("SDT_Khach") %></small></div>
-                                                    </td>
-                                                    <td><b><%#Eval("TonCuoi_SauXuat","{0:#,##0}") %></b></td>
-                                                </asp:PlaceHolder>
-
-
-                                                <asp:PlaceHolder ID="PlaceHolder5" runat="server" Visible="false">
-                                                    <td class="text-right"><%#Eval("GiaNhapXuat","{0:#,##0}") %>
-                                                        <div><small>x <%#Eval("soluong_nhap") %></small></div>
-                                                        <div><small>=<%#Eval("TongGia","{0:#,##0}") %></small></div>
-                                                    </td>
-                                                </asp:PlaceHolder>
-
-                                                <td><%#Eval("Hang").ToString().ToUpper() %></td>
-                                                <td><%#Eval("model").ToString().ToUpper() %></td>
-                                                <td><%#Eval("Nhom").ToString().ToUpper() %></td>
-
-
+                                                <td class="text-center">
+                                                    <asp:PlaceHolder ID="PlaceHolder9" runat="server" Visible='<%#Convert.ToString(Eval("nhap_hay_xuat"))=="True" %>'>
+                                                        <b><%#Eval("TonCuoi_SauNhap","{0:#,##0}") %></b>
+                                                    </asp:PlaceHolder>
+                                                    <asp:PlaceHolder ID="PlaceHolder10" runat="server" Visible='<%#Convert.ToString(Eval("nhap_hay_xuat"))=="False" %>'>
+                                                        <b><%#Eval("TonCuoi_SauXuat","{0:#,##0}") %></b>
+                                                    </asp:PlaceHolder>
+                                                </td>
+                                                <td class="text-center"><b><%#Eval("id_baogia") %></b></td>
+                                                <td>
+                                                    <div><small><b><%#Eval("TenKhach") %></b></small></div>
+                                                    <div><small><%#Eval("SDT_Khach") %></small></div>
+                                                </td>
                                             </tr>
                                         </ItemTemplate>
                                     </asp:Repeater>

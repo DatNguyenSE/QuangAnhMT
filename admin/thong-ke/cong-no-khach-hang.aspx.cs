@@ -51,16 +51,20 @@ public partial class admin_thong_ke_cong_no_khach_hang : System.Web.UI.Page
 
             using (dbDataContext db = new dbDataContext())
             {
-                // Lấy các đơn bán hàng có nợ
+                var thresholdDate = DateTime.Now.AddDays(-30);
+                
+                // Lấy các đơn bán hàng có nợ (bao gồm cả điều chỉnh công nợ)
                 var listBanHang = db.BaoGia_tbs
-                    .Where(x => (x.congno ?? 0) > 0 && (x.ngayban_kyhopdong.HasValue || x.trangthai == "Đã ký HĐ"))
+                    .Where(x => (x.congno ?? 0) > 0 && (x.ngayban_kyhopdong.HasValue || x.trangthai == "Đã ký HĐ" || x.trangthai == "Điều chỉnh công nợ"))
                     .Where(x => (x.ngayban_kyhopdong ?? x.ngaybaogia) >= tuNgay && (x.ngayban_kyhopdong ?? x.ngaybaogia) <= denNgay)
                     .Select(x => new
                     {
                         TenKhachHang = x.ten_khachhang ?? "Không rõ",
                         SoDienThoai = x.sdt_khachhang ?? "Không rõ",
                         NoBanHang = x.congno ?? 0,
-                        NoBaoHanh = 0L
+                        NoBaoHanh = 0L,
+                        NgayTao = x.ngayban_kyhopdong ?? x.ngaybaogia,
+                        QuaHan = ((x.ngayban_kyhopdong ?? x.ngaybaogia) < thresholdDate) ? (x.congno ?? 0) : 0L
                     }).ToList();
 
                 // Lấy các đơn bảo hành có nợ
@@ -72,7 +76,9 @@ public partial class admin_thong_ke_cong_no_khach_hang : System.Web.UI.Page
                         TenKhachHang = x.ten_khachhang ?? "Không rõ",
                         SoDienThoai = x.sdt_khachhang ?? "Không rõ",
                         NoBanHang = 0L,
-                        NoBaoHanh = x.congno ?? 0
+                        NoBaoHanh = x.congno ?? 0,
+                        NgayTao = x.NgayTra_ThucTe ?? x.ngaytao,
+                        QuaHan = ((x.NgayTra_ThucTe ?? x.ngaytao) < thresholdDate) ? (x.congno ?? 0) : 0L
                     }).ToList();
 
                 // Gộp chung
@@ -87,7 +93,9 @@ public partial class admin_thong_ke_cong_no_khach_hang : System.Web.UI.Page
                         SoDienThoai = g.Key.SoDienThoai,
                         NoBanHang = g.Sum(x => x.NoBanHang),
                         NoBaoHanh = g.Sum(x => x.NoBaoHanh),
-                        TongNo = g.Sum(x => x.NoBanHang) + g.Sum(x => x.NoBaoHanh)
+                        TongNo = g.Sum(x => x.NoBanHang) + g.Sum(x => x.NoBaoHanh),
+                        QuaHan = g.Sum(x => x.QuaHan),
+                        NgayQuaHanList = g.Where(x => x.QuaHan > 0).Select(x => x.NgayTao).OrderBy(x => x).ToList()
                     })
                     .Where(x => x.TongNo > 0)
                     .OrderByDescending(x => x.TongNo)
@@ -120,12 +128,22 @@ public partial class admin_thong_ke_cong_no_khach_hang : System.Web.UI.Page
                     string encryptedToken = mahoa_cl.mahoa_Bcorn(rawToken);
                     string encodedToken = HttpUtility.UrlEncode(encryptedToken);
                     string publicLink = domain + "/chi-tiet-cong-no.aspx?token=" + encodedToken;
+                    
+                    string strNgayQuaHan = "";
+                    if (x.NgayQuaHanList.Any())
+                    {
+                        var dates = x.NgayQuaHanList.Where(d => d.HasValue).Select(d => d.Value.ToString("dd/MM/yy")).Distinct();
+                        strNgayQuaHan = string.Join("<br/>", dates);
+                    }
+
                     return new {
                         x.TenKhachHang,
                         x.SoDienThoai,
                         NoBanHangText = Money(x.NoBanHang),
                         NoBaoHanhText = Money(x.NoBaoHanh),
                         TongNoText = Money(x.TongNo),
+                        QuaHanText = x.QuaHan > 0 ? "<span class='fg-red fw-bold'><span class='mif-warning'></span> Báo động</span>" : "",
+                        NgayQuaHan = strNgayQuaHan,
                         Token = encryptedToken,
                         PublicLink = publicLink
                     };
@@ -135,6 +153,7 @@ public partial class admin_thong_ke_cong_no_khach_hang : System.Web.UI.Page
                 grv_khachhang.DataBind();
 
                 pn_thongbao.Visible = false;
+                up_grid.Update();
             }
         }
         catch (Exception ex)
@@ -183,12 +202,13 @@ public partial class admin_thong_ke_cong_no_khach_hang : System.Web.UI.Page
             {
                 // 1. Mua hàng
                 var listBanHang = db.BaoGia_tbs
-                    .Where(x => x.sdt_khachhang == sdt && x.ten_khachhang == ten && (x.congno ?? 0) > 0 && (x.ngayban_kyhopdong.HasValue || x.trangthai == "Đã ký HĐ"))
+                    .Where(x => x.sdt_khachhang == sdt && x.ten_khachhang == ten && (x.congno ?? 0) > 0 && (x.ngayban_kyhopdong.HasValue || x.trangthai == "Đã ký HĐ" || x.trangthai == "Điều chỉnh công nợ"))
                     .Where(x => (x.ngayban_kyhopdong ?? x.ngaybaogia) >= tuNgay && (x.ngayban_kyhopdong ?? x.ngaybaogia) <= denNgay)
                     .Select(x => new
                     {
                         Ngay = x.ngayban_kyhopdong ?? x.ngaybaogia,
                         MaDon = x.id.ToString(),
+                        TrangThai = x.trangthai == "Điều chỉnh công nợ" ? "Điều chỉnh nợ cũ" : "Bán hàng",
                         TongTien = x.tongtien ?? 0,
                         CongNo = x.congno ?? 0
                     }).ToList()
@@ -196,6 +216,7 @@ public partial class admin_thong_ke_cong_no_khach_hang : System.Web.UI.Page
                     {
                         x.Ngay,
                         x.MaDon,
+                        x.TrangThai,
                         TongTienText = Money(x.TongTien),
                         CongNoText = Money(x.CongNo)
                     }).ToList();
@@ -224,10 +245,10 @@ public partial class admin_thong_ke_cong_no_khach_hang : System.Web.UI.Page
 
                 grv_modal_baohanh.DataSource = listBaoHanh;
                 grv_modal_baohanh.DataBind();
-            }
 
-            // Mở modal
-            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), "OpenModal", "Metro.dialog.open('#modal_chitiet');", true);
+                ScriptManager.RegisterStartupScript(up_modal, up_modal.GetType(), "open_modal", "Metro.dialog.open('#modal_chitiet');", true);
+                up_modal.Update();
+            }
         }
         catch (Exception ex)
         {
@@ -326,6 +347,130 @@ public partial class admin_thong_ke_cong_no_khach_hang : System.Web.UI.Page
         {
             pn_thongbao.Visible = true;
             lb_thongbao.Text = "Lỗi khi xuất file: " + Server.HtmlEncode(ex.Message);
+        }
+    }
+
+    protected void but_dieuchinh_save_Click(object sender, EventArgs e)
+    {
+        try
+        {
+            string sdt = !string.IsNullOrEmpty(txt_dc_sdt.Text) ? txt_dc_sdt.Text.Trim() : (Request.Form[txt_dc_sdt.UniqueID] ?? "").Trim();
+            string ten = !string.IsNullOrEmpty(txt_dc_ten.Text) ? txt_dc_ten.Text.Trim() : (Request.Form[txt_dc_ten.UniqueID] ?? "").Trim();
+            string tienStr = !string.IsNullOrEmpty(txt_dc_sotien.Text) ? txt_dc_sotien.Text.Trim() : (Request.Form[txt_dc_sotien.UniqueID] ?? "").Trim();
+            string ghichu = !string.IsNullOrEmpty(txt_dc_ghichu.Text) ? txt_dc_ghichu.Text.Trim() : (Request.Form[txt_dc_ghichu.UniqueID] ?? "").Trim();
+            string ngayStr = !string.IsNullOrEmpty(txt_dc_ngay.Text) ? txt_dc_ngay.Text.Trim() : (Request.Form[txt_dc_ngay.UniqueID] ?? "").Trim();
+
+            if (string.IsNullOrEmpty(sdt) || string.IsNullOrEmpty(ten) || string.IsNullOrEmpty(tienStr))
+            {
+                ScriptManager.RegisterStartupScript(up_dieuchinh, up_dieuchinh.GetType(), "alert", "Metro.notify.create('Vui lòng nhập đủ thông tin bắt buộc!', 'Lỗi', { cls: 'alert' });", true);
+                return;
+            }
+
+            long tien = 0;
+            if (!long.TryParse(tienStr, out tien))
+            {
+                ScriptManager.RegisterStartupScript(up_dieuchinh, up_dieuchinh.GetType(), "alert", "Metro.notify.create('Số tiền không hợp lệ!', 'Lỗi', { cls: 'alert' });", true);
+                return;
+            }
+
+            DateTime ngayGhiNo = DateTime.Now;
+            if (!string.IsNullOrEmpty(ngayStr))
+            {
+                try {
+                    ngayGhiNo = DateTime.ParseExact(ngayStr, "dd/MM/yyyy", CultureInfo.InvariantCulture);
+                } catch {
+                    ngayGhiNo = DateTime.Now;
+                }
+            }
+
+            using (dbDataContext db = new dbDataContext())
+            {
+                BaoGia_tb bg = new BaoGia_tb();
+                bg.sdt_khachhang = sdt;
+                bg.ten_khachhang = ten;
+                bg.ngaybaogia = ngayGhiNo;
+                bg.ngayban_kyhopdong = ngayGhiNo;
+                bg.nguoibaogia = Session["taikhoan"]?.ToString() ?? "";
+                bg.trangthai = "Điều chỉnh công nợ";
+                bg.tongtien = tien;
+                bg.congno = tien;
+                bg.ghichu_chuagiao = ghichu;
+
+                db.BaoGia_tbs.InsertOnSubmit(bg);
+                db.SubmitChanges();
+            }
+
+            txt_dc_sdt.Text = "";
+            txt_dc_ten.Text = "";
+            txt_dc_sotien.Text = "";
+            txt_dc_ngay.Text = "";
+            txt_dc_ghichu.Text = "";
+
+            LoadThongKe();
+            ScriptManager.RegisterStartupScript(up_dieuchinh, up_dieuchinh.GetType(), "alert_ok", "Metro.notify.create('Đã thêm công nợ thành công!', 'Thành công', { cls: 'success' }); Metro.dialog.close('#modal_dieuchinh');", true);
+        }
+        catch (Exception ex)
+        {
+            ScriptManager.RegisterStartupScript(up_dieuchinh, up_dieuchinh.GetType(), "alert_err", "Metro.notify.create('Lỗi: " + Server.HtmlEncode(ex.Message) + "', 'Lỗi', { cls: 'alert' });", true);
+        }
+    }
+
+    protected void grv_modal_banhang_RowCommand(object sender, GridViewCommandEventArgs e)
+    {
+        if (e.CommandName == "ViewHistory")
+        {
+            LoadHistory(e.CommandArgument.ToString(), "banhang");
+        }
+    }
+
+    protected void grv_modal_baohanh_RowCommand(object sender, GridViewCommandEventArgs e)
+    {
+        if (e.CommandName == "ViewHistory")
+        {
+            LoadHistory(e.CommandArgument.ToString(), "baohanh");
+        }
+    }
+
+    private void LoadHistory(string maDon, string type)
+    {
+        try
+        {
+            using (dbDataContext db = new dbDataContext())
+            {
+                if (type == "banhang")
+                {
+                    var list = db.LichSu_ThanhToan_tbs
+                        .Where(x => x.idbg == maDon)
+                        .Select(x => new
+                        {
+                            Ngay = x.ngay_thanhtoan,
+                            SoTienText = Money(x.sotien_thanhtoan ?? 0)
+                        }).OrderByDescending(x => x.Ngay).ToList();
+                    
+                    grv_modal_lichsu.DataSource = list;
+                    grv_modal_lichsu.DataBind();
+                }
+                else
+                {
+                    var list = db.HangBaoHanh_LichSu_ThanhToan_tbs
+                        .Where(x => x.id_PhieuBaoHanh == maDon)
+                        .Select(x => new
+                        {
+                            Ngay = x.ngay_thanhtoan,
+                            SoTienText = Money(x.sotien_thanhtoan ?? 0)
+                        }).OrderByDescending(x => x.Ngay).ToList();
+                    
+                    grv_modal_lichsu.DataSource = list;
+                    grv_modal_lichsu.DataBind();
+                }
+
+                ScriptManager.RegisterStartupScript(up_lichsu, up_lichsu.GetType(), "open_history", "Metro.dialog.open('#modal_lichsu');", true);
+                up_lichsu.Update();
+            }
+        }
+        catch (Exception ex)
+        {
+            ScriptManager.RegisterStartupScript(up_lichsu, up_lichsu.GetType(), "alert_err", "Metro.notify.create('Lỗi tải lịch sử: " + Server.HtmlEncode(ex.Message) + "', 'Lỗi', { cls: 'alert' });", true);
         }
     }
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -99,22 +99,6 @@ public partial class admin_quan_ly_kho_lich_su_nhap_xuat : System.Web.UI.Page
     {
         string userPermissions = ViewState["quyen"].ToString();
         var permissionsList = userPermissions.Split(',');
-        if (permissionsList.Contains("8"))
-        {
-            PlaceHolder PlaceHolder5 = (PlaceHolder)e.Item.FindControl("PlaceHolder5");
-            if (PlaceHolder5 != null)
-            {
-                PlaceHolder5.Visible = true;
-            }
-        }
-        else
-        {
-            PlaceHolder PlaceHolder5 = (PlaceHolder)e.Item.FindControl("PlaceHolder5");
-            if (PlaceHolder5 != null)
-            {
-                PlaceHolder5.Visible = false;
-            }
-        }
 
         if (e.Item.ItemType == ListItemType.Item || e.Item.ItemType == ListItemType.AlternatingItem)
         {
@@ -145,12 +129,10 @@ public partial class admin_quan_ly_kho_lich_su_nhap_xuat : System.Web.UI.Page
                 var permissionsList = q.permission.Split(',');
                 if (permissionsList.Contains("8"))
                 {
-                    PlaceHolder4.Visible = true;
                     PlaceHolder1.Visible = true;
                 }
                 else
                 {
-                    PlaceHolder4.Visible = false;
                     PlaceHolder1.Visible = false;
                 }
                 #endregion

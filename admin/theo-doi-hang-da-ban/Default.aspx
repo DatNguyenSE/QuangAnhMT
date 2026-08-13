@@ -3,6 +3,15 @@
 <%@ Register Assembly="AjaxControlToolkit" Namespace="AjaxControlToolkit" TagPrefix="ajaxToolkit" %>
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="Server">
     <style>
+        @media screen and (max-width: 768px) {
+            #menutop-tool-bc {
+                position: relative !important;
+                top: 0 !important;
+            }
+            .top-padding-spacer {
+                display: none !important;
+            }
+        }
         .product-img {
             width: 50px;
             height: 50px;
@@ -398,7 +407,7 @@
                     <asp:TextBox MaxLength="50" data-prepend="<span class='mif mif-search'></span>" ID="txt_timkiem" runat="server" placeholder="Tìm sản phẩm, seri, seri đổi, khách..." data-role="input" CssClass="input-small" AutoPostBack="true" OnTextChanged="txt_timkiem_TextChanged"></asp:TextBox>
                 </div>
 
-                <div style="padding-top: 60px;"></div>
+                <div class="top-padding-spacer" style="padding-top: 60px;"></div>
 
                 <div class="p-3">
                     <div class="d-none-sm d-block mb-3">
