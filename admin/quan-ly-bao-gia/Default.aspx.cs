@@ -166,6 +166,9 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
     }
     protected void Page_Load(object sender, EventArgs e)
     {
+        ScriptManager.GetCurrent(this).RegisterPostBackControl(but_show_form_xuat);
+        ScriptManager.GetCurrent(this).RegisterPostBackControl(but_xuat_excel);
+
         if (!IsPostBack)
         {
 
@@ -703,38 +706,7 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
         try
         {
             check_login_cl.check_login_admin("none", "none");
-            bool _chonmuc = false, _chonPage = false;
-
-            foreach (ListItem item in check_list_excel.Items)
-            {
-                if (item.Selected)
-                {
-                    _chonmuc = true;
-                    break; // Thoát vòng lặp sớm nếu tìm thấy mục được chọn
-                }
-            }
-            if (!_chonmuc)
-            {
-                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Không có mục nào được chọn.", "false", "false", "OK", "alert", ""), true);
-                return; // Kết thúc sớm nếu không có mục nào được chọn
-            }
-
-            // Khởi tạo danh sách để lưu các mục được chọn (nếu cần)
-            List<ListItem> selectedPage = new List<ListItem>();//để lưu các trang được chọn. dùng để xuất excel
-            foreach (ListItem item in check_list_page.Items)
-            {
-                if (item.Selected)//nếu có trang đc chọn
-                {
-                    selectedPage.Add(item);//lưu lại trang đc chọn
-                    _chonPage = true;
-                    //break; // Thoát vòng lặp sớm nếu tìm thấy mục được chọn. K thoát vòng lặp vì để lưu hết trang đc chọn
-                }
-            }
-            if (!_chonPage)
-            {
-                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Không có trang nào được chọn.", "false", "false", "OK", "alert", ""), true);
-                return; // Kết thúc sớm nếu không có mục nào được chọn
-            }
+            // Validation for _chonmuc and _chonPage is removed since we export everything.
 
             if (!Directory.Exists(Server.MapPath("~/uploads/files/")))
                 Directory.CreateDirectory(Server.MapPath("~/uploads/files/"));
@@ -785,6 +757,8 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                 if (check_login_cl.CheckQuyen(db, ViewState["taikhoan"].ToString(), "17"))
                 { list_all = list_all.Where(p => p.nguoibaogia == ViewState["taikhoan"].ToString()); }
 
+                // BỎ LỌC THEO YÊU CẦU: Khỏi cần lọc, xuất ra hết
+                /*
                 // Kiểm tra xem textbox có dữ liệu tìm kiếm không
                 string _key = txt_timkiem.Text.Trim();
                 if (!string.IsNullOrEmpty(_key))
@@ -865,6 +839,7 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                 //}
                 //if (!list_phanloai_baiviet.Contains(""))//nếu tồn tại "": tất cả thì k lọc
                 //    list_all = list_all.Where(tk => list_phanloai_baiviet.Contains(tk.phanloai));
+                */
 
                 //sắp xếp
                 list_all = list_all.OrderByDescending(p => p.ngaybaogia);
@@ -895,6 +870,9 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
 
 
                 #region xuất vào excel
+                // Set the license context for EPPlus 5+ to avoid LicenseException
+                ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
                 // Sử dụng EPPlus để tạo một tệp Excel và ghi dữ liệu vào đó
                 using (ExcelPackage package = new ExcelPackage())
                 {
@@ -904,11 +882,8 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                     //ghi tiêu đề
                     foreach (ListItem item in check_list_excel.Items)//duyệt qua hết check list mục cần xuất
                     {
-                        if (item.Selected)//nếu mục này có chọn
-                        {
-                            worksheet.Cells[1, _cot].Value = item.Text;
-                            _cot = _cot + 1;
-                        }
+                        worksheet.Cells[1, _cot].Value = item.Text;
+                        _cot = _cot + 1;
                     }
                     //hết vòng lặp thì cột bằng 1 lại
                     _cot = 1;
@@ -917,7 +892,8 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
 
                     #region xác định dữ liệu chuẩn bị xuất (list_xuat). Là xuất tất cả hay các trang riêng lẻ đc chọn
                     // Ghi dữ liệu từ LINQ Query vào ExcelWorksheet
-                    IEnumerable<dynamic> list_xuat;
+                    IEnumerable<dynamic> list_xuat = list_all.ToList(); // Bỏ qua trang, xuất tất cả
+                    /*
                     if (check_all_page.Checked == true)//nếu chọn tất cả
                         list_xuat = list_all;
                     else//nếu chọn trang riêng lẻ
@@ -943,13 +919,14 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                         }
                         list_xuat = list_split;
                     }
+                    */
                     #endregion
 
                     foreach (var t in list_xuat)
                     {
                         _cot = 1;
-                        // Chỉ lặp qua các mục đã được chọn trong `check_list_excel.Items`
-                        foreach (ListItem item in check_list_excel.Items.Cast<ListItem>().Where(item => item.Selected))
+                        // Lặp qua tất cả các mục trong check_list_excel.Items
+                        foreach (ListItem item in check_list_excel.Items)
                         {
                             string _tencot = item.Value;//lấy tên cột
                             switch (_tencot)
@@ -1066,17 +1043,30 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                         }
                         _row++;
                     }
+                    
+                    // Tự động căn chỉnh độ rộng các cột cho vừa với nội dung (đặc biệt là cột ngày tháng để không bị hiện ####)
+                    worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
+
                     // Lưu tệp Excel vào đường dẫn đã chỉ định
-                    string filePath = "/uploads/files/BanHang-" + str_cl.taoma_theothoigian() + ".xlsx";
-                    package.SaveAs(new System.IO.FileInfo(Server.MapPath("~" + filePath)));
-                    //Response.Redirect(filePath);
+                    string fileName = "BaoGia-" + str_cl.taoma_theothoigian() + ".xlsx";
+                    string filePath = Server.MapPath("~/uploads/files/" + fileName);
+                    package.SaveAs(new System.IO.FileInfo(filePath));
+                    
+                    // Sử dụng Response.TransmitFile với Content-Type chuẩn xác để tránh lỗi file Excel
+                    Response.Clear();
+                    Response.ContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                    Response.AddHeader("Content-Disposition", "attachment; filename=" + fileName);
+                    Response.TransmitFile(filePath);
+                    Response.Flush();
+                    Response.SuppressContent = true;
+                    Context.ApplicationInstance.CompleteRequest();
 
                     // URL bạn muốn chuyển hướng đến
-                    string url = filePath;
+                    //string url = filePath;
                     // Script để mở trang mới trong tab mới
-                    string script = $"window.open('{url}', '_blank');";
+                    //string script = $"window.open('{url}', '_blank');";
                     // Đăng ký script để thực thi sau khi UpdatePanel postback hoàn thành
-                    ScriptManager.RegisterStartupScript(this, GetType(), "OpenNewTab", script, true);
+                    //ScriptManager.RegisterStartupScript(this, GetType(), "OpenNewTab", script, true);
 
 
                     //ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Xử lý thành co", "1000", "warning"), true);
@@ -1112,6 +1102,9 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
             else
                 _tk = "";
             Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
+
+            string errMsg = _ex.Message.Replace("'", "\\'").Replace("\r", "").Replace("\n", " ");
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), $"alert('Lỗi xuất Excel: {errMsg}');", true);
         }
 
     }

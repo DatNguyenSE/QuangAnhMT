@@ -747,4 +747,279 @@ public partial class admin_thong_ke_ban_hang : System.Web.UI.Page
             };
         }
     }
+
+    protected void but_xuat_excel_Click(object sender, EventArgs e)
+    {
+        try
+        {
+            using (dbDataContext db = new dbDataContext())
+            {
+                DateTime? tuNgay = ParseDate(txt_tungay.Text);
+                DateTime? denNgay = ParseDate(txt_denngay.Text);
+                DateTime? tuNgayLoc = tuNgay.HasValue ? (DateTime?)tuNgay.Value.Date : null;
+                DateTime? denNgayLoc = denNgay.HasValue ? (DateTime?)denNgay.Value.Date.AddDays(1) : null;
+                string currentUser = ViewState["taikhoan"] == null ? "" : ViewState["taikhoan"].ToString();
+
+                var list = (from bg in db.BaoGia_tbs
+                            join tk in db.taikhoan_tbs on bg.nguoibaogia equals tk.taikhoan into gTk
+                            from tk in gTk.DefaultIfEmpty()
+                            join ct in db.BaoGia_ChiTiet_tbs on bg.id.ToString() equals ct.id_baogia into chiTietGroup
+                            let tongTien = chiTietGroup.Sum(x => (long?)x.thanhtien) ?? 0
+                            let tongSauGiamCT = chiTietGroup.Sum(x => (long?)x.TongSauGiam) ?? 0
+                            let giamGiaDacBiet = (long?)bg.giamgiadacbiet ?? 0
+                            let tongSauGiam = tongSauGiamCT - giamGiaDacBiet
+                            let vat = (int?)bg.vat ?? 0
+                            let tongSauThue = vat != 0 ? tongSauGiam * (1 + (decimal)vat / 100) : tongSauGiam
+                            select new
+                            {
+                                bg.id,
+                                bg.ngaybaogia,
+                                bg.ngayban_kyhopdong,
+                                bg.nguoibaogia,
+                                HoTenNhanVien = tk != null ? tk.hoten : bg.nguoibaogia,
+                                bg.ten_khachhang,
+                                bg.sdt_khachhang,
+                                bg.diachi_khachhang,
+                                bg.trangthai,
+                                CongNo = bg.congno ?? 0,
+                                Thuong = bg.thuongdoanhso ?? 0,
+                                TongTien = tongTien,
+                                TongSauThue = tongSauThue
+                            }).AsQueryable();
+
+                if (check_login_cl.CheckQuyen(db, currentUser, "17"))
+                    list = list.Where(x => x.nguoibaogia == currentUser);
+
+                if (tuNgay.HasValue)
+                {
+                    if (ddl_loai_ngay.SelectedValue == "baogia")
+                        list = list.Where(x => x.ngaybaogia.HasValue && x.ngaybaogia.Value >= tuNgayLoc.Value);
+                    else
+                        list = list.Where(x => x.ngayban_kyhopdong.HasValue && x.ngayban_kyhopdong.Value >= tuNgayLoc.Value);
+                }
+
+                if (denNgay.HasValue)
+                {
+                    if (ddl_loai_ngay.SelectedValue == "baogia")
+                        list = list.Where(x => x.ngaybaogia.HasValue && x.ngaybaogia.Value < denNgayLoc.Value);
+                    else
+                        list = list.Where(x => x.ngayban_kyhopdong.HasValue && x.ngayban_kyhopdong.Value < denNgayLoc.Value);
+                }
+
+                if (ddl_trangthai.SelectedValue == "daban")
+                    list = list.Where(x => x.ngayban_kyhopdong.HasValue || x.trangthai == "Đã ký HĐ");
+                else if (ddl_trangthai.SelectedValue == "chuaban")
+                    list = list.Where(x => !x.ngayban_kyhopdong.HasValue && x.trangthai != "Đã ký HĐ");
+
+                if (ddl_thanhtoan.SelectedValue == "done")
+                    list = list.Where(x => (x.ngayban_kyhopdong.HasValue || x.trangthai == "Đã ký HĐ") && x.CongNo == 0);
+                else if (ddl_thanhtoan.SelectedValue == "debt")
+                    list = list.Where(x => (x.ngayban_kyhopdong.HasValue || x.trangthai == "Đã ký HĐ") && x.CongNo != 0);
+
+                if (!string.IsNullOrWhiteSpace(ddl_nhanvien.SelectedValue))
+                    list = list.Where(x => x.nguoibaogia == ddl_nhanvien.SelectedValue);
+
+                string key = txt_timkiem.Text.Trim();
+                if (!string.IsNullOrWhiteSpace(key))
+                {
+                    list = list.Where(x =>
+                        x.id.ToString() == key ||
+                        (x.ten_khachhang != null && x.ten_khachhang.Contains(key)) ||
+                        (x.sdt_khachhang != null && x.sdt_khachhang.Contains(key)) ||
+                        (x.diachi_khachhang != null && x.diachi_khachhang.Contains(key)));
+                }
+
+                var data = list.ToList();
+                var ids = data.Select(x => x.id.ToString()).ToList();
+
+                if (!string.IsNullOrWhiteSpace(txt_sanpham.Text))
+                {
+                    string spKey = txt_sanpham.Text.Trim();
+
+                    var hangIds = db.DuLieuNguon_tbs
+                        .Where(h => h.kyhieu == "hangsanpham" && h.ten != null && h.ten.Contains(spKey))
+                        .Select(h => h.id.ToString())
+                        .ToList();
+
+                    var idSanPhams = db.KhoSanPham_tbs
+                        .Where(sp =>
+                            (sp.ten != null && sp.ten.Contains(spKey)) ||
+                            (sp.model != null && sp.model.Contains(spKey)) ||
+                            hangIds.Contains(sp.id_hang))
+                        .Select(sp => sp.id.ToString())
+                        .ToList();
+
+                    var idsCoSp = db.BaoGia_ChiTiet_tbs
+                        .Where(ct => ids.Contains(ct.id_baogia) && idSanPhams.Contains(ct.id_sanpham))
+                        .Select(ct => ct.id_baogia)
+                        .Distinct()
+                        .ToList();
+
+                    data = data.Where(x => idsCoSp.Contains(x.id.ToString())).ToList();
+                }
+
+                var dataBan = data.Where(x => x.ngayban_kyhopdong.HasValue || x.trangthai == "Đã ký HĐ").ToList();
+                
+                var listBH = (from bh in db.HangBaoHanh_tbs
+                              join tk in db.taikhoan_tbs on bh.nguoitao equals tk.taikhoan into gTk
+                              from tk in gTk.DefaultIfEmpty()
+                              select new
+                              {
+                                  bh.id,
+                                  bh.ngaytao,
+                                  bh.NgayTra_ThucTe,
+                                  bh.nguoitao,
+                                  HoTenNhanVien = tk != null ? tk.hoten : bh.nguoitao,
+                                  bh.ten_khachhang,
+                                  bh.sdt_khachhang,
+                                  bh.diachi_khachhang,
+                                  bh.trangthai,
+                                  CongNo = bh.congno ?? 0,
+                                  TongSauThue = bh.giatri_thuc_donhang ?? 0
+                              }).AsQueryable();
+
+                if (check_login_cl.CheckQuyen(db, currentUser, "17"))
+                    listBH = listBH.Where(x => x.nguoitao == currentUser);
+
+                if (tuNgay.HasValue)
+                {
+                    if (ddl_loai_ngay.SelectedValue == "baogia")
+                        listBH = listBH.Where(x => x.ngaytao.HasValue && x.ngaytao.Value >= tuNgayLoc.Value);
+                    else
+                        listBH = listBH.Where(x => x.NgayTra_ThucTe.HasValue && x.NgayTra_ThucTe.Value >= tuNgayLoc.Value);
+                }
+
+                if (denNgay.HasValue)
+                {
+                    if (ddl_loai_ngay.SelectedValue == "baogia")
+                        listBH = listBH.Where(x => x.ngaytao.HasValue && x.ngaytao.Value < denNgayLoc.Value);
+                    else
+                        listBH = listBH.Where(x => x.NgayTra_ThucTe.HasValue && x.NgayTra_ThucTe.Value < denNgayLoc.Value);
+                }
+
+                if (ddl_trangthai.SelectedValue == "daban")
+                    listBH = listBH.Where(x => x.trangthai == "Đã trả");
+                else if (ddl_trangthai.SelectedValue == "chuaban")
+                    listBH = listBH.Where(x => x.trangthai != "Đã trả");
+
+                if (ddl_thanhtoan.SelectedValue == "done")
+                    listBH = listBH.Where(x => x.trangthai == "Đã trả" && x.CongNo == 0);
+                else if (ddl_thanhtoan.SelectedValue == "debt")
+                    listBH = listBH.Where(x => x.trangthai == "Đã trả" && x.CongNo != 0);
+
+                if (!string.IsNullOrWhiteSpace(ddl_nhanvien.SelectedValue))
+                    listBH = listBH.Where(x => x.nguoitao == ddl_nhanvien.SelectedValue);
+
+                if (!string.IsNullOrWhiteSpace(key))
+                {
+                    listBH = listBH.Where(x =>
+                        x.id.ToString() == key ||
+                        (x.ten_khachhang != null && x.ten_khachhang.Contains(key)) ||
+                        (x.sdt_khachhang != null && x.sdt_khachhang.Contains(key)) ||
+                        (x.diachi_khachhang != null && x.diachi_khachhang.Contains(key)));
+                }
+
+                var dataBH = listBH.ToList();
+                var idsBH = dataBH.Select(x => x.id.ToString()).ToList();
+
+                if (!string.IsNullOrWhiteSpace(txt_sanpham.Text))
+                {
+                    string spKey = txt_sanpham.Text.Trim();
+                    var hangIds = db.DuLieuNguon_tbs
+                        .Where(h => h.kyhieu == "hangsanpham" && h.ten != null && h.ten.Contains(spKey))
+                        .Select(h => h.id.ToString())
+                        .ToList();
+
+                    var idsCoSpBH = db.HangBaoHanh_ChiTiet_tbs
+                        .Where(ct => idsBH.Contains(ct.id_PhieuBaoHanh) &&
+                            (
+                                (ct.ten != null && ct.ten.Contains(spKey)) ||
+                                (ct.model != null && ct.model.Contains(spKey)) ||
+                                (ct.id_hang != null && hangIds.Contains(ct.id_hang))
+                            ))
+                        .Select(ct => ct.id_PhieuBaoHanh)
+                        .Distinct()
+                        .ToList();
+
+                    dataBH = dataBH.Where(x => idsCoSpBH.Contains(x.id.ToString())).ToList();
+                }
+
+                var dataBanBH = dataBH.Where(x => x.trangthai == "Đã trả").ToList();
+
+                var exportList = dataBan.Select(x => new
+                {
+                    Loai = "Đơn bán",
+                    MaDon = x.id,
+                    Ngay = x.ngayban_kyhopdong,
+                    NhanVien = x.HoTenNhanVien,
+                    KhachHang = x.ten_khachhang,
+                    Sdt = x.sdt_khachhang,
+                    DiaChi = x.diachi_khachhang,
+                    TrangThai = x.trangthai,
+                    TongTien = (decimal)x.TongSauThue,
+                    CongNo = (decimal)x.CongNo
+                }).ToList();
+
+                exportList.AddRange(dataBanBH.Select(x => new
+                {
+                    Loai = "Bảo hành",
+                    MaDon = x.id,
+                    Ngay = x.NgayTra_ThucTe,
+                    NhanVien = x.HoTenNhanVien,
+                    KhachHang = x.ten_khachhang,
+                    Sdt = x.sdt_khachhang,
+                    DiaChi = x.diachi_khachhang,
+                    TrangThai = x.trangthai,
+                    TongTien = (decimal)x.TongSauThue,
+                    CongNo = (decimal)x.CongNo
+                }).ToList());
+
+                exportList = exportList.OrderByDescending(x => x.Ngay).ToList();
+
+                var list_dynamic = exportList.Select(x =>
+                    (System.Collections.Generic.IDictionary<string, object>)x.GetType().GetProperties().ToDictionary(
+                        p => p.Name,
+                        p => p.GetValue(x, null)
+                    )
+                ).ToList();
+
+                var headers = new System.Collections.Generic.Dictionary<string, string>
+                {
+                    { "Loai", "Loại" },
+                    { "MaDon", "Mã đơn" },
+                    { "Ngay", "Ngày" },
+                    { "NhanVien", "Nhân viên" },
+                    { "KhachHang", "Khách hàng" },
+                    { "Sdt", "SĐT" },
+                    { "DiaChi", "Địa chỉ" },
+                    { "TrangThai", "Trạng thái" },
+                    { "TongTien", "Tổng tiền" },
+                    { "CongNo", "Công nợ" }
+                };
+
+                NPOI.XSSF.UserModel.XSSFWorkbook workbook = new NPOI.XSSF.UserModel.XSSFWorkbook();
+                ExportExcel.ExportToExcelFormat(list_dynamic, headers, workbook);
+
+                string fileName = "ThongKeBanHang_" + DateTime.Now.ToString("ddMMyyyyHHmmss") + ".xlsx";
+                string filePath = Server.MapPath("~/uploads/Files/" + fileName);
+                using (System.IO.FileStream fs = new System.IO.FileStream(filePath, System.IO.FileMode.Create))
+                {
+                    workbook.Write(fs);
+                }
+
+                Response.Clear();
+                Response.ContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                Response.AddHeader("Content-Disposition", "attachment; filename=" + fileName);
+                Response.TransmitFile(filePath);
+                Response.Flush();
+                Response.SuppressContent = true;
+                Context.ApplicationInstance.CompleteRequest();
+            }
+        }
+        catch (Exception _ex)
+        {
+            pn_thongbao.Visible = true;
+            lb_thongbao.Text = "Không xuất được Excel: " + Server.HtmlEncode(_ex.Message);
+        }
+    }
 }

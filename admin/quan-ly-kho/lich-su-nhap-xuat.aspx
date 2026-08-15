@@ -84,7 +84,7 @@
 
     <asp:UpdatePanel ID="up_main" runat="server" UpdateMode="Conditional">
         <Triggers>
-            <%--<asp:AsyncPostBackTrigger ControlID="but_add" EventName="Click" />--%>
+            <asp:PostBackTrigger ControlID="but_xuat_excel" />
         </Triggers>
         <ContentTemplate>
 
@@ -107,9 +107,9 @@
                         <li data-role="hint" data-hint-position="top" data-hint-text="Xóa">
                             <asp:LinkButton ID="but_xoa" OnClick="but_xoa_Click" runat="server"><span class="mif-bin"></span></asp:LinkButton>
                         </li>
-                        <%--<li data-role="hint" data-hint-position="top" data-hint-text="Xuất excel">
-                         <asp:LinkButton ID="but_show_form_xuat" runat="server" OnClick="but_show_form_xuat_Click"><span class="mif-file-excel"></span></asp:LinkButton>
-                     </li>--%>
+                        <li data-role="hint" data-hint-position="top" data-hint-text="Xuất excel">
+                            <asp:LinkButton ID="but_xuat_excel" runat="server" OnClick="but_xuat_excel_Click"><span class="mif-file-excel"></span></asp:LinkButton>
+                        </li>
 
 
                         <li class="bd-gray border bd-default mt-2 d-block-lg d-none" style="height: 24px"></li>

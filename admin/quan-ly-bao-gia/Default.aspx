@@ -164,7 +164,7 @@
                                         </asp:CheckBoxList>
                                     </div>
                                 </div>
-                                <div class="cell-lg-6 pl-4-lg">
+                                <div class="cell-lg-6 pl-4-lg" style="display:none;">
                                     <div class="mt-3">
                                         <div class="fw-600">Chọn trang</div>
                                         <div class="mt-1">
@@ -911,6 +911,9 @@
     </asp:UpdateProgress>
 
     <asp:UpdatePanel ID="up_main" runat="server" UpdateMode="Conditional">
+        <Triggers>
+            <asp:PostBackTrigger ControlID="but_show_form_xuat" />
+        </Triggers>
         <ContentTemplate>
 
             <div class="pos-relative pb-11">
@@ -935,7 +938,7 @@
                             <asp:LinkButton ID="but_show_form_loc" runat="server" OnClick="but_show_form_loc_Click"><span class="mif-filter"></span></asp:LinkButton>
                         </li>
                         <li data-role="hint" data-hint-position="top" data-hint-text="Xuất excel">
-                            <asp:LinkButton ID="but_show_form_xuat" runat="server" OnClick="but_show_form_xuat_Click"><span class="mif-file-excel"></span></asp:LinkButton>
+                            <asp:LinkButton ID="but_show_form_xuat" runat="server" OnClick="but_xuat_excel_Click"><span class="mif-file-excel"></span></asp:LinkButton>
                         </li>
 
 

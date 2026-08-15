@@ -243,6 +243,10 @@
                                         <label class="fw-600 seri-label-toggle">Số seri</label>
                                         <asp:TextBox ID="txt_so_seri" runat="server" data-role="input"></asp:TextBox>
                                     </div>
+                                    <div class="mt-3">
+                                        <label class="fw-600">Ngày tạo / Ngày nhập <small class="dung-chung-text">(dùng chung, mặc định hôm nay)</small></label>
+                                        <asp:TextBox ID="txt_ngaytao" runat="server" TextMode="Date" data-role="input" onchange="if(window.calculateHanBaoHanh) window.calculateHanBaoHanh();"></asp:TextBox>
+                                    </div>
                                     <asp:PlaceHolder ID="ph_quick_entry_quantity" runat="server" Visible="false">
                                         <div class="quick-entry-section mt-4">
                                             <div class="quick-entry-section-title">Số lượng sản phẩm muốn tạo</div>
@@ -284,7 +288,18 @@
                                         <asp:RadioButton ID="rbKhongCoHoaDon" runat="server" GroupName="HoaDon" Text="Không có hóa đơn" />
                                     </div>
                                     <div class="mt-3">
-                                        <asp:CheckBox runat="server" ID="check_hangthanhly" Text="Hàng thanh lý"></asp:CheckBox>
+                                        <div class="row">
+                                            <div class="cell-sm-5 pt-7">
+                                                <asp:CheckBox runat="server" ID="check_hangthanhly" Text="Hàng thanh lý" onclick="if(window.toggleHangThanhLy) window.toggleHangThanhLy();" onchange="if(window.toggleHangThanhLy) window.toggleHangThanhLy();"></asp:CheckBox>
+                                            </div>
+                                            <div class="cell-sm-7" id="div_phantram_thanhly">
+                                                <label class="fw-600 fg-orange">% thanh lý <small class="fg-gray">(ví dụ: 70)</small></label>
+                                                <div class="d-flex flex-align-center">
+                                                    <asp:TextBox ID="txt_phantram_thanhly" runat="server" data-role="input" TextMode="Number" Text="100" min="1" max="100" placeholder="100" oninput="if(window.onPhanTramThanhLyChange) window.onPhanTramThanhLyChange();"></asp:TextBox>
+                                                    <span id="lbl_phantram_hint" class="ml-2 fg-orange fw-600 text-nowrap" style="font-size: 13px;">100%</span>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div class="mt-3">
                                         <label class="fw-600">Hãng sản phẩm <small class="dung-chung-text">(dùng chung)</small></label>
@@ -308,15 +323,11 @@
                                         <label class="fw-600">Model <small class="dung-chung-text">(dùng chung)</small></label>
                                         <asp:TextBox ID="txt_model" runat="server" data-role="input" MaxLength="100"></asp:TextBox>
                                     </div>
-
-
-
                                 </div>
                                 <div class="cell-lg-6 pl-4-lg">
                                     <div class="mt-3">
                                          <label class="fw-600">Thông số kỹ thuật <small class="dung-chung-text">(dùng chung)</small></label>
                                         <CKEditor:CKEditorControl ID="txt_thongso" runat="server" Height="100px" Width="100%" CustomConfig="/ckeditor/config-basic.js"></CKEditor:CKEditorControl>
-                                        <%--<asp:TextBox ID="txt_thongso" data-role="textarea" runat="server" TextMode="MultiLine"></asp:TextBox>--%>
                                     </div>
                                     <asp:PlaceHolder ID="PlaceHolder1" runat="server" Visible="false">
                                         <div class="mt-3">
@@ -326,9 +337,14 @@
                                     </asp:PlaceHolder>
                                     <div class="mt-3">
                                          <label class="fw-600">Giá bán <small class="dung-chung-text">(dùng chung)</small></label>
-                                        <asp:TextBox ID="txt_giaban" onfocus="AutoSelect(this)" MaxLength="14" oninput="format_sotien_new(this)" runat="server" data-role="input" Text="0"></asp:TextBox>
+                                        <asp:TextBox ID="txt_giaban" onfocus="AutoSelect(this)" MaxLength="14" oninput="format_sotien_new(this); if(window.onGiaBanInput) window.onGiaBanInput(this);" runat="server" data-role="input" Text="0"></asp:TextBox>
                                     </div>
-
+                                    <div class="mt-3">
+                                        <label class="fw-600">Thời gian bảo hành (tháng) <small class="dung-chung-text">(dùng chung)</small></label>
+                                        <asp:TextBox ID="txt_thang_baohanh" runat="server" data-role="input" TextMode="Number" min="0" placeholder="Nhập số tháng (ví dụ: 12, 24, 36...)" oninput="if(window.calculateHanBaoHanh) window.calculateHanBaoHanh();"></asp:TextBox>
+                                        <div id="lbl_han_baohanh_hint" class="mt-1 fg-emerald fw-600" style="font-size: 13px; min-height: 18px;"></div>
+                                        <asp:TextBox ID="txt_han_baohanh" runat="server" style="display:none"></asp:TextBox>
+                                    </div>
                                     <div class="mt-3">
                                          <label class="fw-600">Ghi chú <small class="dung-chung-text">(dùng chung)</small></label>
                                         <asp:TextBox ID="txt_ghichu" runat="server" data-role="input"></asp:TextBox>
@@ -740,19 +756,11 @@
                                                 <asp:Label ID="lbID" runat="server" Text='<%#Eval("id") %>'></asp:Label>
                                             </span>
                                             <tr>
-                                                <%--<td class="text-center">
-                                                    <asp:LinkButton CssClass="fg-white" OnClick="but_show_chinhsua_Click" data-role="hint" data-hint-position="top" data-hint-text="Chỉnh sửa" ID="but_name_1" CommandArgument='<%# Eval("id") %>' runat="server">
-                                                        <%#Eval("id") %>
-                                                    </asp:LinkButton>
-                                                </td>--%>
                                                 <td class="text-center" style="cursor: pointer;" onclick="var sp = this.querySelector('.seri-span'); var inp = this.querySelector('.seri-input'); if(sp) { sp.style.display = 'none'; inp.style.display = 'inline-block'; inp.focus(); }">
                                                     <span class="seri-span" style="display: inline-block; min-width: 50px; min-height: 20px;"><%# string.IsNullOrEmpty(Convert.ToString(Eval("so_seri"))) ? "<i style='color:#ccc'>Click để nhập</i>" : Convert.ToString(Eval("so_seri")) %></span>
                                                     <asp:TextBox ID="txt_so_seri" runat="server" Text='<%#Eval("so_seri") %>' CssClass="input-small seri-input" style="display:none;" onblur="this.style.display='none'; var sp = this.parentElement.querySelector('.seri-span'); if(sp) sp.style.display='inline-block';" onkeydown="if(event.keyCode==13){ if(confirm('Bạn có muốn chỉnh số seri này không?')){ __doPostBack(this.name, ''); return false; } else { return false; } }" OnTextChanged="txt_so_seri_TextChanged" AutoPostBack="true"></asp:TextBox>
                                                 </td>
-                                                <%--<td class="text-center"><%# Container.ItemIndex + 1 %></td>--%>
                                                 <td class="checkbox-table">
-                                                    <%--data-role="checkbox" data-style="2"--%>
-                                                    <%--<input type="checkbox" onkeypress="if (event.keyCode==13) return false;" name="check_<%#Eval("id").ToString() %>">--%>
                                                     <asp:CheckBox ID="checkID" runat="server" onkeypress="if (event.keyCode==13) return false;" />
                                                 </td>
                                                 <td>
@@ -772,7 +780,7 @@
 
                                                     <div>
                                                         <asp:PlaceHolder ID="PlaceHolder3" runat="server" Visible='<%# Convert.ToBoolean(Eval("hangthanhly")) %>'>
-                                                            <span class="button mini warning rounded">Hàng thanh lý</span>
+                                                            <span class="button mini warning rounded">Hàng thanh lý <%# Eval("phantram_thanhly") != null && Convert.ToString(Eval("phantram_thanhly")) != "" && Convert.ToString(Eval("phantram_thanhly")) != "100" ? "(" + Eval("phantram_thanhly") + "%)" : "" %></span>
                                                         </asp:PlaceHolder>
                                                     </div>
                                                 </td>
@@ -1130,6 +1138,38 @@
                 var status = document.getElementById('cameraBarcodeStatus');
                 if (!modal || !video || !status) return;
                 modal.style.display = 'block';
+
+            window.closeCameraScanner = function () {
+                stopCameraStream();
+                var modal = document.getElementById('cameraBarcodeModal');
+                if (modal) modal.style.display = 'none';
+            };
+
+            function detectCameraBarcode(video, status) {
+                if (!cameraScanActive || !cameraDetector) return;
+                cameraDetector.detect(video).then(function (barcodes) {
+                    if (!cameraScanActive) return;
+                    if (barcodes.length > 0 && barcodes[0].rawValue) {
+                        var value = barcodes[0].rawValue.trim();
+                        status.innerText = 'Đã nhận barcode: ' + value;
+                        stopCameraStream();
+                        document.getElementById('cameraBarcodeModal').style.display = 'none';
+                        submitScannedBarcode(value);
+                        return;
+                    }
+                    window.setTimeout(function () { detectCameraBarcode(video, status); }, 120);
+                }).catch(function () {
+                    if (cameraScanActive)
+                        window.setTimeout(function () { detectCameraBarcode(video, status); }, 250);
+                });
+            }
+
+            window.openCameraScanner = function () {
+                var modal = document.getElementById('cameraBarcodeModal');
+                var video = document.getElementById('cameraBarcodeVideo');
+                var status = document.getElementById('cameraBarcodeStatus');
+                if (!modal || !video || !status) return;
+                modal.style.display = 'block';
                 status.innerText = 'Đang khởi động camera...';
 
                 if (typeof window.BarcodeDetector !== 'function' && !window.ZXingBrowser) {
@@ -1145,26 +1185,24 @@
                 if (typeof window.BarcodeDetector !== 'function') {
                     cameraScanActive = true;
                     status.innerText = 'Đang khởi động bộ đọc barcode...';
-                    cameraReader = new ZXingBrowser.BrowserMultiFormatReader();
-                    Promise.resolve(cameraReader.decodeFromConstraints({
+                    cameraControls = new ZXingBrowser.BrowserMultiFormatReader();
+                    cameraControls.decodeFromConstraints({
                         video: {
                             facingMode: { ideal: 'environment' },
                             width: { min: 640, ideal: 1280, max: 1920 },
                             height: { min: 480, ideal: 720, max: 1080 },
                             frameRate: { ideal: 30 },
                             focusMode: { ideal: 'continuous' }
-                        },
-                        audio: false
-                    }, video, function (result, error, controls) {
-                        if (controls) cameraControls = controls;
+                        }
+                    }, video, function (result, error) {
                         optimizeCamera(video);
                         if (!cameraScanActive || !result) return;
                         var value = result.getText().trim();
                         status.innerText = 'Đã nhận barcode: ' + value;
                         stopCameraStream();
-                        modal.style.display = 'none';
+                        document.getElementById('cameraBarcodeModal').style.display = 'none';
                         submitScannedBarcode(value);
-                    })).catch(function () {
+                    }).catch(function () {
                         status.innerText = 'Không thể khởi động bộ đọc barcode bằng camera.';
                     });
                     return;
@@ -1174,50 +1212,25 @@
                 navigator.mediaDevices.getUserMedia({
                     video: {
                         facingMode: { ideal: 'environment' },
-                            width: { min: 640, ideal: 1280, max: 1920 },
-                            height: { min: 480, ideal: 720, max: 1080 },
-                            frameRate: { ideal: 30 },
-                            focusMode: { ideal: 'continuous' }
+                        width: { min: 640, ideal: 1280, max: 1920 },
+                        height: { min: 480, ideal: 720, max: 1080 },
+                        frameRate: { ideal: 30 },
+                        focusMode: { ideal: 'continuous' }
                     },
                     audio: false
                 })
-                    .then(function (stream) {
-                        cameraStream = stream;
+                .then(function (stream) {
+                    cameraStream = stream;
                     video.srcObject = stream;
                     video.play().catch(function () { });
                     optimizeCamera(video);
-                        cameraScanActive = true;
-                        status.innerText = 'Đưa một mã vạch vào gần khung xanh, để phần vạch chiếm phần lớn khung hình...';
-                        if (cameraDetector) {
-                            detectCameraBarcode(video, status);
-                        }
-                    })
-                    .catch(function () {
-                        status.innerText = 'Không thể mở camera. Hãy cấp quyền camera cho localhost.';
-                    });
-            };
-
-            document.addEventListener('keydown', function (event) {
-                if (event.key === 'Enter') {
-                    var elapsed = scanStartedAt ? Date.now() - scanStartedAt : 99999;
-                    if (scanBuffer.length >= scanMinLength && elapsed <= 1200) {
-                        event.preventDefault();
-                        submitScannedBarcode(scanBuffer);
-                    }
-                    scanBuffer = '';
-                    scanStartedAt = 0;
-                    return;
-                }
-
-                if (event.key.length !== 1 || event.ctrlKey || event.altKey || event.metaKey) return;
-                if (!scanStartedAt) scanStartedAt = Date.now();
-                scanBuffer += event.key;
-                if (scanTimer) clearTimeout(scanTimer);
-                scanTimer = setTimeout(function () {
-                    scanBuffer = '';
-                    scanStartedAt = 0;
-                }, scanGap);
             });
+
+                    detectCameraBarcode(video, status);
+                }).catch(function () {
+                    status.innerText = 'Không thể truy cập camera.';
+                });
+            };
 
             document.addEventListener('input', function (event) {
                 if (event.target && (event.target.id.indexOf('txt_quick_quantity') !== -1 || event.target.id === '<%= txt_so_seri.ClientID %>')) {
@@ -1225,5 +1238,210 @@
                 }
             });
         })();
+
+        // Xử lý logic Hàng thanh lý và Hạn bảo hành
+        function getFieldById(idSub) {
+            return document.querySelector('[id$="' + idSub + '"]');
+        }
+
+        function getCheckboxById(idSub) {
+            var el = document.querySelector('input[type="checkbox"][id$="' + idSub + '"]');
+            if (el) return el;
+            var container = document.querySelector('[id$="' + idSub + '"]');
+            if (container) {
+                if (container.tagName === 'INPUT' && container.type === 'checkbox') return container;
+                var child = container.querySelector('input[type="checkbox"]');
+                if (child) return child;
+            }
+            return null;
+        }
+
+        function parsePrice(str) {
+            if (!str) return 0;
+            var clean = str.toString().replace(/\./g, '').replace(/,/g, '.').replace(/\s/g, '');
+            var val = parseFloat(clean);
+            return isNaN(val) ? 0 : val;
+        }
+
+        function formatPriceNumber(num) {
+            if (isNaN(num) || num === null || num === undefined) return "0";
+            return Math.round(num).toLocaleString('de-DE');
+        }
+
+        function toggleHangThanhLy() {
+            var chk = getCheckboxById('check_hangthanhly');
+            var txtGiaBan = getFieldById('txt_giaban');
+            var txtPt = getFieldById('txt_phantram_thanhly');
+            var lblHint = document.getElementById('lbl_phantram_hint');
+
+            var isChecked = false;
+            if (chk) {
+                isChecked = chk.checked;
+            }
+
+            if (isChecked) {
+                var currentPrice = txtGiaBan ? parsePrice(txtGiaBan.value) : 0;
+                var ptVal = txtPt ? parseFloat(txtPt.value) : 100;
+                if (isNaN(ptVal) || ptVal <= 0 || ptVal > 100) {
+                    ptVal = 100;
+                    if (txtPt) txtPt.value = 100;
+                }
+                var giaGoc = txtGiaBan ? parseFloat(txtGiaBan.getAttribute('data-gia-goc')) : 0;
+                if (!giaGoc || isNaN(giaGoc) || giaGoc <= 0) {
+                    if (ptVal < 100 && currentPrice > 0) {
+                        giaGoc = Math.round((currentPrice * 100.0) / ptVal);
+                    } else {
+                        giaGoc = currentPrice;
+                    }
+                    if (txtGiaBan) txtGiaBan.setAttribute('data-gia-goc', giaGoc);
+                }
+                if (lblHint) lblHint.innerText = ptVal + '% giá gốc (' + formatPriceNumber(giaGoc) + ' đ)';
+                if (ptVal < 100 && giaGoc > 0 && txtGiaBan) {
+                    var newPrice = Math.round(giaGoc * ptVal / 100.0);
+                    txtGiaBan.value = formatPriceNumber(newPrice);
+                }
+            } else {
+                if (txtGiaBan) {
+                    var giaGoc = parseFloat(txtGiaBan.getAttribute('data-gia-goc'));
+                    if (giaGoc && !isNaN(giaGoc) && giaGoc > 0) {
+                        txtGiaBan.value = formatPriceNumber(giaGoc);
+                        txtGiaBan.removeAttribute('data-gia-goc');
+                    }
+                }
+                if (txtPt) txtPt.value = 100;
+                if (lblHint) lblHint.innerText = '100%';
+            }
+        }
+
+        function onPhanTramThanhLyChange() {
+            var chk = getCheckboxById('check_hangthanhly');
+            var txtPt = getFieldById('txt_phantram_thanhly');
+            var txtGiaBan = getFieldById('txt_giaban');
+            var lblHint = document.getElementById('lbl_phantram_hint');
+            if (!txtPt || !txtGiaBan) return;
+
+            var pt = parseFloat(txtPt.value);
+            if (isNaN(pt)) return;
+            if (pt > 100) { pt = 100; txtPt.value = 100; }
+            if (pt < 1) { pt = 1; }
+
+            if (pt < 100 && chk && !chk.checked) {
+                chk.checked = true;
+            }
+
+            var giaGoc = parseFloat(txtGiaBan.getAttribute('data-gia-goc'));
+            var currentPrice = parsePrice(txtGiaBan.value);
+            if (!giaGoc || isNaN(giaGoc) || giaGoc <= 0) {
+                giaGoc = currentPrice;
+                txtGiaBan.setAttribute('data-gia-goc', giaGoc);
+            }
+
+            if (giaGoc > 0) {
+                var newPrice = Math.round(giaGoc * pt / 100.0);
+                txtGiaBan.value = formatPriceNumber(newPrice);
+            }
+            if (lblHint) lblHint.innerText = pt + '% giá gốc (' + formatPriceNumber(giaGoc) + ' đ)';
+        }
+
+        function onGiaBanInput(el) {
+            var chk = getCheckboxById('check_hangthanhly');
+            var txtPt = getFieldById('txt_phantram_thanhly');
+            var lblHint = document.getElementById('lbl_phantram_hint');
+            if (!el) return;
+
+            if (!chk || !chk.checked) {
+                el.setAttribute('data-gia-goc', parsePrice(el.value));
+            } else {
+                var giaGoc = parseFloat(el.getAttribute('data-gia-goc'));
+                var curr = parsePrice(el.value);
+                if (giaGoc && giaGoc > 0 && curr > 0 && txtPt) {
+                    var pt = Math.round((curr / giaGoc) * 100);
+                    if (pt > 0 && pt <= 100) {
+                        txtPt.value = pt;
+                        if (lblHint) lblHint.innerText = pt + '% giá gốc (' + formatPriceNumber(giaGoc) + ' đ)';
+                    }
+                }
+            }
+        }
+
+        function calculateHanBaoHanh() {
+            var txtNgayTao = getFieldById('txt_ngaytao');
+            var txtThang = getFieldById('txt_thang_baohanh');
+            var txtHan = getFieldById('txt_han_baohanh');
+            var lblHint = document.getElementById('lbl_han_baohanh_hint');
+            if (!txtThang) return;
+
+            var thang = parseInt(txtThang.value, 10);
+            if (isNaN(thang) || thang <= 0) {
+                if (txtHan) txtHan.value = '';
+                if (lblHint) lblHint.innerHTML = '';
+                return;
+            }
+
+            var baseDateStr = txtNgayTao && txtNgayTao.value ? txtNgayTao.value : '';
+            var baseDate;
+            if (baseDateStr) {
+                var parts = baseDateStr.split('-');
+                if (parts.length === 3) {
+                    baseDate = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+                }
+            }
+            if (!baseDate || isNaN(baseDate.getTime())) {
+                baseDate = new Date();
+            }
+
+            baseDate.setMonth(baseDate.getMonth() + thang);
+
+            var y = baseDate.getFullYear();
+            var m = (baseDate.getMonth() + 1).toString().padStart(2, '0');
+            var d = baseDate.getDate().toString().padStart(2, '0');
+            var isoDate = y + '-' + m + '-' + d;
+            var vnDate = d + '/' + m + '/' + y;
+
+            if (txtHan) txtHan.value = isoDate;
+            if (lblHint) {
+                lblHint.innerHTML = '<span class="mif-calendar"></span> Hết hạn bảo hành: <strong>' + vnDate + '</strong>';
+            }
+        }
+
+        function initAddEditModal() {
+            var chk = getCheckboxById('check_hangthanhly');
+            var txtGiaBan = getFieldById('txt_giaban');
+            var txtPt = getFieldById('txt_phantram_thanhly');
+            var lblHint = document.getElementById('lbl_phantram_hint');
+
+            if (chk && chk.checked) {
+                var ptVal = txtPt ? parseFloat(txtPt.value) : 100;
+                if (isNaN(ptVal) || ptVal <= 0) ptVal = 100;
+                var currentPrice = txtGiaBan ? parsePrice(txtGiaBan.value) : 0;
+                var giaGoc = Math.round((currentPrice * 100.0) / (ptVal || 100));
+                if (txtGiaBan) txtGiaBan.setAttribute('data-gia-goc', giaGoc);
+                if (lblHint) lblHint.innerText = ptVal + '% giá gốc (' + formatPriceNumber(giaGoc) + ' đ)';
+            } else {
+                if (lblHint) lblHint.innerText = '100%';
+            }
+            calculateHanBaoHanh();
+        }
+
+        window.toggleHangThanhLy = toggleHangThanhLy;
+        window.onPhanTramThanhLyChange = onPhanTramThanhLyChange;
+        window.onGiaBanInput = onGiaBanInput;
+        window.calculateHanBaoHanh = calculateHanBaoHanh;
+        window.initAddEditModal = initAddEditModal;
+
+        $(document).on('change click', '[id*="check_hangthanhly"], label[for*="check_hangthanhly"], .checkbox', function () {
+            setTimeout(function () {
+                toggleHangThanhLy();
+            }, 30);
+        });
+
+        if (typeof Sys !== 'undefined' && Sys.WebForms && Sys.WebForms.PageRequestManager) {
+            Sys.WebForms.PageRequestManager.getInstance().add_endRequest(function () {
+                initAddEditModal();
+            });
+        }
+        $(document).ready(function () {
+            initAddEditModal();
+        });
     </script>
 </asp:Content>

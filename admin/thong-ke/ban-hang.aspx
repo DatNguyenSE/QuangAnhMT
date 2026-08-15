@@ -23,6 +23,7 @@
             <div class="cell-lg-6 cell-md-4 cell-sm-12 pt-6">
                 <asp:Button ID="but_thongke" runat="server" Text="XEM THỐNG KÊ" CssClass="button primary" OnClick="but_thongke_Click" />
                 <asp:Button ID="but_reset" runat="server" Text="THÁNG NÀY" CssClass="button secondary" OnClick="but_reset_Click" />
+                <asp:Button ID="but_xuat_excel" runat="server" Text="XUẤT EXCEL" CssClass="button success" OnClick="but_xuat_excel_Click" />
             </div>
         </div>
 

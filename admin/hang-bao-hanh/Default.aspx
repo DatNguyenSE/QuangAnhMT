@@ -768,6 +768,9 @@
 
 
     <asp:UpdatePanel ID="up_main" runat="server" UpdateMode="Conditional">
+        <Triggers>
+            <asp:PostBackTrigger ControlID="but_xuat_excel" />
+        </Triggers>
         <ContentTemplate>
             <asp:Button ID="btnRefreshGrid" runat="server" OnClick="btnRefreshGrid_Click" style="display:none;" />
 
@@ -795,9 +798,9 @@
                         <%--<li data-role="hint" data-hint-position="top" data-hint-text="Lọc">
                             <asp:LinkButton ID="but_show_form_loc" runat="server" OnClick="but_show_form_loc_Click"><span class="mif-filter"></span></asp:LinkButton>
                         </li>--%>
-                        <%-- <li data-role="hint" data-hint-position="top" data-hint-text="Xuất excel">
-                            <asp:LinkButton ID="but_show_form_xuat" runat="server" OnClick="but_show_form_xuat_Click"><span class="mif-file-excel"></span></asp:LinkButton>
-                        </li>--%>
+                        <li data-role="hint" data-hint-position="top" data-hint-text="Xuất excel">
+                            <asp:LinkButton ID="but_xuat_excel" runat="server" OnClick="but_xuat_excel_Click"><span class="mif-file-excel"></span></asp:LinkButton>
+                        </li>
 
 
                         <li class="bd-gray border bd-default mt-2 d-block-lg d-none" style="height: 24px"></li>

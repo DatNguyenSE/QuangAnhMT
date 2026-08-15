@@ -584,6 +584,114 @@ public partial class admin_quan_ly_kho_lich_su_nhap_xuat : System.Web.UI.Page
 
     #endregion
 
- 
+    #region XUẤT EXCEL
+    protected void but_xuat_excel_Click(object sender, EventArgs e)
+    {
+        try
+        {
+            using (dbDataContext db = new dbDataContext())
+            {
+                var list_all = (from nxk in db.NhapXuatKho_tbs
+                                join ob5 in db.BaoGia_tbs on nxk.id_baogia equals ob5.id.ToString() into BaoGiaGroup
+                                from ob5 in BaoGiaGroup.DefaultIfEmpty()
+                                join ob1 in db.KhoSanPham_tbs on nxk.id_sanpham equals ob1.id.ToString() into SanPhamGroup
+                                from ob1 in SanPhamGroup.DefaultIfEmpty()
+                                join ob2 in db.DuLieuNguon_tbs
+                                    .Where(p => p.kyhieu == "hangsanpham") on ob1.id_hang equals ob2.id.ToString() into HangGroup
+                                from ob2 in HangGroup.DefaultIfEmpty()
+                                join ob3 in db.DuLieuNguon_tbs
+                                    .Where(p => p.kyhieu == "nhomsanpham") on ob1.id_nhom equals ob3.id.ToString() into NhomGroup
+                                from ob3 in NhomGroup.DefaultIfEmpty()
+                                join ob4 in db.DuLieuNguon_tbs
+                                    .Where(p => p.kyhieu == "donvitinh") on ob1.donvitinh equals ob4.id.ToString() into DVTGroup
+                                from ob4 in DVTGroup.DefaultIfEmpty()
+                                join tk in db.taikhoan_tbs on nxk.nguoinhap equals tk.taikhoan into TaiKhoanGroup
+                                from tk in TaiKhoanGroup.DefaultIfEmpty()
+                                select new
+                                {
+                                    id = nxk.id,
+                                    ngaynhap = nxk.ngaynhap,
+                                    Loai = nxk.nhap_hay_xuat == true ? "Nhập" : "Xuất",
+                                    TenSP = ob1 == null ? "" : ob1.ten,
+                                    Hang = ob2 == null ? "" : ob2.ten,
+                                    TonDau = nxk.ton_hientai,
+                                    SoLuong = nxk.soluong_nhap,
+                                    TonCuoi = nxk.nhap_hay_xuat == true ? nxk.ton_hientai + nxk.soluong_nhap : nxk.ton_hientai - nxk.soluong_nhap,
+                                    MaBaoGia = nxk.id_baogia,
+                                    KhachHang = ob5 == null ? "" : ob5.ten_khachhang,
+                                    SDT_Khach = ob5 == null ? "" : ob5.sdt_khachhang,
+                                    HoTenNhanVien = tk == null ? "" : tk.hoten
+                                }).AsQueryable();
 
+                if (txt_tungay.Text != "")
+                    list_all = list_all.Where(p => p.ngaynhap.Value.Date >= DateTime.Parse(txt_tungay.Text).Date);
+                if (txt_denngay.Text != "")
+                    list_all = list_all.Where(p => p.ngaynhap.Value.Date <= DateTime.Parse(txt_denngay.Text).Date);
+
+                string _key = txt_timkiem.Text.Trim();
+                if (!string.IsNullOrEmpty(_key))
+                    list_all = list_all.Where(p => p.TenSP.Contains(_key) || p.Hang.Contains(_key) || p.id.ToString() == _key);
+                else
+                {
+                    string _key1 = txt_timkiem1.Text.Trim();
+                    if (!string.IsNullOrEmpty(_key1))
+                        list_all = list_all.Where(p => p.TenSP.Contains(_key1) || p.Hang.Contains(_key1) || p.id.ToString() == _key1);
+                }
+
+                list_all = list_all.OrderByDescending(p => p.ngaynhap);
+
+                var list_all_result = list_all.ToList();
+                var list_dynamic = list_all_result.Select(x =>
+                    (IDictionary<string, object>)x.GetType().GetProperties().ToDictionary(
+                        p => p.Name,
+                        p => p.GetValue(x, null)
+                    )
+                ).ToList();
+
+                var headers = new Dictionary<string, string>
+                {
+                    { "id", "ID" },
+                    { "ngaynhap", "Ngày" },
+                    { "Loai", "Loại" },
+                    { "TenSP", "Sản phẩm" },
+                    { "Hang", "Hãng" },
+                    { "TonDau", "Tồn đầu" },
+                    { "SoLuong", "Số lượng" },
+                    { "TonCuoi", "Tồn cuối" },
+                    { "MaBaoGia", "Mã báo giá" },
+                    { "KhachHang", "Khách hàng" },
+                    { "SDT_Khach", "SĐT" },
+                    { "HoTenNhanVien", "Nhân viên" }
+                };
+
+                NPOI.XSSF.UserModel.XSSFWorkbook workbook = new NPOI.XSSF.UserModel.XSSFWorkbook();
+                ExportExcel.ExportToExcelFormat(list_dynamic, headers, workbook);
+
+                string fileName = "LichSuNhapXuat_" + DateTime.Now.ToString("ddMMyyyyHHmmss") + ".xlsx";
+                string filePath = Server.MapPath("~/uploads/Files/" + fileName);
+                using (FileStream fs = new FileStream(filePath, FileMode.Create))
+                {
+                    workbook.Write(fs);
+                }
+
+                Response.Clear();
+                Response.ContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                Response.AddHeader("Content-Disposition", "attachment; filename=" + fileName);
+                Response.TransmitFile(filePath);
+                Response.Flush();
+                Response.SuppressContent = true;
+                Context.ApplicationInstance.CompleteRequest();
+            }
+        }
+        catch (Exception _ex)
+        {
+            string _tk = Session["taikhoan"] as string;
+            if (!string.IsNullOrEmpty(_tk))
+                _tk = mahoa_cl.giaima_Bcorn(_tk);
+            else
+                _tk = "";
+            Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
+        }
+    }
+    #endregion
 }

@@ -8591,6 +8591,10 @@ public partial class KhoSanPham_tb : INotifyPropertyChanging, INotifyPropertyCha
 	
 	private System.Nullable<bool> _daban;
 	
+	private System.Nullable<long> _phantram_thanhly;
+	
+	private System.Nullable<System.DateTime> _han_baohanh;
+	
     #region Extensibility Method Definitions
     partial void OnLoaded();
     partial void OnValidate(System.Data.Linq.ChangeAction action);
@@ -8633,6 +8637,10 @@ public partial class KhoSanPham_tb : INotifyPropertyChanging, INotifyPropertyCha
     partial void Onso_seriChanged();
     partial void OndabanChanging(System.Nullable<bool> value);
     partial void OndabanChanged();
+    partial void Onphantram_thanhlyChanging(System.Nullable<long> value);
+    partial void Onphantram_thanhlyChanged();
+    partial void Onhan_baohanhChanging(System.Nullable<System.DateTime> value);
+    partial void Onhan_baohanhChanged();
     #endregion
 	
 	public KhoSanPham_tb()
@@ -9016,6 +9024,46 @@ public partial class KhoSanPham_tb : INotifyPropertyChanging, INotifyPropertyCha
 				this._daban = value;
 				this.SendPropertyChanged("daban");
 				this.OndabanChanged();
+			}
+		}
+	}
+	
+	[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_phantram_thanhly", DbType="BigInt")]
+	public System.Nullable<long> phantram_thanhly
+	{
+		get
+		{
+			return this._phantram_thanhly;
+		}
+		set
+		{
+			if ((this._phantram_thanhly != value))
+			{
+				this.Onphantram_thanhlyChanging(value);
+				this.SendPropertyChanging();
+				this._phantram_thanhly = value;
+				this.SendPropertyChanged("phantram_thanhly");
+				this.Onphantram_thanhlyChanged();
+			}
+		}
+	}
+	
+	[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_han_baohanh", DbType="DateTime")]
+	public System.Nullable<System.DateTime> han_baohanh
+	{
+		get
+		{
+			return this._han_baohanh;
+		}
+		set
+		{
+			if ((this._han_baohanh != value))
+			{
+				this.Onhan_baohanhChanging(value);
+				this.SendPropertyChanging();
+				this._han_baohanh = value;
+				this.SendPropertyChanged("han_baohanh");
+				this.Onhan_baohanhChanged();
 			}
 		}
 	}

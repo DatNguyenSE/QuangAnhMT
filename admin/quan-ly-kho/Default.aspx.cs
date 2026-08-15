@@ -1,56 +1,31 @@
 using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Globalization;
-using System.Security.Cryptography;
 using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 
 public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
 {
-
-    // ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Tài khoản đã bị khóa.", "false", "false", "OK", "alert", ""), true);
     String_cl str_cl = new String_cl();
     DateTime_cl dt_cl = new DateTime_cl();
 
-    // Lưu trạng thái quyền trong request hiện tại, tránh Split/Contains lặp lại cho từng dòng Repeater.
-    private bool _canViewPurchasePrice;
-
-    private static bool HasPermission(string permissionText, string permissionCode)
-    {
-        if (string.IsNullOrWhiteSpace(permissionText) || string.IsNullOrWhiteSpace(permissionCode))
-            return false;
-
-        return permissionText
-            .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-            .Any(p => string.Equals(p.Trim(), permissionCode, StringComparison.Ordinal));
-    }
-
-    private static long? TryGetId(string value)
+    private long? TryGetId(string value)
     {
         long id;
-        return long.TryParse(value, out id) ? (long?)id : null;
+        if (long.TryParse(value, out id))
+            return id;
+        return null;
     }
 
-    private string GetCurrentSearchKey()
-    {
-        string key = ViewState["search_key"] as string;
-        if (key != null)
-            return key.Trim();
-
-        return !string.IsNullOrWhiteSpace(txt_timkiem1.Text)
-            ? txt_timkiem1.Text.Trim()
-            : txt_timkiem.Text.Trim();
-    }
-
-    private void BindProductSourceDropDowns(dbDataContext db, KhoSanPham_tb product)
+    private void BindProductSourceDropDowns(dbDataContext db, KhoSanPham_tb currentProduct)
     {
         var data = db.DuLieuNguon_tbs
             .Where(p => p.kyhieu == "hangsanpham" || p.kyhieu == "nhomsanpham" || p.kyhieu == "donvitinh")
-            .Select(p => new { p.id, p.ten, p.kyhieu })
             .ToList();
 
         var hangSanPham = data.Where(p => p.kyhieu == "hangsanpham").OrderBy(p => p.ten).ToList();
@@ -58,75 +33,70 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
         var donViTinh = data.Where(p => p.kyhieu == "donvitinh").OrderBy(p => p.ten).ToList();
 
         DropDownList1.DataSource = hangSanPham;
-        DropDownList1.DataValueField = "id";
         DropDownList1.DataTextField = "ten";
+        DropDownList1.DataValueField = "id";
         DropDownList1.DataBind();
         DropDownList1.Items.Insert(0, new ListItem("Chọn hãng", ""));
 
         DropDownList2.DataSource = nhomSanPham;
-        DropDownList2.DataValueField = "id";
         DropDownList2.DataTextField = "ten";
+        DropDownList2.DataValueField = "id";
         DropDownList2.DataBind();
         DropDownList2.Items.Insert(0, new ListItem("Chọn nhóm", ""));
 
         DropDownList3.DataSource = donViTinh;
-        DropDownList3.DataValueField = "id";
         DropDownList3.DataTextField = "ten";
+        DropDownList3.DataValueField = "id";
         DropDownList3.DataBind();
         DropDownList3.Items.Insert(0, new ListItem("Chọn đơn vị tính", ""));
 
-        if (product == null)
-            return;
-
-        DropDownList1.SelectedValue = hangSanPham.Any(p => p.id.ToString() == product.id_hang) ? product.id_hang : "";
-        DropDownList2.SelectedValue = nhomSanPham.Any(p => p.id.ToString() == product.id_nhom) ? product.id_nhom : "";
-        DropDownList3.SelectedValue = donViTinh.Any(p => p.id.ToString() == product.donvitinh) ? product.donvitinh : "";
+        if (currentProduct != null)
+        {
+            if (DropDownList1.Items.FindByValue(currentProduct.id_hang) != null)
+                DropDownList1.SelectedValue = currentProduct.id_hang;
+            if (DropDownList2.Items.FindByValue(currentProduct.id_nhom) != null)
+                DropDownList2.SelectedValue = currentProduct.id_nhom;
+            if (DropDownList3.Items.FindByValue(currentProduct.donvitinh) != null)
+                DropDownList3.SelectedValue = currentProduct.donvitinh;
+        }
     }
 
     public void set_dulieu_macdinh()
     {
         try
         {
-            ResetButtonCss();//button chọn ngày nhanh
-            txt_show.Text = "100";
+            ResetButtonCss();
+            txt_show.Text = "30";
             ViewState["current_page_qlkho"] = "1";
 
-
             #region set_get_cookie
-            // Lấy cookie "cookie_qlkho" từ Request.Cookies
             HttpCookie cookie = Request.Cookies["cookie_qlkho"];
             if (cookie == null)
             {
-                ListBox1.SelectedIndex = 0;//mặc định chọn tất cả phân loại, nếu select=true ngoài html thì k lưu lịch sử đc, kệ mẹ nó cứ làm y vậy đi, đừng quan tâm tới đoạn này
-                                           // Nếu cookie không tồn tại, tạo cookie mới
+                ListBox1.SelectedIndex = 0;
                 cookie = new HttpCookie("cookie_qlkho");
-                cookie["show"] = txt_show.Text;//lưu số dòng hiển thị mỗi trang
-                cookie["trang_hientai"] = "1";//lưu trang hiện tại
+                cookie["show"] = txt_show.Text;
+                cookie["trang_hientai"] = "1";
                 cookie["id_loctheothoigian"] = ddl_thoigian.SelectedValue;
                 cookie["tungay"] = txt_tungay.Text;
                 cookie["denngay"] = txt_denngay.Text;
-                cookie["phanloai"] = "";//Tất cả phân loại
-                                        // Đặt thời gian hết hạn của cookie là 1 ngày từ thời điểm hiện tại
+                cookie["phanloai"] = "";
                 cookie.Expires = DateTime.Now.AddDays(1);
                 cookie.HttpOnly = true;
                 cookie.Secure = true;
-                // Thêm cookie vào Response.Cookies
                 Response.Cookies.Add(cookie);
-
             }
             else
             {
-                // Nếu cookie đã tồn tại, lấy giá trị từ cookie
                 txt_show.Text = cookie["show"];
                 ViewState["current_page_qlkho"] = cookie["trang_hientai"];
                 ddl_thoigian.SelectedValue = cookie["id_loctheothoigian"];
                 txt_tungay.Text = cookie["tungay"];
                 txt_denngay.Text = cookie["denngay"];
-                if (cookie["phanloai"] == "")//nếu phân loại là Tất cả (value = "")
-                    ListBox1.SelectedIndex = 0;//Chọn mục Tất cả
+                if (cookie["phanloai"] == "")
+                    ListBox1.SelectedIndex = 0;
                 else
                 {
-                    // Chọn các mục tương ứng với giá trị đã lưu
                     string[] _chon_phanloai = cookie["phanloai"].Split(',');
                     foreach (ListItem item in ListBox1.Items)
                     {
@@ -134,18 +104,15 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                             item.Selected = true;
                     }
                 }
-                // Thiết lập lại thời gian hết hạn của cookie là 1 ngày từ thời điểm hiện tại
                 cookie.Expires = DateTime.Now.AddDays(1);
-                // Cập nhật cookie trong Response.Cookies
                 Response.Cookies.Set(cookie);
             }
             #endregion
-
         }
         catch (Exception _ex)
         {
-            string _tk = Session["taikhoan"] as string; // Sử dụng 'as' để tránh lỗi nếu là null
-            if (!string.IsNullOrEmpty(_tk)) // Kiểm tra xem '_tk' có hợp lệ hay không
+            string _tk = Session["taikhoan"] as string;
+            if (!string.IsNullOrEmpty(_tk))
             {
                 _tk = mahoa_cl.giaima_Bcorn(_tk);
             }
@@ -154,20 +121,16 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
         }
     }
+
     protected void Page_Load(object sender, EventArgs e)
     {
-        // FileUpload chỉ gửi được dữ liệu khi form dùng multipart/form-data.
-        if (Page.Form != null)
-            Page.Form.Enctype = "multipart/form-data";
-
         if (!IsPostBack)
         {
-
             Session["url_back"] = HttpContext.Current.Request.Url.AbsoluteUri;
             check_login_cl.check_login_admin("7", "7");
 
-            string _tk = Session["taikhoan"] as string; // Sử dụng 'as' để tránh lỗi nếu là null
-            if (!string.IsNullOrEmpty(_tk)) // Kiểm tra xem '_tk' có hợp lệ hay không
+            string _tk = Session["taikhoan"] as string;
+            if (!string.IsNullOrEmpty(_tk))
             {
                 _tk = mahoa_cl.giaima_Bcorn(_tk);
             }
@@ -175,296 +138,78 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                 _tk = "";
 
             ViewState["taikhoan"] = _tk;
-            ViewState["show_sold_products"] = false;
-            lbl_toggle_sold_products.Text = "Xem sản phẩm đã bán";
-            but_toggle_sold_products.CssClass = "";
-            icon_toggle.Attributes["class"] = "mif-checkmark";
 
             set_dulieu_macdinh();
             show_main();
-
         }
     }
 
-    protected void but_toggle_sold_products_Click(object sender, EventArgs e)
-    {
-        check_login_cl.check_login_admin("7", "7");
-        bool showSoldProducts = !Convert.ToBoolean(ViewState["show_sold_products"] ?? false);
-        ViewState["show_sold_products"] = showSoldProducts;
-        ViewState["current_page_qlkho"] = "1";
-        if (showSoldProducts)
-        {
-            lbl_toggle_sold_products.Text = "Đang xem hàng đã bán (Quay lại)";
-            but_toggle_sold_products.CssClass = "bg-red fg-white text-bold";
-            icon_toggle.Attributes["class"] = "mif-undo";
-        }
-        else
-        {
-            lbl_toggle_sold_products.Text = "Xem sản phẩm đã bán";
-            but_toggle_sold_products.CssClass = "";
-            icon_toggle.Attributes["class"] = "mif-checkmark";
-        }
-        show_main();
-        up_main.Update();
-    }
-
-    protected void but_show_import_excel_Click(object sender, EventArgs e)
-    {
-        check_login_cl.check_login_admin("7", "7");
-        pn_import_excel.Visible = true;
-        up_import_excel.Update();
-    }
-
-    protected void but_close_import_excel_Click(object sender, EventArgs e)
-    {
-        pn_import_excel.Visible = false;
-        fu_import_excel.Attributes.Clear();
-        up_import_excel.Update();
-    }
-
-    private static string GetImportCellText(ExcelWorksheet sheet, int row, int column)
-    {
-        return (sheet.Cells[row, column].Text ?? string.Empty).Trim();
-    }
-
-    private static bool TryParseImportQuantity(string value, out int quantity)
-    {
-        quantity = 0;
-        decimal parsed;
-        if (!decimal.TryParse(value, NumberStyles.Number, CultureInfo.CurrentCulture, out parsed) &&
-            !decimal.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out parsed))
-            return false;
-
-        if (parsed < 0 || parsed != decimal.Truncate(parsed) || parsed > int.MaxValue)
-            return false;
-
-        quantity = (int)parsed;
-        return true;
-    }
-
-    private void WriteImportConsoleLog(string message)
-    {
-        string encodedMessage = HttpUtility.JavaScriptStringEncode(message ?? string.Empty);
-        Response.Write("<script>console.log(\"[Import Excel] " + encodedMessage + "\");</script>");
-        Response.Flush();
-    }
-
-    private static string GetImportFileHash(byte[] fileBytes)
-    {
-        using (SHA256 sha256 = SHA256.Create())
-        {
-            return string.Concat(sha256.ComputeHash(fileBytes).Select(b => b.ToString("x2")));
-        }
-    }
-
-    protected void but_confirm_import_excel_Click(object sender, EventArgs e)
-    {
-        check_login_cl.check_login_admin("7", "7");
-        Response.BufferOutput = false;
-        WriteImportConsoleLog("Bắt đầu nhận file...");
-
-        if (!fu_import_excel.HasFile)
-        {
-            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng chọn file Excel.", "false", "false", "OK", "alert", ""), true);
-            return;
-        }
-
-        byte[] fileBytes;
-        using (var uploadedStream = fu_import_excel.PostedFile.InputStream)
-        using (var buffer = new MemoryStream())
-        {
-            uploadedStream.CopyTo(buffer);
-            fileBytes = buffer.ToArray();
-        }
-
-        string importKey = "KhoSanPham_ExcelImport_" + GetImportFileHash(fileBytes);
-        string importState = Session[importKey] as string;
-        if (importState == "processing" || importState == "completed")
-        {
-            WriteImportConsoleLog("File này đã được xử lý hoặc đang được xử lý, không chạy lại.");
-            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "File này đã được nhập trước đó hoặc đang được xử lý. Không chạy lại để tránh tạo sản phẩm trùng.", "false", "false", "OK", "alert", ""), true);
-            return;
-        }
-
-        // Đánh dấu trước khi bắt đầu insert để lần submit lại cùng file không tạo trùng,
-        // kể cả khi request đầu tiên bị ngắt sau khi đã ghi một phần dữ liệu.
-        Session[importKey] = "processing";
-
-        string extension = Path.GetExtension(fu_import_excel.FileName);
-        if (!string.Equals(extension, ".xlsx", StringComparison.OrdinalIgnoreCase) &&
-            !string.Equals(extension, ".xlsm", StringComparison.OrdinalIgnoreCase))
-        {
-            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Chỉ hỗ trợ file .xlsx hoặc .xlsm.", "false", "false", "OK", "alert", ""), true);
-            return;
-        }
-
-        int created = 0;
-        int skipped = 0;
-        var skippedRows = new List<string>();
-
-        try
-        {
-            // Dự án đang dùng EPPlus 7.0.1 trong Bin; phải khai báo context
-            // trước khi khởi tạo ExcelPackage để đọc được file .xlsx.
-            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-            using (var package = new ExcelPackage(new MemoryStream(fileBytes)))
-            {
-                var sheet = package.Workbook.Worksheets.FirstOrDefault();
-                if (sheet == null || sheet.Dimension == null || sheet.Dimension.End.Row < 4)
-                {
-                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "File Excel không có dữ liệu từ dòng 4.", "false", "false", "OK", "alert", ""), true);
-                    return;
-                }
-
-                WriteImportConsoleLog("Đã mở sheet: " + sheet.Name + ". Bắt đầu đọc từ dòng 4.");
-
-                using (dbDataContext db = new dbDataContext())
-                {
-                    int blankRows = 0;
-                    for (int row = 4; row <= sheet.Dimension.End.Row; row++)
-                    {
-                        string name = GetImportCellText(sheet, row, 3);
-                        string unit = GetImportCellText(sheet, row, 4);
-                        string quantityText = GetImportCellText(sheet, row, 5);
-
-                        if (string.IsNullOrWhiteSpace(name) && string.IsNullOrWhiteSpace(unit) && string.IsNullOrWhiteSpace(quantityText))
-                        {
-                            // Bỏ qua phần đuôi chỉ chứa định dạng của Excel. Nếu
-                            // gặp 20 dòng trống liên tiếp thì coi là hết dữ liệu.
-                            blankRows++;
-                            if (blankRows >= 20)
-                                break;
-                            continue;
-                        }
-                        blankRows = 0;
-
-                        string unitId;
-                        if (string.Equals(unit, "Cái", StringComparison.OrdinalIgnoreCase))
-                            unitId = "45";
-                        else if (string.Equals(unit, "Cặp", StringComparison.OrdinalIgnoreCase))
-                            unitId = "46";
-                        else if (string.Equals(unit, "Bộ", StringComparison.OrdinalIgnoreCase))
-                            unitId = "48";
-                        else
-                        {
-                            skipped++;
-                            skippedRows.Add("Dòng " + row + ": đơn vị tính không hợp lệ");
-                            WriteImportConsoleLog("Bỏ qua dòng " + row + ": đơn vị tính '" + unit + "' không hợp lệ.");
-                            continue;
-                        }
-
-                        int quantity;
-                        if (string.IsNullOrWhiteSpace(name) || !TryParseImportQuantity(quantityText, out quantity))
-                        {
-                            skipped++;
-                            skippedRows.Add("Dòng " + row + ": thiếu tên hoặc số lượng không hợp lệ");
-                            WriteImportConsoleLog("Bỏ qua dòng " + row + ": thiếu tên hoặc số lượng không hợp lệ.");
-                            continue;
-                        }
-
-                        var product = new KhoSanPham_tb
-                        {
-                            ten = name,
-                            donvitinh = unitId,
-                            soluong_hientai = quantity,
-                            daban = false
-                        };
-                        db.KhoSanPham_tbs.InsertOnSubmit(product);
-                        created++;
-                        WriteImportConsoleLog("Đã đọc dòng " + row + ": thêm sản phẩm '" + name + "' vào hàng chờ ghi. Tổng: " + created);
-
-                        // Ghi theo batch để file lớn không giữ quá nhiều entity trong bộ nhớ.
-                        if (created % 500 == 0)
-                        {
-                            WriteImportConsoleLog("Đang ghi batch 500 sản phẩm xuống database...");
-                            db.SubmitChanges();
-                            WriteImportConsoleLog("Đã ghi xuống database " + created + " sản phẩm.");
-                        }
-                    }
-
-                    WriteImportConsoleLog("Đang ghi các sản phẩm còn lại xuống database...");
-                    db.SubmitChanges();
-                    WriteImportConsoleLog("Đã ghi xong database. Tổng sản phẩm: " + created + ". Dòng bỏ qua: " + skipped + ".");
-                }
-            }
-
-            Session[importKey] = "completed";
-            pn_import_excel.Visible = false;
-
-            string message = "Đã tạo " + created.ToString("#,##0") + " sản phẩm.";
-            if (skipped > 0)
-                message += " Bỏ qua " + skipped.ToString("#,##0") + " dòng không hợp lệ.";
-            string notifyScript = thongbao_class.metro_notifi("Thông báo", message, "3000", "warning") +
-                "window.setTimeout(function(){ window.location.reload(); }, 3200);";
-            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), notifyScript, true);
-        }
-        catch (Exception ex)
-        {
-            if (created > 0)
-                Session[importKey] = "completed";
-            else
-                Session.Remove(importKey);
-            string detail = skippedRows.Count > 0 ? " " + string.Join("; ", skippedRows.Take(5)) : string.Empty;
-            string errorMessage = ex.GetBaseException().Message;
-            WriteImportConsoleLog("LỖI: " + errorMessage);
-            Log_cl.Add_Log(errorMessage, ViewState["taikhoan"]?.ToString() ?? "", ex.StackTrace);
-            string safeErrorMessage = Server.HtmlEncode(errorMessage);
-            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Lỗi nhập Excel", "Không thể nhập file: " + safeErrorMessage + detail, "false", "false", "OK", "alert", ""), true);
-        }
-    }
     #region main - phân trang - tìm kiếm
     protected void Repeater1_ItemDataBound(object sender, RepeaterItemEventArgs e)
     {
-        PlaceHolder purchasePriceHolder = e.Item.FindControl("PlaceHolder5") as PlaceHolder;
-        if (purchasePriceHolder != null)
-            purchasePriceHolder.Visible = _canViewPurchasePrice;
+        string userPermissions = ViewState["quyen"].ToString();
+        var permissionsList = userPermissions.Split(',');
+        if (permissionsList.Contains("8"))
+        {
+            PlaceHolder PlaceHolder5 = (PlaceHolder)e.Item.FindControl("PlaceHolder5");
+            if (PlaceHolder5 != null)
+            {
+                PlaceHolder5.Visible = true;
+            }
+        }
+        else
+        {
+            PlaceHolder PlaceHolder5 = (PlaceHolder)e.Item.FindControl("PlaceHolder5");
+            if (PlaceHolder5 != null)
+            {
+                PlaceHolder5.Visible = false;
+            }
+        }
     }
+
     public void show_main()
     {
         try
         {
             using (dbDataContext db = new dbDataContext())
             {
-                db.ObjectTrackingEnabled = false;
-
                 #region kiểm tra quyền - k cho xem giá nhập
-                string account = Convert.ToString(ViewState["taikhoan"]);
-                string permission = db.taikhoan_tbs
-                    .Where(p => p.taikhoan == account)
-                    .Select(p => p.permission)
-                    .FirstOrDefault() ?? "";
-
-                ViewState["quyen"] = permission;
-                _canViewPurchasePrice = HasPermission(permission, "8");
-                PlaceHolder1.Visible = _canViewPurchasePrice;
-                PlaceHolder3.Visible = _canViewPurchasePrice;
-                PlaceHolder6.Visible = _canViewPurchasePrice;
-                PlaceHolder4.Visible = _canViewPurchasePrice;
-                #endregion
-
-                #region lấy dữ liệu
-                string _key = GetCurrentSearchKey();
-                bool showSoldProducts = Convert.ToBoolean(ViewState["show_sold_products"] ?? false);
-                var products = db.KhoSanPham_tbs.AsQueryable();
-                if (showSoldProducts)
+                var q = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == ViewState["taikhoan"].ToString());
+                ViewState["quyen"] = q.permission;
+                var permissionsList = q.permission.Split(',');
+                if (permissionsList.Contains("8"))
                 {
-                    products = products.Where(p => p.daban == true);
+                    PlaceHolder1.Visible = true;
+                    PlaceHolder3.Visible = true;
+                    PlaceHolder6.Visible = true;
+                    PlaceHolder4.Visible = true;
                 }
                 else
                 {
-                    products = products.Where(p => p.daban == false || p.daban == null);
+                    PlaceHolder1.Visible = false;
+                    PlaceHolder3.Visible = false;
+                    PlaceHolder6.Visible = false;
+                    PlaceHolder4.Visible = false;
+                }
+                #endregion
+
+                #region lấy dữ liệu
+                string _key = ViewState["search_key"] as string;
+                if (_key == null)
+                {
+                    _key = !string.IsNullOrWhiteSpace(txt_timkiem1.Text)
+                        ? txt_timkiem1.Text.Trim()
+                        : txt_timkiem.Text.Trim();
                 }
 
+                var products = db.KhoSanPham_tbs.AsQueryable();
                 if (!string.IsNullOrEmpty(_key))
                 {
                     long searchId;
                     bool hasSearchId = long.TryParse(_key, out searchId);
-                    List<string> categoryIds = db.DuLieuNguon_tbs
+                    var categoryIds = db.DuLieuNguon_tbs
                         .Where(p => (p.kyhieu == "hangsanpham" || p.kyhieu == "nhomsanpham") && p.ten.Contains(_key))
-                        .Select(p => p.id)
-                        .ToList()
-                        .Select(id => id.ToString())
-                        .ToList();
+                        .Select(p => p.id.ToString());
 
                     products = products.Where(p =>
                         p.ten.Contains(_key) ||
@@ -474,15 +219,6 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                         categoryIds.Contains(p.id_hang) ||
                         categoryIds.Contains(p.id_nhom));
                 }
-
-                // Lọc theo ngày tạo trước khi tính tổng và phân trang.
-                DateTime tuNgay;
-                if (DateTime.TryParse(txt_tungay.Text.Trim(), out tuNgay))
-                    products = products.Where(p => p.ngaytao >= tuNgay.Date);
-
-                DateTime denNgay;
-                if (DateTime.TryParse(txt_denngay.Text.Trim(), out denNgay))
-                    products = products.Where(p => p.ngaytao < denNgay.Date.AddDays(1));
 
                 var list_all = (from ob1 in products
                                 join ob2 in db.DuLieuNguon_tbs
@@ -511,31 +247,13 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                                     TongBanLe = ob1.giabanle * ob1.soluong_hientai,
                                     ob1.cohoadon,
                                     ob1.hangthanhly,
+                                    ob1.phantram_thanhly,
+                                    ob1.han_baohanh,
                                     ob1.soluong_hientai,
                                     ob1.ghichu,
                                     ob1.ngaytao,
                                     ob1.nguoitao,
-                                 }).AsQueryable();
-
-                /* ////xử lý theo thời gian
-                //string _id_locthoigian = ddl_thoigian.SelectedValue;
-                //if (_id_locthoigian == "1")//lọc theo ngày tạo
-                //{
-                //    if (txt_tungay.Text != "")
-                //        list_all = list_all.Where(p => p.ngaytao.Value.Date >= DateTime.Parse(txt_tungay.Text).Date);
-                //    if (txt_denngay.Text != "")
-                //        list_all = list_all.Where(p => p.ngaytao.Value.Date <= DateTime.Parse(txt_denngay.Text).Date);
-                //} */
-
-                //lọc theo phân loại bài viết
-                //List<string> list_phanloai_baiviet = new List<string>();
-                //foreach (ListItem item in ListBox1.Items)
-                //{
-                //    if (item.Selected)
-                //        list_phanloai_baiviet.Add(item.Value);
-                //}
-                //if (!list_phanloai_baiviet.Contains(""))//nếu tồn tại "": tất cả thì k lọc
-                //    list_all = list_all.Where(tk => list_phanloai_baiviet.Contains(tk.phanloai));
+                                }).AsQueryable();
 
                 var stats = products.GroupBy(p => 1).Select(g => new
                 {
@@ -556,21 +274,17 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                 #endregion
 
                 #region phân trang OK, k sửa
-                // Chỉ sắp xếp ở truy vấn lấy dữ liệu trang hiện tại.
                 list_all = list_all
                     .OrderByDescending(p => p.ngaytao)
                     .ThenBy(p => p.Nhom)
                     .ThenBy(p => p.TenSP);
-                // Xử lý số record mỗi trang
-                int show = Number_cl.Check_Int(txt_show.Text.Trim()); if (show <= 0) show = 100;
-                //xử lý trang hiện tại. Đảm bảo current_page không nhỏ hơn 1 và không lớn hơn total_page
+                int show = Number_cl.Check_Int(txt_show.Text.Trim()); if (show <= 0) show = 30;
                 int current_page = int.Parse(ViewState["current_page_qlkho"].ToString()); int total_page = number_of_page_class.return_total_page(_Tong_Record, show); if (total_page == 0) total_page = 1; if (current_page > total_page) current_page = total_page; if (current_page < 1) current_page = 1;
                 ViewState["total_page"] = total_page;
-                //xử lý nút bấm tới lui
                 if (current_page >= total_page)
                 {
-                    but_xemtiep.Enabled = false;//máy tính
-                    but_xemtiep1.Enabled = false;//điện thoại
+                    but_xemtiep.Enabled = false;
+                    but_xemtiep1.Enabled = false;
                 }
                 else
                 {
@@ -587,9 +301,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                     but_quaylai.Enabled = true;
                     but_quaylai1.Enabled = true;
                 }
-                //PHÂN TRANG****PHÂN TRANG
                 var list_split = list_all.Skip(current_page * show - show).Take(show).ToList();
-                //xử lý thanh thông báo phân trang
                 int stt = (show * current_page) - show + 1; int _s1 = stt + list_split.Count - 1;
                 if (_Tong_Record != 0) lb_show.Text = stt + "-" + _s1 + " trong số " + _Tong_Record.ToString("#,##0"); else lb_show.Text = "0-0/0"; lb_show_md.Text = stt + "-" + _s1 + " trong số " + _Tong_Record.ToString("#,##0");
                 #endregion
@@ -599,8 +311,8 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
         }
         catch (Exception _ex)
         {
-            string _tk = Session["taikhoan"] as string; // Sử dụng 'as' để tránh lỗi nếu là null
-            if (!string.IsNullOrEmpty(_tk)) // Kiểm tra xem '_tk' có hợp lệ hay không
+            string _tk = Session["taikhoan"] as string;
+            if (!string.IsNullOrEmpty(_tk))
             {
                 _tk = mahoa_cl.giaima_Bcorn(_tk);
             }
@@ -609,6 +321,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
         }
     }
+
     protected void but_quaylai_Click(object sender, EventArgs e)
     {
         try
@@ -616,14 +329,11 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             check_login_cl.check_login_admin("none", "none");
             ViewState["current_page_qlkho"] = int.Parse(ViewState["current_page_qlkho"].ToString()) - 1;
             #region LƯU TRANG HIỆN TẠI
-            // Lấy cookie "cookie_qlkho" từ Request.Cookies
             HttpCookie cookie = Request.Cookies["cookie_qlkho"];
             if (cookie != null)
             {
                 cookie["trang_hientai"] = ViewState["current_page_qlkho"].ToString();
-                // Thiết lập lại thời gian hết hạn của cookie là 1 ngày từ thời điểm hiện tại
                 cookie.Expires = DateTime.Now.AddDays(1);
-                // Cập nhật cookie trong Response.Cookies
                 Response.Cookies.Set(cookie);
             }
             #endregion
@@ -631,8 +341,8 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
         }
         catch (Exception _ex)
         {
-            string _tk = Session["taikhoan"] as string; // Sử dụng 'as' để tránh lỗi nếu là null
-            if (!string.IsNullOrEmpty(_tk)) // Kiểm tra xem '_tk' có hợp lệ hay không
+            string _tk = Session["taikhoan"] as string;
+            if (!string.IsNullOrEmpty(_tk))
             {
                 _tk = mahoa_cl.giaima_Bcorn(_tk);
             }
@@ -641,6 +351,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
         }
     }
+
     protected void but_xemtiep_Click(object sender, EventArgs e)
     {
         try
@@ -648,14 +359,11 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             check_login_cl.check_login_admin("none", "none");
             ViewState["current_page_qlkho"] = int.Parse(ViewState["current_page_qlkho"].ToString()) + 1;
             #region LƯU TRANG HIỆN TẠI
-            // Lấy cookie "cookie_qlkho" từ Request.Cookies
             HttpCookie cookie = Request.Cookies["cookie_qlkho"];
             if (cookie != null)
             {
                 cookie["trang_hientai"] = ViewState["current_page_qlkho"].ToString();
-                // Thiết lập lại thời gian hết hạn của cookie là 1 ngày từ thời điểm hiện tại
                 cookie.Expires = DateTime.Now.AddDays(1);
-                // Cập nhật cookie trong Response.Cookies
                 Response.Cookies.Set(cookie);
             }
             #endregion
@@ -663,8 +371,8 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
         }
         catch (Exception _ex)
         {
-            string _tk = Session["taikhoan"] as string; // Sử dụng 'as' để tránh lỗi nếu là null
-            if (!string.IsNullOrEmpty(_tk)) // Kiểm tra xem '_tk' có hợp lệ hay không
+            string _tk = Session["taikhoan"] as string;
+            if (!string.IsNullOrEmpty(_tk))
             {
                 _tk = mahoa_cl.giaima_Bcorn(_tk);
             }
@@ -673,6 +381,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
         }
     }
+
     protected void txt_timkiem_TextChanged(object sender, EventArgs e)
     {
         try
@@ -685,8 +394,8 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
         }
         catch (Exception _ex)
         {
-            string _tk = Session["taikhoan"] as string; // Sử dụng 'as' để tránh lỗi nếu là null
-            if (!string.IsNullOrEmpty(_tk)) // Kiểm tra xem '_tk' có hợp lệ hay không
+            string _tk = Session["taikhoan"] as string;
+            if (!string.IsNullOrEmpty(_tk))
             {
                 _tk = mahoa_cl.giaima_Bcorn(_tk);
             }
@@ -696,8 +405,6 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
         }
     }
     #endregion
-
-
 
     #region ADD - EDIT - CHI TIẾT
     private T FindControlRecursive<T>(Control root, string id) where T : Control
@@ -731,6 +438,11 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             txt_so_seri.Text = ""; txt_name.Text = ""; txt_model.Text = ""; txt_thongso.Text = ""; txt_ghichu.Text = "";
             txt_giaban.Text = "0";
             txt_gianhap.Text = "0";
+            txt_ngaytao.Text = DateTime.Today.ToString("yyyy-MM-dd");
+            check_hangthanhly.Checked = false;
+            txt_phantram_thanhly.Text = "100";
+            txt_thang_baohanh.Text = "";
+            txt_han_baohanh.Text = "";
             Label2.Text = ""; Button2.Visible = false; txt_link_fileupload.Text = "";
             DropDownList1.DataSource = null;
             DropDownList1.DataBind();
@@ -742,8 +454,8 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
         }
         catch (Exception _ex)
         {
-            string _tk = Session["taikhoan"] as string; // Sử dụng 'as' để tránh lỗi nếu là null
-            if (!string.IsNullOrEmpty(_tk)) // Kiểm tra xem '_tk' có hợp lệ hay không
+            string _tk = Session["taikhoan"] as string;
+            if (!string.IsNullOrEmpty(_tk))
             {
                 _tk = mahoa_cl.giaima_Bcorn(_tk);
             }
@@ -752,12 +464,12 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
         }
     }
+
     protected void but_show_form_add_Click(object sender, EventArgs e)
     {
         try
         {
             check_login_cl.check_login_admin("9", "9");
-            //reset control
             reset_control_add_edit();
 
             ViewState["add_edit"] = "add";
@@ -772,17 +484,14 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             using (dbDataContext db = new dbDataContext())
             {
                 BindProductSourceDropDowns(db, null);
-
             }
-            //hiện form add_edit trong updatePanel_add
             pn_add.Visible = !pn_add.Visible;
             up_add.Update();
-            // ScriptManager.RegisterStartupScript(this.Page, this.GetType(), "generate_seri", ... removed auto generate seri
         }
         catch (Exception _ex)
         {
-            string _tk = Session["taikhoan"] as string; // Sử dụng 'as' để tránh lỗi nếu là null
-            if (!string.IsNullOrEmpty(_tk)) // Kiểm tra xem '_tk' có hợp lệ hay không
+            string _tk = Session["taikhoan"] as string;
+            if (!string.IsNullOrEmpty(_tk))
             {
                 _tk = mahoa_cl.giaima_Bcorn(_tk);
             }
@@ -828,23 +537,22 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             Log_cl.Add_Log(_ex.Message, string.IsNullOrEmpty(_tk) ? "" : mahoa_cl.giaima_Bcorn(_tk), _ex.StackTrace);
         }
     }
+
     protected void but_close_form_add_Click(object sender, EventArgs e)
     {
         try
         {
-            //reset control
             reset_control_add_edit();
             pn_add.CssClass = "";
             GetQuickPlaceHolder("ph_quick_entry_info").Visible = false;
             GetQuickPlaceHolder("ph_quick_entry_quantity").Visible = false;
             GetQuickPlaceHolder("ph_quick_entry_common_start").Visible = false;
-            //ẩn form
             pn_add.Visible = !pn_add.Visible;
         }
         catch (Exception _ex)
         {
-            string _tk = Session["taikhoan"] as string; // Sử dụng 'as' để tránh lỗi nếu là null
-            if (!string.IsNullOrEmpty(_tk)) // Kiểm tra xem '_tk' có hợp lệ hay không
+            string _tk = Session["taikhoan"] as string;
+            if (!string.IsNullOrEmpty(_tk))
             {
                 _tk = mahoa_cl.giaima_Bcorn(_tk);
             }
@@ -854,10 +562,8 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
         }
     }
 
-    //chỉnh sửa
-    protected void Button2_Click(object sender, EventArgs e)//xóa ảnh cũ
+    protected void Button2_Click(object sender, EventArgs e)
     {
-
         using (dbDataContext db = new dbDataContext())
         {
             long? editId = TryGetId(Convert.ToString(ViewState["id_edit"]));
@@ -865,7 +571,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             if (q != null)
             {
                 KhoSanPham_tb _ob = q;
-                File_Folder_cl.del_file(_ob.anh);//xóa ảnh cũ nếu có
+                File_Folder_cl.del_file(_ob.anh);
                 _ob.anh = "";
                 Button2.Visible = false;
                 db.SubmitChanges();
@@ -873,22 +579,19 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                 ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Xóa ảnh thành công.", "1000", "warning"), true);
             }
         }
-
     }
+
     protected void but_show_chinhsua_Click(object sender, EventArgs e)
     {
-
         check_login_cl.check_login_admin("10", "10");
         ViewState["add_edit"] = "edit";
         Label1.Text = "CHỈNH SỬA SẢN PHẨM";
         but_add_edit.Text = "CẬP NHẬT";
         using (dbDataContext db = new dbDataContext())
         {
-
             LinkButton button = (LinkButton)sender;
             string _id = button.CommandArgument;
 
-            //truy vấn dữ liệu để sửa
             long? productId = TryGetId(_id);
             var q = db.KhoSanPham_tbs.FirstOrDefault(p => p.id == productId);
             if (q != null)
@@ -904,6 +607,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                 txt_thongso.Text = q.thongso_kythuat;
                 txt_gianhap.Text = (q.gianhap ?? 0).ToString("#,##0").Replace(",", ".");
                 txt_giaban.Text = (q.giabanle ?? 0).ToString("#,##0").Replace(",", ".");
+                txt_ngaytao.Text = q.ngaytao.HasValue ? q.ngaytao.Value.ToString("yyyy-MM-dd") : DateTime.Today.ToString("yyyy-MM-dd");
 
                 if (q.anh != "")
                 {
@@ -925,34 +629,50 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                     rbCoHoaDon.Checked = false; rbKhongCoHoaDon.Checked = true;
                 }
                 bool _hangthanhly = q.hangthanhly ?? false;
-                if (_hangthanhly == true)
-                    check_hangthanhly.Checked = true;
-                else
-                    check_hangthanhly.Checked = false;
+                check_hangthanhly.Checked = _hangthanhly;
+                txt_phantram_thanhly.Text = (q.phantram_thanhly ?? 100).ToString();
 
-                //hiện form add_edit trong updatePanel_add
+                if (q.han_baohanh.HasValue)
+                {
+                    txt_han_baohanh.Text = q.han_baohanh.Value.ToString("yyyy-MM-dd");
+                    if (q.ngaytao.HasValue)
+                    {
+                        int diffMonths = ((q.han_baohanh.Value.Year - q.ngaytao.Value.Year) * 12) + q.han_baohanh.Value.Month - q.ngaytao.Value.Month;
+                        if (diffMonths > 0)
+                            txt_thang_baohanh.Text = diffMonths.ToString();
+                        else
+                            txt_thang_baohanh.Text = "";
+                    }
+                    else
+                    {
+                        txt_thang_baohanh.Text = "";
+                    }
+                }
+                else
+                {
+                    txt_han_baohanh.Text = "";
+                    txt_thang_baohanh.Text = "";
+                }
+
                 pn_add.Visible = !pn_add.Visible;
                 up_add.Update();
             }
             else
                 ViewState["id_edit"] = "";
-
         }
-
     }
+
     protected void but_close_chinhsua_Click(object sender, EventArgs e)
     {
         try
         {
-            //reset control
             reset_control_add_edit();
-            //ẩn form
             pn_add.Visible = !pn_add.Visible;
         }
         catch (Exception _ex)
         {
-            string _tk = Session["taikhoan"] as string; // Sử dụng 'as' để tránh lỗi nếu là null
-            if (!string.IsNullOrEmpty(_tk)) // Kiểm tra xem '_tk' có hợp lệ hay không
+            string _tk = Session["taikhoan"] as string;
+            if (!string.IsNullOrEmpty(_tk))
             {
                 _tk = mahoa_cl.giaima_Bcorn(_tk);
             }
@@ -968,7 +688,6 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
         {
             check_login_cl.check_login_admin("9", "9");
             #region Chuẩn bị dữ liệu
-            //đảm bảo luôn có thư mục chứa ảnh
             if (!Directory.Exists(Server.MapPath("~/uploads/img-handler/"))) Directory.CreateDirectory(Server.MapPath("~/uploads/img-handler/"));
             string _so_seri = txt_so_seri.Text.Trim();
             string _tensp = txt_name.Text.Trim();
@@ -979,13 +698,39 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             bool _hangthanhly = false;
             if (check_hangthanhly.Checked)
                 _hangthanhly = true;
+            long _phantram_thanhly = Number_cl.Check_Int64(txt_phantram_thanhly.Text.Trim());
+            if (_phantram_thanhly <= 0) _phantram_thanhly = 100;
+
             string _id_hang = DropDownList1.SelectedValue;
             string _id_nhom = DropDownList2.SelectedValue;
             string _id_donvitinh = DropDownList3.SelectedValue;
             string _model = txt_model.Text.Trim().ToUpper();
             string _thongso = txt_thongso.Text;
             string _ghichu = txt_ghichu.Text;
+
             DateTime _ngaytao = DateTime.Now;
+            DateTime dtNgayTao;
+            if (DateTime.TryParseExact(txt_ngaytao.Text.Trim(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out dtNgayTao))
+                _ngaytao = dtNgayTao;
+            else if (DateTime.TryParse(txt_ngaytao.Text.Trim(), out dtNgayTao))
+                _ngaytao = dtNgayTao;
+
+            DateTime? _han_baohanh = null;
+            DateTime dtHan;
+            int _thang_bh = Number_cl.Check_Int(txt_thang_baohanh.Text.Trim());
+            if (_thang_bh > 0)
+            {
+                _han_baohanh = _ngaytao.AddMonths(_thang_bh);
+            }
+            else if (DateTime.TryParseExact(txt_han_baohanh.Text.Trim(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out dtHan))
+            {
+                _han_baohanh = dtHan;
+            }
+            else if (DateTime.TryParse(txt_han_baohanh.Text.Trim(), out dtHan))
+            {
+                _han_baohanh = dtHan;
+            }
+
             string _nguoitao = mahoa_cl.giaima_Bcorn(Session["taikhoan"].ToString());
             Int64 _giaban = Number_cl.Check_Int64(txt_giaban.Text.Trim());
             Int64 _gianhap = Number_cl.Check_Int64(txt_gianhap.Text.Trim());
@@ -995,23 +740,16 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             {
                 if (Convert.ToBoolean(ViewState["quick_entry"]))
                 {
-                    SaveQuickProducts(db, _so_seri, _tensp, _anh, _cohoadon, _hangthanhly, _id_hang, _id_nhom, _id_donvitinh, _model, _thongso, _ghichu, _giaban, _gianhap, _nguoitao);
+                    SaveQuickProducts(db, _so_seri, _tensp, _anh, _cohoadon, _hangthanhly, _phantram_thanhly, _han_baohanh, _id_hang, _id_nhom, _id_donvitinh, _model, _thongso, _ghichu, _giaban, _gianhap, _nguoitao);
                     return;
                 }
 
                 #region Kiểm tra ngoại lệ.
-
-                // if (_so_seri == "")
-                // {
-                //     ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng nhập số seri.", "false", "false", "OK", "alert", ""), true);
-                //     return;
-                // }
                 if (_tensp == "")
                 {
                     ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng nhập tên sản phẩm.", "false", "false", "OK", "alert", ""), true);
                     return;
                 }
-
                 #endregion
 
                 if (ViewState["add_edit"].ToString() == "add")
@@ -1027,7 +765,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                     }
                     #region thêm mới
                     KhoSanPham_tb _ob = new KhoSanPham_tb();
-                    _ob.sanpham_tuychon = false;//đánh dấu đây kp là sản phẩm có sẵn, sp này khi báo giá thì cứ thêm vào rồi báo, bán đc hàng thì tự nhập xuất và thêm vào kho --> đổi thành true khi bán đc hàng
+                    _ob.sanpham_tuychon = false;
                     _ob.so_seri = _so_seri;
                     _ob.ten = _tensp;
                     _ob.id_nhom = _id_nhom;
@@ -1040,6 +778,8 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                     _ob.gianhap = _gianhap;
                     _ob.cohoadon = _cohoadon;
                     _ob.hangthanhly = _hangthanhly;
+                    _ob.phantram_thanhly = _phantram_thanhly;
+                    _ob.han_baohanh = _han_baohanh;
                     _ob.ghichu = _ghichu;
                     _ob.ngaytao = _ngaytao;
                     _ob.nguoitao = _nguoitao;
@@ -1050,11 +790,15 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                     #endregion
                     #region cập nhật dữ liệu và update hiển thị
                     txt_so_seri.Text = ""; txt_name.Text = ""; txt_model.Text = ""; txt_thongso.Text = ""; txt_giaban.Text = "0"; txt_gianhap.Text = "0"; txt_ghichu.Text = ""; txt_link_fileupload.Text = "";
+                    txt_ngaytao.Text = DateTime.Today.ToString("yyyy-MM-dd");
+                    check_hangthanhly.Checked = false;
+                    txt_phantram_thanhly.Text = "100";
+                    txt_thang_baohanh.Text = "";
+                    txt_han_baohanh.Text = "";
                     DropDownList1.SelectedIndex = 0; DropDownList2.SelectedIndex = 0; DropDownList3.SelectedIndex = 0;
                     show_main();
                     up_main.Update();
                     ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Xử lý thành công.", "1000", "warning"), true);
-                    // ScriptManager.RegisterStartupScript(this.Page, this.GetType(), "generate_seri", ... removed auto generate seri
                     #endregion
                 }
                 else//edit
@@ -1088,22 +832,19 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                         _ob.gianhap = _gianhap;
                         _ob.cohoadon = _cohoadon;
                         _ob.hangthanhly = _hangthanhly;
+                        _ob.phantram_thanhly = _phantram_thanhly;
+                        _ob.han_baohanh = _han_baohanh;
                         _ob.ghichu = _ghichu;
+                        _ob.ngaytao = _ngaytao;
                         db.SubmitChanges();
 
-
                         #region cập nhật dữ liệu và update hiển thị
-
                         show_main();
                         up_main.Update();
-
-                        //reset control
                         reset_control_add_edit();
-                        //ẩn form
                         pn_add.Visible = !pn_add.Visible;
                         ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Xử lý thành công.", "1000", "warning"), true);
                         #endregion
-
                         #endregion
                     }
                     #endregion
@@ -1112,8 +853,8 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
         }
         catch (Exception _ex)
         {
-            string _tk = Session["taikhoan"] as string; // Sử dụng 'as' để tránh lỗi nếu là null
-            if (!string.IsNullOrEmpty(_tk)) // Kiểm tra xem '_tk' có hợp lệ hay không
+            string _tk = Session["taikhoan"] as string;
+            if (!string.IsNullOrEmpty(_tk))
             {
                 _tk = mahoa_cl.giaima_Bcorn(_tk);
             }
@@ -1124,7 +865,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
     }
 
     private void SaveQuickProducts(dbDataContext db, string baseSerial, string name, string image, bool coHoaDon, bool hangThanhLy,
-        string idHang, string idNhom, string idDonViTinh, string model, string thongSo, string ghiChu,
+        long phanTramThanhLy, DateTime? hanBaoHanh, string idHang, string idNhom, string idDonViTinh, string model, string thongSo, string ghiChu,
         long giaBan, long giaNhap, string nguoiTao)
     {
         int quantity;
@@ -1156,7 +897,6 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
         if (!DateTime.TryParseExact(quickDate.Text.Trim(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out ngayNhap))
             ngayNhap = DateTime.Today;
 
-        // Giữ số 0 ở đầu (nếu có), nhưng vẫn cho phép mã mở rộng độ dài khi vượt giới hạn.
         int serialWidth = baseSerial.Length;
         var serials = Enumerable.Range(1, quantity)
             .Select(i =>
@@ -1214,6 +954,8 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             product.gianhap = giaNhap;
             product.cohoadon = coHoaDon;
             product.hangthanhly = hangThanhLy;
+            product.phantram_thanhly = phanTramThanhLy;
+            product.han_baohanh = hanBaoHanh;
             product.ghichu = ghiChu;
             product.ngaytao = ngayNhap;
             product.nguoitao = nguoiTao;
@@ -1253,17 +995,11 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             check_login_cl.check_login_admin("none", "none");
             pn_xuat.Visible = !pn_xuat.Visible;
 
-            // Clear CheckBoxList before adding new items
             check_list_page.Items.Clear();
-            // add số trang vào checkboxlist
             for (int i = 1; i <= int.Parse(ViewState["total_page"].ToString()); i++)
             {
-                // Tạo một ListItem mới với văn bản và giá trị là số thứ tự
                 ListItem item = new ListItem($"Trang {i}", i.ToString());
-
-                // Thêm mục vào CheckBoxList
                 check_list_page.Items.Add(item);
-                //tích chọn luôn
                 item.Selected = true;
             }
 
@@ -1271,8 +1007,8 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
         }
         catch (Exception _ex)
         {
-            string _tk = Session["taikhoan"] as string; // Sử dụng 'as' để tránh lỗi nếu là null
-            if (!string.IsNullOrEmpty(_tk)) // Kiểm tra xem '_tk' có hợp lệ hay không
+            string _tk = Session["taikhoan"] as string;
+            if (!string.IsNullOrEmpty(_tk))
             {
                 _tk = mahoa_cl.giaima_Bcorn(_tk);
             }
@@ -1281,6 +1017,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
         }
     }
+
     protected void but_xuat_excel_Click(object sender, EventArgs e)
     {
         try
@@ -1293,30 +1030,28 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                 if (item.Selected)
                 {
                     _chonmuc = true;
-                    break; // Thoát vòng lặp sớm nếu tìm thấy mục được chọn
+                    break;
                 }
             }
             if (!_chonmuc)
             {
                 ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Không có mục nào được chọn.", "false", "false", "OK", "alert", ""), true);
-                return; // Kết thúc sớm nếu không có mục nào được chọn
+                return;
             }
 
-            // Khởi tạo danh sách để lưu các mục được chọn (nếu cần)
-            List<ListItem> selectedPage = new List<ListItem>();//để lưu các trang được chọn. dùng để xuất excel
+            List<ListItem> selectedPage = new List<ListItem>();
             foreach (ListItem item in check_list_page.Items)
             {
-                if (item.Selected)//nếu có trang đc chọn
+                if (item.Selected)
                 {
-                    selectedPage.Add(item);//lưu lại trang đc chọn
+                    selectedPage.Add(item);
                     _chonPage = true;
-                    //break; // Thoát vòng lặp sớm nếu tìm thấy mục được chọn. K thoát vòng lặp vì để lưu hết trang đc chọn
                 }
             }
             if (!_chonPage)
             {
                 ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Không có trang nào được chọn.", "false", "false", "OK", "alert", ""), true);
-                return; // Kết thúc sớm nếu không có mục nào được chọn
+                return;
             }
 
             if (!Directory.Exists(Server.MapPath("~/uploads/files/")))
@@ -1343,6 +1078,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                                     Nhom = ob3 == null ? "" : ob3.ten,
                                     DVT = ob4 == null ? "" : ob4.ten,
                                     ob1.anh,
+                                    ob1.so_seri,
                                     ob1.model,
                                     ob1.thongso_kythuat,
                                     ob1.gianhap,
@@ -1351,16 +1087,14 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                                     TongBanLe = ob1.giabanle * ob1.soluong_hientai,
                                     ob1.cohoadon,
                                     ob1.hangthanhly,
+                                    ob1.phantram_thanhly,
+                                    ob1.han_baohanh,
                                     ob1.soluong_hientai,
                                     ob1.ghichu,
                                     ob1.ngaytao,
                                     ob1.nguoitao,
                                 }).AsQueryable();
 
-
-
-
-                // Giữ nguyên logic tìm kiếm của chức năng xuất Excel.
                 string _key = txt_timkiem.Text.Trim();
                 if (!string.IsNullOrEmpty(_key))
                 {
@@ -1384,84 +1118,41 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                     }
                 }
 
-                ////xử lý theo thời gian
-                //string _id_locthoigian = ddl_thoigian.SelectedValue;
-                //if (_id_locthoigian == "1")//lọc theo ngày tạo
-                //{
-                //    if (txt_tungay.Text != "")
-                //        list_all = list_all.Where(p => p.ngaytao.Value.Date >= DateTime.Parse(txt_tungay.Text).Date);
-                //    if (txt_denngay.Text != "")
-                //        list_all = list_all.Where(p => p.ngaytao.Value.Date <= DateTime.Parse(txt_denngay.Text).Date);
-                //}
-
-                //lọc theo phân loại bài viết
-                //List<string> list_phanloai_baiviet = new List<string>();
-                //foreach (ListItem item in ListBox1.Items)
-                //{
-                //    if (item.Selected)
-                //        list_phanloai_baiviet.Add(item.Value);
-                //}
-                //if (!list_phanloai_baiviet.Contains(""))//nếu tồn tại "": tất cả thì k lọc
-                //    list_all = list_all.Where(tk => list_phanloai_baiviet.Contains(tk.phanloai));
-
-                //sắp xếp
                 list_all = list_all.OrderBy(p => p.Nhom).ThenBy(p => p.TenSP);
                 var exportData = list_all.ToList();
                 int _Tong_Record = exportData.Count;
-
-                //Int64 _tongbanle = list_all.Sum(p => p.TongBanLe.Value), _tonggianhap = list_all.Sum(p => p.TongGiaNhap.Value);
-                //ViewState["tong_ton"] = list_all.Sum(p => p.soluong_hientai.Value).ToString("#,##0");
-                //ViewState["tong_giale"] = _tongbanle.ToString("#,##0");
-                //ViewState["tong_gianhap"] = _tonggianhap.ToString("#,##0");
-                //ViewState["tong_laigop"] = (_tongbanle - _tonggianhap).ToString("#,##0");
                 #endregion
 
-
                 #region xuất vào excel
-                // Sử dụng EPPlus để tạo một tệp Excel và ghi dữ liệu vào đó
                 using (ExcelPackage package = new ExcelPackage())
                 {
-                    int _cot = 1;//đánh dấu là cột 1
-                                 //đặt tên sheet
+                    int _cot = 1;
                     ExcelWorksheet worksheet = package.Workbook.Worksheets.Add("Sheet 1");
-                    //ghi tiêu đề
-                    foreach (ListItem item in check_list_excel.Items)//duyệt qua hết check list mục cần xuất
+                    foreach (ListItem item in check_list_excel.Items)
                     {
-                        if (item.Selected)//nếu mục này có chọn
+                        if (item.Selected)
                         {
                             worksheet.Cells[1, _cot].Value = item.Text;
                             _cot = _cot + 1;
                         }
                     }
-                    //hết vòng lặp thì cột bằng 1 lại
                     _cot = 1;
-                    // Bắt đầu ghi dữ liệu từ dòng thứ 2
                     int _row = 2;
 
-                    #region xác định dữ liệu chuẩn bị xuất (list_xuat). Là xuất tất cả hay các trang riêng lẻ đc chọn
-                    // Ghi dữ liệu từ LINQ Query vào ExcelWorksheet
+                    #region xác định dữ liệu chuẩn bị xuất
                     IEnumerable<dynamic> list_xuat;
-                    if (check_all_page.Checked == true)//nếu chọn tất cả
+                    if (check_all_page.Checked == true)
                         list_xuat = exportData;
-                    else//nếu chọn trang riêng lẻ
+                    else
                     {
-                        // Khởi tạo danh sách để lưu trữ dữ liệu xuất ra từ các trang cụ thể
                         List<dynamic> list_split = new List<dynamic>();
-                        // Duyệt qua `selectedItems` để lấy giá trị trang cụ thể
                         foreach (ListItem selectedItem in selectedPage)
                         {
-                            // Chuyển đổi giá trị của `ListItem` thành số trang (int)
                             int pageNumber = int.Parse(selectedItem.Value);
-
-                            // Tính toán vị trí bắt đầu và kết thúc của trang cụ thể trong `list_all`
-                            int itemsPerPage = Number_cl.Check_Int(txt_show.Text.Trim()); // Số lượng mục trên mỗi trang
-                            int startIndex = (pageNumber - 1) * itemsPerPage; // Chỉ số bắt đầu của trang cụ thể trong `list_all`
+                            int itemsPerPage = Number_cl.Check_Int(txt_show.Text.Trim());
+                            int startIndex = (pageNumber - 1) * itemsPerPage;
                             int endIndex = startIndex + itemsPerPage;
-
-                            // Lọc dữ liệu từ `list_all` cho trang cụ thể
                             var pageData = exportData.Skip(startIndex).Take(itemsPerPage);
-
-                            // Thêm dữ liệu đã lọc vào danh sách `list_xuat`
                             list_split.AddRange(pageData);
                         }
                         list_xuat = list_split;
@@ -1471,10 +1162,9 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                     foreach (var t in list_xuat)
                     {
                         _cot = 1;
-                        // Chỉ lặp qua các mục đã được chọn trong `check_list_excel.Items`
                         foreach (ListItem item in check_list_excel.Items.Cast<ListItem>().Where(item => item.Selected))
                         {
-                            string _tencot = item.Value;//lấy tên cột
+                            string _tencot = item.Value;
                             switch (_tencot)
                             {
                                 case "id":
@@ -1511,72 +1201,52 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                                     worksheet.Cells[_row, _cot].Value = t.ghichu; _cot = _cot + 1;
                                     break;
                                 case "ngaytao":
-                                    // Giả định t.ngaytao là thuộc tính DateTime hoặc DateTime?
                                     DateTime? ngayTao = t.ngaytao;
-
                                     if (ngayTao.HasValue)
                                     {
-                                        // Chuyển đổi DateTime thành chỉ ngày (ngayTao.Value.Date)
                                         DateTime onlyDate = ngayTao.Value.Date;
-
-                                        // Đặt giá trị ô là kiểu DateTime chỉ với ngày
                                         worksheet.Cells[_row, _cot].Value = onlyDate;
-
-                                        // Định dạng số cho ô thành "dd/MM/yyyy"
                                         worksheet.Cells[_row, _cot].Style.Numberformat.Format = "dd/MM/yyyy";
                                     }
                                     else
                                     {
-                                        // Nếu giá trị ngayTao là null, bạn có thể để trống ô đó hoặc xử lý theo cách khác
-                                        worksheet.Cells[_row, _cot].Value = DBNull.Value; // Hoặc để trống, hoặc đặt giá trị mặc định
+                                        worksheet.Cells[_row, _cot].Value = DBNull.Value;
                                     }
                                     _cot = _cot + 1;
                                     break;
-                                default: break;
+                                case "nguoitao":
+                                    worksheet.Cells[_row, _cot].Value = t.nguoitao; _cot = _cot + 1;
+                                    break;
+                                case "thongso_kythuat":
+                                    worksheet.Cells[_row, _cot].Value = t.thongso_kythuat; _cot = _cot + 1;
+                                    break;
+                                case "gianhap":
+                                    worksheet.Cells[_row, _cot].Value = t.gianhap; _cot = _cot + 1;
+                                    break;
                             }
                         }
                         _row++;
                     }
-                    // Lưu tệp Excel vào đường dẫn đã chỉ định
-                    string filePath = "/uploads/files/Kho-" + str_cl.taoma_theothoigian() + ".xlsx";
-                    package.SaveAs(new System.IO.FileInfo(Server.MapPath("~" + filePath)));
-                    //Response.Redirect(filePath);
 
-                    // URL bạn muốn chuyển hướng đến
-                    string url = filePath;
-                    // Script để mở trang mới trong tab mới
-                    string script = $"window.open('{url}', '_blank');";
-                    // Đăng ký script để thực thi sau khi UpdatePanel postback hoàn thành
-                    ScriptManager.RegisterStartupScript(this, GetType(), "OpenNewTab", script, true);
+                    string fileName = "KhoSanPham_" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".xlsx";
+                    string filePath = Server.MapPath("~/uploads/files/" + fileName);
+                    FileInfo file = new FileInfo(filePath);
+                    package.SaveAs(file);
 
-
-                    //ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Xử lý thành co", "1000", "warning"), true);
-
-                    #region tắt Update Panel thì dùng được. Nó dùng RAM để xử lý, k lưu file trên ổ cứng
-                    // Sử dụng MemoryStream để lưu tệp Excel
-                    //using (MemoryStream stream = new MemoryStream())
-                    //{
-                    //    // Lưu tệp Excel vào MemoryStream
-                    //    package.SaveAs(stream);
-
-                    //    // Lưu nội dung MemoryStream vào một tệp tạm thời trên máy chủ
-                    //    string filePath = Path.Combine(Server.MapPath("~/uploads/files/"), "DanhMuc-" + str_cl.taoma_theothoigian() + ".xlsx");
-                    //    File.WriteAllBytes(filePath, stream.ToArray());
-
-                    //    // Đăng ký script JavaScript để tự động tải xuống tệp Excel
-                    //    string script = $"window.location.href = '/uploads/files/DanhMuc-{str_cl.taoma_theothoigian()}.xlsx';";
-                    //    ScriptManager.RegisterStartupScript(this, GetType(), "DownloadExcel", script, true);
-                    //}
-                    #endregion
+                    Response.Clear();
+                    Response.ContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                    Response.AddHeader("content-disposition", "attachment; filename=" + fileName);
+                    Response.TransmitFile(filePath);
+                    Response.Flush();
+                    Response.End();
                 }
                 #endregion
-
             }
         }
         catch (Exception _ex)
         {
-            string _tk = Session["taikhoan"] as string; // Sử dụng 'as' để tránh lỗi nếu là null
-            if (!string.IsNullOrEmpty(_tk)) // Kiểm tra xem '_tk' có hợp lệ hay không
+            string _tk = Session["taikhoan"] as string;
+            if (!string.IsNullOrEmpty(_tk))
             {
                 _tk = mahoa_cl.giaima_Bcorn(_tk);
             }
@@ -1584,17 +1254,14 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                 _tk = "";
             Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
         }
-
     }
+
     protected void check_all_CheckedChanged(object sender, EventArgs e)
     {
         try
         {
             check_login_cl.check_login_admin("none", "none");
-            // Kiểm tra trạng thái của checkbox "Chọn tất cả"
             bool isChecked = check_all_excel.Checked;
-
-            // Đặt trạng thái của tất cả các mục trong CheckBoxList theo trạng thái của "Chọn tất cả"
             foreach (ListItem item in check_list_excel.Items)
             {
                 item.Selected = isChecked;
@@ -1602,8 +1269,8 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
         }
         catch (Exception _ex)
         {
-            string _tk = Session["taikhoan"] as string; // Sử dụng 'as' để tránh lỗi nếu là null
-            if (!string.IsNullOrEmpty(_tk)) // Kiểm tra xem '_tk' có hợp lệ hay không
+            string _tk = Session["taikhoan"] as string;
+            if (!string.IsNullOrEmpty(_tk))
             {
                 _tk = mahoa_cl.giaima_Bcorn(_tk);
             }
@@ -1612,14 +1279,13 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
         }
     }
+
     protected void check_list_excel_SelectedIndexChanged(object sender, EventArgs e)
     {
         try
         {
             check_login_cl.check_login_admin("none", "none");
-            // Kiểm tra xem tất cả các mục trong CheckBoxList đã được chọn hay chưa
             bool allSelected = true;
-
             foreach (ListItem item in check_list_excel.Items)
             {
                 if (!item.Selected)
@@ -1628,14 +1294,12 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                     break;
                 }
             }
-
-            // Cập nhật trạng thái của check_all_page theo kết quả kiểm tra
             check_all_excel.Checked = allSelected;
         }
         catch (Exception _ex)
         {
-            string _tk = Session["taikhoan"] as string; // Sử dụng 'as' để tránh lỗi nếu là null
-            if (!string.IsNullOrEmpty(_tk)) // Kiểm tra xem '_tk' có hợp lệ hay không
+            string _tk = Session["taikhoan"] as string;
+            if (!string.IsNullOrEmpty(_tk))
             {
                 _tk = mahoa_cl.giaima_Bcorn(_tk);
             }
@@ -1644,15 +1308,13 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
         }
     }
+
     protected void check_all_page_CheckedChanged(object sender, EventArgs e)
     {
         try
         {
             check_login_cl.check_login_admin("none", "none");
-            // Kiểm tra trạng thái của checkbox "Chọn tất cả"
             bool isChecked = check_all_page.Checked;
-
-            // Đặt trạng thái của tất cả các mục trong CheckBoxList theo trạng thái của "Chọn tất cả"
             foreach (ListItem item in check_list_page.Items)
             {
                 item.Selected = isChecked;
@@ -1660,8 +1322,8 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
         }
         catch (Exception _ex)
         {
-            string _tk = Session["taikhoan"] as string; // Sử dụng 'as' để tránh lỗi nếu là null
-            if (!string.IsNullOrEmpty(_tk)) // Kiểm tra xem '_tk' có hợp lệ hay không
+            string _tk = Session["taikhoan"] as string;
+            if (!string.IsNullOrEmpty(_tk))
             {
                 _tk = mahoa_cl.giaima_Bcorn(_tk);
             }
@@ -1670,14 +1332,13 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
         }
     }
+
     protected void check_list_page_SelectedIndexChanged(object sender, EventArgs e)
     {
         try
         {
             check_login_cl.check_login_admin("none", "none");
-            // Kiểm tra xem tất cả các mục trong CheckBoxList đã được chọn hay chưa
             bool allSelected = true;
-
             foreach (ListItem item in check_list_page.Items)
             {
                 if (!item.Selected)
@@ -1686,14 +1347,12 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                     break;
                 }
             }
-
-            // Cập nhật trạng thái của check_all_page theo kết quả kiểm tra
             check_all_page.Checked = allSelected;
         }
         catch (Exception _ex)
         {
-            string _tk = Session["taikhoan"] as string; // Sử dụng 'as' để tránh lỗi nếu là null
-            if (!string.IsNullOrEmpty(_tk)) // Kiểm tra xem '_tk' có hợp lệ hay không
+            string _tk = Session["taikhoan"] as string;
+            if (!string.IsNullOrEmpty(_tk))
             {
                 _tk = mahoa_cl.giaima_Bcorn(_tk);
             }
@@ -1702,7 +1361,6 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
         }
     }
-
     #endregion
 
     #region Lọc dữ liệu
@@ -1735,13 +1393,13 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
     protected void but_tuantruoc_Click(object sender, EventArgs e)
     {
         ResetButtonCss(); but_tuantruoc.CssClass = "small mt-1 info";
-        txt_tungay.Text = dt_cl.return_ngaydautuan().AddDays(-7).ToShortDateString();//lấy ngày đầu tuần
+        txt_tungay.Text = dt_cl.return_ngaydautuan().AddDays(-7).ToShortDateString();
         txt_denngay.Text = dt_cl.return_ngaydautuan().AddDays(-1).ToShortDateString();
     }
     protected void but_tuannay_Click(object sender, EventArgs e)
     {
         ResetButtonCss(); but_tuannay.CssClass = "small mt-1 info";
-        txt_tungay.Text = dt_cl.return_ngaydautuan().ToShortDateString();//lấy ngày đầu tuần
+        txt_tungay.Text = dt_cl.return_ngaydautuan().ToShortDateString();
         txt_denngay.Text = dt_cl.return_ngaycuoituan().ToShortDateString();
     }
     protected void but_thangtruoc_Click(object sender, EventArgs e)
@@ -1781,6 +1439,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
         txt_denngay.Text = dt_cl.return_ngaycuoiquynay(DateTime.Now.Month.ToString(), DateTime.Now.Year.ToString()).ToShortDateString();
     }
     #endregion
+
     protected void but_show_form_loc_Click(object sender, EventArgs e)
     {
         try
@@ -1790,8 +1449,8 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
         }
         catch (Exception _ex)
         {
-            string _tk = Session["taikhoan"] as string; // Sử dụng 'as' để tránh lỗi nếu là null
-            if (!string.IsNullOrEmpty(_tk)) // Kiểm tra xem '_tk' có hợp lệ hay không
+            string _tk = Session["taikhoan"] as string;
+            if (!string.IsNullOrEmpty(_tk))
             {
                 _tk = mahoa_cl.giaima_Bcorn(_tk);
             }
@@ -1800,12 +1459,13 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
         }
     }
+
     protected void but_loc_Click(object sender, EventArgs e)
     {
         try
         {
             check_login_cl.check_login_admin("none", "none");
-            if (Request.Cookies["cookie_qlkho"] != null)//nếu có ck r thì lưu giá trị mới
+            if (Request.Cookies["cookie_qlkho"] != null)
             {
                 HttpCookie _ck = Request.Cookies["cookie_qlkho"];
                 _ck["show"] = txt_show.Text;
@@ -1822,14 +1482,13 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                         _chon_phanloai.Add(item.Value);
                     }
                 }
-                // Kiểm tra nếu "Tất cả" được chọn
-                if (_chon_phanloai.Contains(""))//Tất cả được chọn
-                    _ck["phanloai"] = "";//Tất cả phân loại
+                if (_chon_phanloai.Contains(""))
+                    _ck["phanloai"] = "";
                 else
-                    _ck["phanloai"] = string.Join(",", _chon_phanloai);//Ví dụ: Sản phẩm,Tin tức nếu chọn Sản phẩm và Tin tức
+                    _ck["phanloai"] = string.Join(",", _chon_phanloai);
                 #endregion
                 _ck.Expires = DateTime.Now.AddDays(1);
-                Response.Cookies.Set(_ck); // Cập nhật lại cookie
+                Response.Cookies.Set(_ck);
             }
             show_main();
             up_main.Update();
@@ -1838,8 +1497,8 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
         }
         catch (Exception _ex)
         {
-            string _tk = Session["taikhoan"] as string; // Sử dụng 'as' để tránh lỗi nếu là null
-            if (!string.IsNullOrEmpty(_tk)) // Kiểm tra xem '_tk' có hợp lệ hay không
+            string _tk = Session["taikhoan"] as string;
+            if (!string.IsNullOrEmpty(_tk))
             {
                 _tk = mahoa_cl.giaima_Bcorn(_tk);
             }
@@ -1848,6 +1507,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
         }
     }
+
     protected void but_huy_loc_Click(object sender, EventArgs e)
     {
         try
@@ -1860,8 +1520,8 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
         }
         catch (Exception _ex)
         {
-            string _tk = Session["taikhoan"] as string; // Sử dụng 'as' để tránh lỗi nếu là null
-            if (!string.IsNullOrEmpty(_tk)) // Kiểm tra xem '_tk' có hợp lệ hay không
+            string _tk = Session["taikhoan"] as string;
+            if (!string.IsNullOrEmpty(_tk))
             {
                 _tk = mahoa_cl.giaima_Bcorn(_tk);
             }
@@ -1873,16 +1533,13 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
     #endregion
 
     #region BIN - XÓA - KHÔI PHỤC - LƯU
-
     protected void but_xoa_Click(object sender, EventArgs e)
     {
         try
         {
             check_login_cl.check_login_admin("11", "11");
+            var selectedIds = new List<Int64>();
 
-            var selectedIds = new List<Int64>(); // Danh sách để lưu trữ ID của các mục đã được chọn
-
-            // Thu thập tất cả ID của các mục đã được chọn trong Repeater1
             foreach (RepeaterItem item in Repeater1.Items)
             {
                 CheckBox chkItem = (CheckBox)item.FindControl("checkID");
@@ -1890,18 +1547,15 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
 
                 if (chkItem != null && lblData != null && chkItem.Checked)
                 {
-                    long id;
-                    if (long.TryParse(lblData.Text, out id))
-                        selectedIds.Add(id); // Thêm ID vào danh sách
+                    int id = int.Parse(lblData.Text);
+                    selectedIds.Add(id);
                 }
             }
 
             if (selectedIds.Count > 0)
             {
-                // Sử dụng dbDataContext và thực hiện cập nhật hàng loạt
                 using (dbDataContext db = new dbDataContext())
                 {
-                    // Lấy tất cả các mục có ID trong danh sách và cập nhật thuộc tính `bin` của chúng
                     var ListsToUpdate = db.KhoSanPham_tbs
                         .Where(d => selectedIds.Contains(d.id))
                         .ToList();
@@ -1910,26 +1564,22 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                     {
                         db.KhoSanPham_tbs.DeleteOnSubmit(dm);
                     }
-
-                    // Lưu tất cả các thay đổi trong một lần
                     db.SubmitChanges();
                 }
 
-                // Hiển thị thông báo thành công
                 show_main();
                 up_main.Update();
                 ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Xử lý thành công.", "1000", "warning"), true);
             }
             else
             {
-                // Hiển thị thông báo không có mục nào được chọn
                 ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Không có mục nào được chọn.", "false", "false", "OK", "alert", ""), true);
             }
         }
         catch (Exception _ex)
         {
-            string _tk = Session["taikhoan"] as string; // Sử dụng 'as' để tránh lỗi nếu là null
-            if (!string.IsNullOrEmpty(_tk)) // Kiểm tra xem '_tk' có hợp lệ hay không
+            string _tk = Session["taikhoan"] as string;
+            if (!string.IsNullOrEmpty(_tk))
             {
                 _tk = mahoa_cl.giaima_Bcorn(_tk);
             }
@@ -1947,8 +1597,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             string _id = button.CommandArgument;
             using (dbDataContext db = new dbDataContext())
             {
-                long? productId = TryGetId(_id);
-            var q = db.KhoSanPham_tbs.FirstOrDefault(p => p.id == productId);
+                var q = db.KhoSanPham_tbs.FirstOrDefault(p => p.id.ToString() == _id);
                 if (q != null)
                 {
                     KhoSanPham_tb _ob = new KhoSanPham_tb();
@@ -1965,6 +1614,8 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                     _ob.gianhap = q.gianhap;
                     _ob.cohoadon = q.cohoadon;
                     _ob.hangthanhly = q.hangthanhly;
+                    _ob.phantram_thanhly = q.phantram_thanhly;
+                    _ob.han_baohanh = q.han_baohanh;
                     _ob.ghichu = q.ghichu;
                     _ob.ngaytao = q.ngaytao;
                     _ob.nguoitao = q.nguoitao;
@@ -2001,8 +1652,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             string _id = button.CommandArgument;
             using (dbDataContext db = new dbDataContext())
             {
-                long? productId = TryGetId(_id);
-            var q = db.KhoSanPham_tbs.FirstOrDefault(p => p.id == productId);
+                var q = db.KhoSanPham_tbs.FirstOrDefault(p => p.id.ToString() == _id);
                 if (q != null)
                 {
                     db.KhoSanPham_tbs.DeleteOnSubmit(q);
@@ -2025,104 +1675,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
         }
     }
-
-    //protected void but_save_Click(object sender, EventArgs e)
-    //{
-    //    try
-    //    {
-    //        check_login_cl.check_login_admin("none", "none");
-    //        // Tạo một danh sách để lưu trữ các cập nhật cần thực hiện
-    //        var updates = new List<(int id, bool noibat)>();
-    //        // Lấy thông tin từ Repeater1
-    //        foreach (RepeaterItem item in Repeater1.Items)
-    //        {
-    //            // Tìm các điều khiển TextBox và Label từ RepeaterItem
-    //            CheckBox CheckBox1 = (CheckBox)item.FindControl("CheckBox1");
-    //            Label lblData = (Label)item.FindControl("lbID");
-
-    //            // Kiểm tra nếu cả TextBox và Label không null
-    //            if (CheckBox1 != null && lblData != null)
-    //            {
-    //                // Lấy ID và rank từ các điều khiển
-    //                string _id = lblData.Text;
-    //                bool _check_noibat = CheckBox1.Checked;
-
-    //                // Thêm thông tin vào danh sách cập nhật
-    //                updates.Add((id: int.Parse(_id), noibat: _check_noibat));
-    //            }
-    //        }
-    //        // Cập nhật cơ sở dữ liệu một cách hàng loạt
-    //        using (dbDataContext db = new dbDataContext())
-    //        {
-    //            // Truy vấn và lấy tất cả các mục cần cập nhật trong một lần
-    //            var itemsToUpdate = db.BaiViet_tbs
-    //                .Where(d => updates.Select(u => u.id).Contains(d.id))
-    //                .ToList();
-
-    //            // Cập nhật giá trị rank cho tất cả các mục trong danh sách danhMucsToUpdate
-    //            foreach (var dm in itemsToUpdate)
-    //            {
-    //                var update = updates.First(u => u.id == dm.id);
-    //                dm.noibat = update.noibat;
-    //            }
-
-    //            // Lưu các thay đổi vào cơ sở dữ liệu một lần
-    //            db.SubmitChanges();
-    //        }
-    //        show_main();
-    //        ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Xử lý thành công.", "1000", "warning"), true);
-    //    }
-    //    catch (Exception _ex)
-    //    {
-    //        string _tk = Session["taikhoan"] as string; // Sử dụng 'as' để tránh lỗi nếu là null
-    //        if (!string.IsNullOrEmpty(_tk)) // Kiểm tra xem '_tk' có hợp lệ hay không
-    //        {
-    //            _tk = mahoa_cl.giaima_Bcorn(_tk);
-    //        }
-    //        else
-    //            _tk = "";
-    //        Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
-    //    }
-    //    //using (dbDataContext db = new dbDataContext())
-    //    //{
-    //    //    foreach (RepeaterItem item in Repeater1.Items)
-    //    //    {
-    //    //        TextBox txt_giaban_1 = (TextBox)item.FindControl("txt_giaban_1");//tìm txt_name
-    //    //        Label lblData = (Label)item.FindControl("lbID");//tìm ID
-    //    //        if (txt_giaban_1 != null && lblData != null)//đảm bảo có Control
-    //    //        {
-    //    //            string _id = lblData.Text;//lấy được ID
-    //    //            string _giaban = txt_giaban_1.Text.Replace(".", "");
-    //    //            if (!string.IsNullOrEmpty(_giaban))//có dữ liệu mới xử lý
-    //    //            {
-    //    //                // Thực hiện các thao tác với ID tại đây
-    //    //                var q = db.DanhMuc_tbs.FirstOrDefault(p => p.id == TryGetId(_id));
-    //    //                if (q != null)
-    //    //                {
-    //    //                    int _r1 = Number_cl.Check_Int(_giaban);
-    //    //                    if (_r1 > 0)
-    //    //                    {
-    //    //                        DanhMuc_tb _ob = q;
-    //    //                        _ob.rank = _r1;
-    //    //                    }
-    //    //                }
-    //    //            }
-    //    //        }
-    //    //        db.SubmitChanges();
-    //    //    }
-    //    //}
-    //    //show_main();
-    //    //ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Xử lý thành công.", "1000", "warning"), true);
-    //}
-    //protected void but_xoa_vinh_vien_only_Click(object sender, EventArgs e)
-    //{
-    //    //demo CommandArgument
-    //    //check_login_cl.check_login_admin("none", "none");
-    //    //LinkButton button = (LinkButton)sender;
-    //    //string _id = button.CommandArgument;
-    //}
     #endregion
-
 
     #region xem chi tiết
     protected void but_show_chitiet_Click(object sender, EventArgs e)
@@ -2140,12 +1693,11 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             Label4.Text = null;
             ViewState["id_sanpham"] = null;
             txt_soluong_nhap.Text = "";
-            //txt_gianhaphang.Text = "";
         }
         catch (Exception _ex)
         {
-            string _tk = Session["taikhoan"] as string; // Sử dụng 'as' để tránh lỗi nếu là null
-            if (!string.IsNullOrEmpty(_tk)) // Kiểm tra xem '_tk' có hợp lệ hay không
+            string _tk = Session["taikhoan"] as string;
+            if (!string.IsNullOrEmpty(_tk))
             {
                 _tk = mahoa_cl.giaima_Bcorn(_tk);
             }
@@ -2154,16 +1706,14 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
         }
     }
+
     protected void but_show_form_nhaphang_Click(object sender, EventArgs e)
     {
         check_login_cl.check_login_admin("12", "12");
-        //reset_control_nhaphang();
         using (dbDataContext db = new dbDataContext())
         {
-
             LinkButton button = (LinkButton)sender;
             string _id = button.CommandArgument;
-            //truy vấn dữ liệu để sửa
             long? productId = TryGetId(_id);
             var q = db.KhoSanPham_tbs.FirstOrDefault(p => p.id == productId);
             if (q != null)
@@ -2171,9 +1721,6 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                 ViewState["id_edit"] = _id;
                 Label3.Text = q.ten;
                 Label4.Text = q.soluong_hientai.Value.ToString("#,##0");
-                //txt_gianhaphang.Text = q.gianhap.Value.ToString("#,##0");
-                //int _soluongnhap = Number_cl.Check_Int(txt_soluong_nhap.Text.Trim());
-                //Int64 _gianhap = Number_cl.Check_Int64(txt_gianhaphang.Text.Trim());
                 ViewState["gianhap_hientai"] = q.gianhap.ToString();
             }
             else
@@ -2182,6 +1729,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
         pn_nhaphang.Visible = !pn_nhaphang.Visible;
         up_nhaphang.Update();
     }
+
     protected void but_close_form_nhaphang_Click(object sender, EventArgs e)
     {
         reset_control_nhaphang();
@@ -2249,7 +1797,6 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
         up_main.Update();
     }
 
-
     protected void but_nhaphang_Click(object sender, EventArgs e)
     {
         try
@@ -2266,36 +1813,29 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                     ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Số lượng nhập không hợp lệ.", "false", "false", "OK", "alert", ""), true);
                     return;
                 }
-                //if (_gianhap == 0)
-                //{
-                //    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Giá nhập không hợp lệ.", "false", "false", "OK", "alert", ""), true);
-                //    return;
-                //}
                 long? editId = TryGetId(Convert.ToString(ViewState["id_edit"]));
-            var q = db.KhoSanPham_tbs.FirstOrDefault(p => p.id == editId);
+                var q = db.KhoSanPham_tbs.FirstOrDefault(p => p.id == editId);
                 if (q != null)
                 {
                     NhapXuatKho_tb _ob = new NhapXuatKho_tb();
-                    _ob.nhap_hay_xuat = true;//nhập
+                    _ob.nhap_hay_xuat = true;
                     _ob.id_sanpham = ViewState["id_edit"].ToString();
                     _ob.ten_sanpham = q.ten;
                     _ob.soluong_nhap = _soluongnhap;
                     _ob.gia_nhap = _gianhap;
-                    if (_gianhap != q.gianhap)//nếu có thay đổi giá nhập
-                        q.gianhap = _gianhap;//tự cập nhật giá nhập cho sản phẩm tại bảng Kho
+                    if (_gianhap != q.gianhap)
+                        q.gianhap = _gianhap;
                     _ob.ngaynhap = _ngaynhap;
                     _ob.nguoinhap = _nguoinhap;
-                            _ob.ton_hientai = q.soluong_hientai;//tồn trước khi nhập
-                            q.soluong_hientai = q.soluong_hientai + _soluongnhap;//tăng tồn hiện tại
-                            q.daban = false;
-                            db.NhapXuatKho_tbs.InsertOnSubmit(_ob);
+                    _ob.ton_hientai = q.soluong_hientai;
+                    q.soluong_hientai = q.soluong_hientai + _soluongnhap;
+                    q.daban = false;
+                    db.NhapXuatKho_tbs.InsertOnSubmit(_ob);
                     db.SubmitChanges();
                     show_main();
                     up_main.Update();
 
-                    //reset control
                     reset_control_nhaphang();
-                    //ẩn form
                     pn_nhaphang.Visible = !pn_nhaphang.Visible;
                     ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Xử lý thành công.", "1000", "warning"), true);
                 }
@@ -2306,20 +1846,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             Response.Redirect("/admin");
         }
     }
-    //protected void txt_soluong_nhap_TextChanged(object sender, EventArgs e)
-    //{
-    //    int _soluongnhap = Number_cl.Check_Int(txt_soluong_nhap.Text.Trim());
-    //    Int64 _gianhap = Number_cl.Check_Int64(txt_gianhaphang.Text.Trim());
-    //    Label5.Text = (_soluongnhap * _gianhap).ToString("#,##0");
-    //}
-    //protected void txt_gianhaphang_TextChanged(object sender, EventArgs e)
-    //{
-    //    int _soluongnhap = Number_cl.Check_Int(txt_soluong_nhap.Text.Trim());
-    //    Int64 _gianhap = Number_cl.Check_Int64(txt_gianhaphang.Text.Trim());
-    //    Label5.Text = (_soluongnhap * _gianhap).ToString("#,##0");
-    //}
     #endregion
-
 
     protected void txt_so_seri_TextChanged(object sender, EventArgs e)
     {
@@ -2361,5 +1888,33 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
         {
             ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Lỗi", "Có lỗi xảy ra: " + ex.Message, "false", "false", "OK", "alert", ""), true);
         }
+    }
+
+    protected void but_save_Click(object sender, EventArgs e)
+    {
+    }
+
+    protected void but_luu_Click(object sender, EventArgs e)
+    {
+    }
+
+    protected void but_toggle_sold_products_Click(object sender, EventArgs e)
+    {
+    }
+
+    protected void but_show_import_excel_Click(object sender, EventArgs e)
+    {
+        pn_import_excel.Visible = true;
+        up_import_excel.Update();
+    }
+
+    protected void but_close_import_excel_Click(object sender, EventArgs e)
+    {
+        pn_import_excel.Visible = false;
+        up_import_excel.Update();
+    }
+
+    protected void but_confirm_import_excel_Click(object sender, EventArgs e)
+    {
     }
 }
