@@ -177,6 +177,8 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             ViewState["taikhoan"] = _tk;
             ViewState["show_sold_products"] = false;
             lbl_toggle_sold_products.Text = "Xem sản phẩm đã bán";
+            but_toggle_sold_products.CssClass = "";
+            icon_toggle.Attributes["class"] = "mif-checkmark";
 
             set_dulieu_macdinh();
             show_main();
@@ -190,7 +192,18 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
         bool showSoldProducts = !Convert.ToBoolean(ViewState["show_sold_products"] ?? false);
         ViewState["show_sold_products"] = showSoldProducts;
         ViewState["current_page_qlkho"] = "1";
-        lbl_toggle_sold_products.Text = showSoldProducts ? "Xem sản phẩm đang tồn" : "Xem sản phẩm đã bán";
+        if (showSoldProducts)
+        {
+            lbl_toggle_sold_products.Text = "Đang xem hàng đã bán (Quay lại)";
+            but_toggle_sold_products.CssClass = "bg-red fg-white text-bold";
+            icon_toggle.Attributes["class"] = "mif-undo";
+        }
+        else
+        {
+            lbl_toggle_sold_products.Text = "Xem sản phẩm đã bán";
+            but_toggle_sold_products.CssClass = "";
+            icon_toggle.Attributes["class"] = "mif-checkmark";
+        }
         show_main();
         up_main.Update();
     }
@@ -2219,7 +2232,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                     {
                         int _new_soluong = Number_cl.Check_Int(txt_chinhsuasoluong.Text.Trim());
                         q.soluong_hientai = _new_soluong;
-                        //q.daban = _new_soluong <= 0; // User requested to disable auto-assignment
+                        q.daban = _new_soluong <= 0;
                         db.SubmitChanges();
                         ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Cập nhật số lượng thành công.", "1000", "success"), true);
                     }

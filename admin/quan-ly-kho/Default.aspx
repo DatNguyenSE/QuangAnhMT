@@ -648,7 +648,7 @@
                         </li>
                         <li data-role="hint" data-hint-position="top" data-hint-text="Xem sản phẩm đã bán">
                             <asp:LinkButton ID="but_toggle_sold_products" runat="server" OnClick="but_toggle_sold_products_Click">
-                                <span class="mif-checkmark"></span>
+                                <span id="icon_toggle" runat="server" class="mif-checkmark"></span>
                                 <asp:Label ID="lbl_toggle_sold_products" runat="server" Text="Xem sản phẩm đã bán"></asp:Label>
                             </asp:LinkButton>
                         </li>
