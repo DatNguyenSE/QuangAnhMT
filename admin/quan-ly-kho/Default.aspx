@@ -233,6 +233,7 @@
                             <%--pl-4 pl-8-md pr-8-md pr-4--%>
                             <div class="row">
                                 <div class="cell-lg-6 pr-4-lg">
+
                                     <asp:PlaceHolder ID="ph_quick_entry_info" runat="server" Visible="false">
                                         <div class="quick-entry-section">
                                             <div class="quick-entry-section-title">Thông tin từ barcode</div>
@@ -240,7 +241,12 @@
                                         </div>
                                     </asp:PlaceHolder>
                                     <div class="mt-3">
-                                        <label class="fw-600 seri-label-toggle">Số seri</label>
+                                        <div class="d-flex flex-justify-between flex-align-center mb-1">
+                                            <label class="fw-600 seri-label-toggle m-0">Số seri</label>
+                                            <button type="button" class="button small light border bd-default" onclick="openCameraScannerForModal();" title="Quét mã barcode bằng camera">
+                                                <span class="mif-camera fg-blue"></span> Quét mã barcode
+                                            </button>
+                                        </div>
                                         <asp:TextBox ID="txt_so_seri" runat="server" data-role="input"></asp:TextBox>
                                     </div>
                                     <div class="mt-3">
@@ -287,20 +293,7 @@
                                         <asp:RadioButton ID="rbCoHoaDon" runat="server" GroupName="HoaDon" Text="Có hóa đơn" Checked="true" />
                                         <asp:RadioButton ID="rbKhongCoHoaDon" runat="server" GroupName="HoaDon" Text="Không có hóa đơn" />
                                     </div>
-                                    <div class="mt-3">
-                                        <div class="row">
-                                            <div class="cell-sm-5 pt-7">
-                                                <asp:CheckBox runat="server" ID="check_hangthanhly" Text="Hàng thanh lý" onclick="if(window.toggleHangThanhLy) window.toggleHangThanhLy();" onchange="if(window.toggleHangThanhLy) window.toggleHangThanhLy();"></asp:CheckBox>
-                                            </div>
-                                            <div class="cell-sm-7" id="div_phantram_thanhly">
-                                                <label class="fw-600 fg-orange">% thanh lý <small class="fg-gray">(ví dụ: 70)</small></label>
-                                                <div class="d-flex flex-align-center">
-                                                    <asp:TextBox ID="txt_phantram_thanhly" runat="server" data-role="input" TextMode="Number" Text="100" min="1" max="100" placeholder="100" oninput="if(window.onPhanTramThanhLyChange) window.onPhanTramThanhLyChange();"></asp:TextBox>
-                                                    <span id="lbl_phantram_hint" class="ml-2 fg-orange fw-600 text-nowrap" style="font-size: 13px;">100%</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+
                                     <div class="mt-3">
                                         <label class="fw-600">Hãng sản phẩm <small class="dung-chung-text">(dùng chung)</small></label>
                                         <div>
@@ -338,6 +331,20 @@
                                     <div class="mt-3">
                                          <label class="fw-600">Giá bán <small class="dung-chung-text">(dùng chung)</small></label>
                                         <asp:TextBox ID="txt_giaban" onfocus="AutoSelect(this)" MaxLength="14" oninput="format_sotien_new(this); if(window.onGiaBanInput) window.onGiaBanInput(this);" runat="server" data-role="input" Text="0"></asp:TextBox>
+                                        <div id="lbl_phantram_hint" class="mt-1 fg-orange fw-600" style="font-size: 13px; display: none;"></div>
+                                    </div>
+                                    <div class="mt-3">
+                                        <div class="row">
+                                            <div class="cell-sm-5 pt-7">
+                                                <asp:CheckBox runat="server" ID="check_hangthanhly" Text="Hàng thanh lý" onclick="if(window.toggleHangThanhLy) window.toggleHangThanhLy();" onchange="if(window.toggleHangThanhLy) window.toggleHangThanhLy();"></asp:CheckBox>
+                                            </div>
+                                            <div class="cell-sm-7" id="div_phantram_thanhly">
+                                                <label class="fw-600 fg-orange">Tình trạng thanh lý (%):</label>
+                                                <div>
+                                                    <asp:TextBox ID="txt_phantram_thanhly" runat="server" data-role="input" TextMode="Number" Text="100" min="1" max="100" placeholder="100" oninput="if(window.onPhanTramThanhLyChange) window.onPhanTramThanhLyChange();"></asp:TextBox>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div class="mt-3">
                                         <label class="fw-600">Thời gian bảo hành (tháng) <small class="dung-chung-text">(dùng chung)</small></label>
@@ -778,10 +785,11 @@
     <%#Eval("TenSP") %>
                                                     </asp:LinkButton>
 
-                                                    <div>
+                                                    <div class="d-flex flex-wrap flex-align-center gap-1 mt-1">
                                                         <asp:PlaceHolder ID="PlaceHolder3" runat="server" Visible='<%# Convert.ToBoolean(Eval("hangthanhly")) %>'>
                                                             <span class="button mini warning rounded">Hàng thanh lý <%# Eval("phantram_thanhly") != null && Convert.ToString(Eval("phantram_thanhly")) != "" && Convert.ToString(Eval("phantram_thanhly")) != "100" ? "(" + Eval("phantram_thanhly") + "%)" : "" %></span>
                                                         </asp:PlaceHolder>
+                                                        <%# GetHanBaoHanhWarning(Eval("han_baohanh")) %>
                                                     </div>
                                                 </td>
                                                 
@@ -1028,6 +1036,7 @@
             var cameraReader = null;
             var cameraControls = null;
             var cameraScanActive = false;
+            var activeScanCallback = null;
 
             function getQuickElement(id) {
                 return document.getElementById(id);
@@ -1035,6 +1044,19 @@
 
             function getQuickElementBySuffix(id) {
                 return document.querySelector('[id$="_' + id + '"]') || document.getElementById(id);
+            }
+
+            function handleScannedBarcode(value) {
+                stopCameraStream();
+                var modal = document.getElementById('cameraBarcodeModal');
+                if (modal) modal.style.display = 'none';
+                if (typeof activeScanCallback === 'function') {
+                    var cb = activeScanCallback;
+                    activeScanCallback = null;
+                    cb(value);
+                } else {
+                    submitScannedBarcode(value);
+                }
             }
 
             window.updateQuickSerialPreview = function () {
@@ -1108,6 +1130,7 @@
             }
 
             window.closeCameraScanner = function () {
+                activeScanCallback = null;
                 stopCameraStream();
                 var modal = document.getElementById('cameraBarcodeModal');
                 if (modal) modal.style.display = 'none';
@@ -1120,9 +1143,7 @@
                     if (barcodes.length > 0 && barcodes[0].rawValue) {
                         var value = barcodes[0].rawValue.trim();
                         status.innerText = 'Đã nhận barcode: ' + value;
-                        stopCameraStream();
-                        document.getElementById('cameraBarcodeModal').style.display = 'none';
-                        submitScannedBarcode(value);
+                        handleScannedBarcode(value);
                         return;
                     }
                     window.setTimeout(function () { detectCameraBarcode(video, status); }, 120);
@@ -1132,39 +1153,8 @@
                 });
             }
 
-            window.openCameraScanner = function () {
-                var modal = document.getElementById('cameraBarcodeModal');
-                var video = document.getElementById('cameraBarcodeVideo');
-                var status = document.getElementById('cameraBarcodeStatus');
-                if (!modal || !video || !status) return;
-                modal.style.display = 'block';
-
-            window.closeCameraScanner = function () {
-                stopCameraStream();
-                var modal = document.getElementById('cameraBarcodeModal');
-                if (modal) modal.style.display = 'none';
-            };
-
-            function detectCameraBarcode(video, status) {
-                if (!cameraScanActive || !cameraDetector) return;
-                cameraDetector.detect(video).then(function (barcodes) {
-                    if (!cameraScanActive) return;
-                    if (barcodes.length > 0 && barcodes[0].rawValue) {
-                        var value = barcodes[0].rawValue.trim();
-                        status.innerText = 'Đã nhận barcode: ' + value;
-                        stopCameraStream();
-                        document.getElementById('cameraBarcodeModal').style.display = 'none';
-                        submitScannedBarcode(value);
-                        return;
-                    }
-                    window.setTimeout(function () { detectCameraBarcode(video, status); }, 120);
-                }).catch(function () {
-                    if (cameraScanActive)
-                        window.setTimeout(function () { detectCameraBarcode(video, status); }, 250);
-                });
-            }
-
-            window.openCameraScanner = function () {
+            window.openCameraScanner = function (onSuccess) {
+                activeScanCallback = typeof onSuccess === 'function' ? onSuccess : null;
                 var modal = document.getElementById('cameraBarcodeModal');
                 var video = document.getElementById('cameraBarcodeVideo');
                 var status = document.getElementById('cameraBarcodeStatus');
@@ -1199,9 +1189,7 @@
                         if (!cameraScanActive || !result) return;
                         var value = result.getText().trim();
                         status.innerText = 'Đã nhận barcode: ' + value;
-                        stopCameraStream();
-                        document.getElementById('cameraBarcodeModal').style.display = 'none';
-                        submitScannedBarcode(value);
+                        handleScannedBarcode(value);
                     }).catch(function () {
                         status.innerText = 'Không thể khởi động bộ đọc barcode bằng camera.';
                     });
@@ -1209,6 +1197,7 @@
                 }
 
                 cameraDetector = new BarcodeDetector();
+                cameraScanActive = true;
                 navigator.mediaDevices.getUserMedia({
                     video: {
                         facingMode: { ideal: 'environment' },
@@ -1224,11 +1213,23 @@
                     video.srcObject = stream;
                     video.play().catch(function () { });
                     optimizeCamera(video);
-            });
-
                     detectCameraBarcode(video, status);
                 }).catch(function () {
                     status.innerText = 'Không thể truy cập camera.';
+                });
+            };
+
+            window.openCameraScannerForModal = function () {
+                window.openCameraScanner(function (scannedValue) {
+                    var txtSeri = getFieldById('txt_so_seri') || document.getElementById('<%= txt_so_seri.ClientID %>');
+                    if (txtSeri) {
+                        txtSeri.value = scannedValue;
+                        txtSeri.dispatchEvent(new Event('input', { bubbles: true }));
+                        txtSeri.dispatchEvent(new Event('change', { bubbles: true }));
+                        if (typeof window.updateQuickSerialPreview === 'function') {
+                            window.updateQuickSerialPreview();
+                        }
+                    }
                 });
             };
 
@@ -1268,11 +1269,22 @@
             return Math.round(num).toLocaleString('de-DE');
         }
 
+        function updatePhanTramHint(pt, giaGoc) {
+            var lblHint = document.getElementById('lbl_phantram_hint');
+            if (!lblHint) return;
+            if (pt < 100 && giaGoc > 0) {
+                lblHint.innerText = pt + '% giá gốc (' + formatPriceNumber(giaGoc) + ' đ)';
+                lblHint.style.display = 'block';
+            } else {
+                lblHint.innerText = '';
+                lblHint.style.display = 'none';
+            }
+        }
+
         function toggleHangThanhLy() {
             var chk = getCheckboxById('check_hangthanhly');
             var txtGiaBan = getFieldById('txt_giaban');
             var txtPt = getFieldById('txt_phantram_thanhly');
-            var lblHint = document.getElementById('lbl_phantram_hint');
 
             var isChecked = false;
             if (chk) {
@@ -1295,7 +1307,7 @@
                     }
                     if (txtGiaBan) txtGiaBan.setAttribute('data-gia-goc', giaGoc);
                 }
-                if (lblHint) lblHint.innerText = ptVal + '% giá gốc (' + formatPriceNumber(giaGoc) + ' đ)';
+                updatePhanTramHint(ptVal, giaGoc);
                 if (ptVal < 100 && giaGoc > 0 && txtGiaBan) {
                     var newPrice = Math.round(giaGoc * ptVal / 100.0);
                     txtGiaBan.value = formatPriceNumber(newPrice);
@@ -1309,7 +1321,7 @@
                     }
                 }
                 if (txtPt) txtPt.value = 100;
-                if (lblHint) lblHint.innerText = '100%';
+                updatePhanTramHint(100, 0);
             }
         }
 
@@ -1317,7 +1329,6 @@
             var chk = getCheckboxById('check_hangthanhly');
             var txtPt = getFieldById('txt_phantram_thanhly');
             var txtGiaBan = getFieldById('txt_giaban');
-            var lblHint = document.getElementById('lbl_phantram_hint');
             if (!txtPt || !txtGiaBan) return;
 
             var pt = parseFloat(txtPt.value);
@@ -1325,8 +1336,15 @@
             if (pt > 100) { pt = 100; txtPt.value = 100; }
             if (pt < 1) { pt = 1; }
 
-            if (pt < 100 && chk && !chk.checked) {
-                chk.checked = true;
+            if (pt < 100 && chk) {
+                if (!chk.checked) {
+                    chk.checked = true;
+                    if (window.jQuery) {
+                        window.jQuery(chk).prop('checked', true).trigger('change');
+                    } else {
+                        chk.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                }
             }
 
             var giaGoc = parseFloat(txtGiaBan.getAttribute('data-gia-goc'));
@@ -1340,17 +1358,17 @@
                 var newPrice = Math.round(giaGoc * pt / 100.0);
                 txtGiaBan.value = formatPriceNumber(newPrice);
             }
-            if (lblHint) lblHint.innerText = pt + '% giá gốc (' + formatPriceNumber(giaGoc) + ' đ)';
+            updatePhanTramHint(pt, giaGoc);
         }
 
         function onGiaBanInput(el) {
             var chk = getCheckboxById('check_hangthanhly');
             var txtPt = getFieldById('txt_phantram_thanhly');
-            var lblHint = document.getElementById('lbl_phantram_hint');
             if (!el) return;
 
             if (!chk || !chk.checked) {
                 el.setAttribute('data-gia-goc', parsePrice(el.value));
+                updatePhanTramHint(100, 0);
             } else {
                 var giaGoc = parseFloat(el.getAttribute('data-gia-goc'));
                 var curr = parsePrice(el.value);
@@ -1358,7 +1376,7 @@
                     var pt = Math.round((curr / giaGoc) * 100);
                     if (pt > 0 && pt <= 100) {
                         txtPt.value = pt;
-                        if (lblHint) lblHint.innerText = pt + '% giá gốc (' + formatPriceNumber(giaGoc) + ' đ)';
+                        updatePhanTramHint(pt, giaGoc);
                     }
                 }
             }
@@ -1408,7 +1426,6 @@
             var chk = getCheckboxById('check_hangthanhly');
             var txtGiaBan = getFieldById('txt_giaban');
             var txtPt = getFieldById('txt_phantram_thanhly');
-            var lblHint = document.getElementById('lbl_phantram_hint');
 
             if (chk && chk.checked) {
                 var ptVal = txtPt ? parseFloat(txtPt.value) : 100;
@@ -1416,9 +1433,9 @@
                 var currentPrice = txtGiaBan ? parsePrice(txtGiaBan.value) : 0;
                 var giaGoc = Math.round((currentPrice * 100.0) / (ptVal || 100));
                 if (txtGiaBan) txtGiaBan.setAttribute('data-gia-goc', giaGoc);
-                if (lblHint) lblHint.innerText = ptVal + '% giá gốc (' + formatPriceNumber(giaGoc) + ' đ)';
+                updatePhanTramHint(ptVal, giaGoc);
             } else {
-                if (lblHint) lblHint.innerText = '100%';
+                updatePhanTramHint(100, 0);
             }
             calculateHanBaoHanh();
         }

@@ -144,6 +144,35 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
         }
     }
 
+    public string GetHanBaoHanhWarning(object hanBaoHanhObj)
+    {
+        if (hanBaoHanhObj == null || hanBaoHanhObj == DBNull.Value)
+            return "";
+
+        DateTime dt;
+        if (hanBaoHanhObj is DateTime)
+        {
+            dt = (DateTime)hanBaoHanhObj;
+        }
+        else if (!DateTime.TryParse(Convert.ToString(hanBaoHanhObj), out dt))
+        {
+            return "";
+        }
+
+        int daysLeft = (dt.Date - DateTime.Today).Days;
+
+        if (daysLeft < 0)
+        {
+            return string.Format("<span class='text-bold' style='background-color: #653819; color: #ffffff; font-size: 10px; padding: 1px 6px; border-radius: 4px; display: inline-block;' title='Hạn bảo hành: {0:dd/MM/yyyy}'>Hết hạn bảo hành</span>", dt);
+        }
+        else if (daysLeft <= 10)
+        {
+            return string.Format("<span class='text-bold' style='background-color: #d97706; color: #ffffff; font-size: 10px; padding: 1px 6px; border-radius: 4px; display: inline-block;' title='Hạn bảo hành: {0:dd/MM/yyyy}'>Bảo hành (còn {1} ngày)</span>", dt, daysLeft);
+        }
+
+        return "";
+    }
+
     #region main - phân trang - tìm kiếm
     protected void Repeater1_ItemDataBound(object sender, RepeaterItemEventArgs e)
     {
