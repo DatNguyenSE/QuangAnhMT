@@ -2,6 +2,12 @@
 <%@ Register Assembly="CKEditor.NET" Namespace="CKEditor.NET" TagPrefix="CKEditor" %>
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="Server">
     <style>
+        @media screen and (max-width: 768px) {
+            #menutop-tool-bc {
+                position: relative !important;
+                top: 0 !important;
+            }
+        }
         .quick-entry-panel > div:last-of-type {
             background: rgba(20, 28, 38, .72) !important;
             backdrop-filter: blur(5px);

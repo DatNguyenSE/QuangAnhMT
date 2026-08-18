@@ -223,6 +223,21 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                 #endregion
 
                 #region lấy dữ liệu
+                bool showSold = ViewState["show_sold"] != null && (bool)ViewState["show_sold"];
+                if (lbl_toggle_sold_products != null)
+                {
+                    if (showSold)
+                    {
+                        lbl_toggle_sold_products.Text = "Quay lại sản phẩm tồn";
+                        if (icon_toggle != null) icon_toggle.Attributes["class"] = "mif-undo fg-red";
+                    }
+                    else
+                    {
+                        lbl_toggle_sold_products.Text = "Xem sản phẩm đã bán";
+                        if (icon_toggle != null) icon_toggle.Attributes["class"] = "mif-checkmark";
+                    }
+                }
+
                 string _key = ViewState["search_key"] as string;
                 if (_key == null)
                 {
@@ -232,6 +247,16 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                 }
 
                 var products = db.KhoSanPham_tbs.AsQueryable();
+
+                if (showSold)
+                {
+                    products = products.Where(p => p.daban == true);
+                }
+                else
+                {
+                    products = products.Where(p => p.daban == null || p.daban == false);
+                }
+
                 if (!string.IsNullOrEmpty(_key))
                 {
                     long searchId;
@@ -1929,6 +1954,25 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
 
     protected void but_toggle_sold_products_Click(object sender, EventArgs e)
     {
+        try
+        {
+            check_login_cl.check_login_admin("none", "none");
+            bool showSold = ViewState["show_sold"] != null && (bool)ViewState["show_sold"];
+            ViewState["show_sold"] = !showSold;
+            ViewState["current_page_qlkho"] = 1;
+            show_main();
+        }
+        catch (Exception _ex)
+        {
+            string _tk = Session["taikhoan"] as string;
+            if (!string.IsNullOrEmpty(_tk))
+            {
+                _tk = mahoa_cl.giaima_Bcorn(_tk);
+            }
+            else
+                _tk = "";
+            Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
+        }
     }
 
     protected void but_show_import_excel_Click(object sender, EventArgs e)
