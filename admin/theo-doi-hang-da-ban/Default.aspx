@@ -447,6 +447,7 @@
                                                      </td>
                                                     <td style="min-width: 230px;">
                                                         <div class="fw-600"><%# Eval("productName") %></div>
+                                                        <asp:Label ID="lbl_dadongbo" runat="server" CssClass="fg-green text-bold" style="font-size: 11px; margin-top: 3px; display: inline-block;" Visible='<%# Eval("isDaban") %>'><span class="mif-checkmark"></span> Đã đồng bộ</asp:Label>
                                                     </td>
                                                     <td><%# Eval("productSerial") %></td>
                                                     <td class="text-center"><%# Eval("maKH") %></td>

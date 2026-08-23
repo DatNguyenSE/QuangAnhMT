@@ -322,6 +322,12 @@
                                         <label class="fw-600">Model <small class="dung-chung-text">(dùng chung)</small></label>
                                         <asp:TextBox ID="txt_model" runat="server" data-role="input" MaxLength="100"></asp:TextBox>
                                     </div>
+                                    <asp:PlaceHolder ID="ph_add_soluong" runat="server">
+                                        <div class="mt-3">
+                                            <label class="fg-red fw-600">Số lượng ban đầu <small class="dung-chung-text">(chỉ dành cho thêm mới)</small></label>
+                                            <asp:TextBox ID="txt_add_soluong" onfocus="AutoSelect(this)" MaxLength="14" oninput="format_sotien_new(this)" runat="server" data-role="input" Text="0"></asp:TextBox>
+                                        </div>
+                                    </asp:PlaceHolder>
                                 </div>
                                 <div class="cell-lg-6 pl-4-lg">
                                     <div class="mt-3">
@@ -852,6 +858,9 @@
                                                              <li>
                                                                  <a href="javascript:void(0)" onclick="showQRCode('<%#Eval("id") %>', '<%#Eval("so_seri") %>')">Mã QR</a>
                                                              </li>
+                                                            <li>
+                                                                <asp:LinkButton ID="but_toggle_daban" OnClick="but_toggle_daban_Click" CommandArgument='<%#Eval("id") %>' runat="server"><%# Convert.ToBoolean(Eval("daban")) ? "Trả về sản phẩm tồn kho" : "Chuyển thành sản phẩm đã bán" %></asp:LinkButton>
+                                                            </li>
                                                             <li>
                                                                 <asp:LinkButton ID="but_xoa_item" OnClientClick="return confirm('Bạn có chắc chắn muốn xóa sản phẩm này?');" OnClick="but_xoa_item_Click" CommandArgument='<%#Eval("id") %>' runat="server" CssClass="fg-red">Xóa</asp:LinkButton>
                                                             </li>

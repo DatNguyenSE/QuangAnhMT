@@ -307,6 +307,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                                     ob1.ghichu,
                                     ob1.ngaytao,
                                     ob1.nguoitao,
+                                    daban = ob1.daban
                                 }).AsQueryable();
 
                 var stats = products.GroupBy(p => 1).Select(g => new
@@ -532,6 +533,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             GetQuickPlaceHolder("ph_quick_entry_info").Visible = false;
             GetQuickPlaceHolder("ph_quick_entry_quantity").Visible = false;
             GetQuickPlaceHolder("ph_quick_entry_common_start").Visible = false;
+            ph_add_soluong.Visible = true;
             Label1.Text = "THÊM SẢN PHẨM MỚI";
             but_add_edit.Text = "THÊM MỚI";
 
@@ -576,6 +578,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             GetQuickPlaceHolder("ph_quick_entry_info").Visible = true;
             GetQuickPlaceHolder("ph_quick_entry_quantity").Visible = true;
             GetQuickPlaceHolder("ph_quick_entry_common_start").Visible = true;
+            ph_add_soluong.Visible = false;
             Label1.Text = "NHẬP NHANH SẢN PHẨM BẰNG BARCODE";
             but_add_edit.Text = "XÁC NHẬN TẠO SẢN PHẨM";
             txt_so_seri.Text = barcode;
@@ -641,6 +644,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
         ViewState["add_edit"] = "edit";
         Label1.Text = "CHỈNH SỬA SẢN PHẨM";
         but_add_edit.Text = "CẬP NHẬT";
+        ph_add_soluong.Visible = false;
         using (dbDataContext db = new dbDataContext())
         {
             LinkButton button = (LinkButton)sender;
@@ -837,13 +841,32 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                     _ob.ghichu = _ghichu;
                     _ob.ngaytao = _ngaytao;
                     _ob.nguoitao = _nguoitao;
-                    _ob.soluong_hientai = string.IsNullOrEmpty(_so_seri) ? 0 : 1;
+                    
+                    int _add_soluong = Number_cl.Check_Int(txt_add_soluong.Text.Trim());
+                    _ob.soluong_hientai = _add_soluong;
+                    
                     _ob.daban = false;
                     db.KhoSanPham_tbs.InsertOnSubmit(_ob);
                     db.SubmitChanges();
+
+                    if (_add_soluong > 0)
+                    {
+                        NhapXuatKho_tb _nx = new NhapXuatKho_tb();
+                        _nx.nhap_hay_xuat = true;
+                        _nx.id_sanpham = _ob.id.ToString();
+                        _nx.ten_sanpham = _ob.ten;
+                        _nx.soluong_nhap = _add_soluong;
+                        _nx.gia_nhap = _gianhap;
+                        _nx.ngaynhap = _ngaytao;
+                        _nx.nguoinhap = _nguoitao;
+                        _nx.ton_hientai = 0;
+                        db.NhapXuatKho_tbs.InsertOnSubmit(_nx);
+                        db.SubmitChanges();
+                    }
                     #endregion
                     #region cập nhật dữ liệu và update hiển thị
                     txt_so_seri.Text = ""; txt_name.Text = ""; txt_model.Text = ""; txt_thongso.Text = ""; txt_giaban.Text = "0"; txt_gianhap.Text = "0"; txt_ghichu.Text = ""; txt_link_fileupload.Text = "";
+                    txt_add_soluong.Text = "0";
                     txt_ngaytao.Text = DateTime.Today.ToString("yyyy-MM-dd");
                     check_hangthanhly.Checked = false;
                     txt_phantram_thanhly.Text = "100";
@@ -1040,6 +1063,37 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             thongbao_class.metro_dialog("Nhập kho thành công", resultMessage, "false", "false", "OK", "alert", ""), true);
     }
     #endregion
+    
+    protected void but_toggle_daban_Click(object sender, EventArgs e)
+    {
+        try
+        {
+            check_login_cl.check_login_admin("10", "10"); // Use appropriate permission level
+            LinkButton button = (LinkButton)sender;
+            long productId;
+            if (long.TryParse(button.CommandArgument, out productId))
+            {
+                using (dbDataContext db = new dbDataContext())
+                {
+                    var product = db.KhoSanPham_tbs.FirstOrDefault(p => p.id == productId);
+                    if (product != null)
+                    {
+                        product.daban = !(product.daban ?? false);
+                        db.SubmitChanges();
+                        
+                        show_main();
+                        up_main.Update();
+                        ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Đã cập nhật trạng thái bán hàng.", "1000", "success"), true);
+                    }
+                }
+            }
+        }
+        catch (Exception _ex)
+        {
+            string _tk = Session["taikhoan"] as string;
+            Log_cl.Add_Log(_ex.Message, string.IsNullOrEmpty(_tk) ? "" : mahoa_cl.giaima_Bcorn(_tk), _ex.StackTrace);
+        }
+    }
 
     #region Xuất excel
     protected void but_show_form_xuat_Click(object sender, EventArgs e)

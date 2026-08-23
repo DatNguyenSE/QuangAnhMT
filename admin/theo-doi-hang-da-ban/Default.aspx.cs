@@ -29,6 +29,7 @@ public partial class admin_theo_doi_hang_da_ban_Default : System.Web.UI.Page
         public string thangBaoHanh { get; set; }
         public int vat { get; set; }
         public long giamgiadacbiet { get; set; }
+        public bool isDaban { get; set; }
     }
 
     private sealed class SoldItemRow
@@ -51,6 +52,7 @@ public partial class admin_theo_doi_hang_da_ban_Default : System.Web.UI.Page
         public string thangBaoHanh { get; set; }
         public DateTime? warrantyExpiry { get; set; }
         public bool warrantyExpired { get; set; }
+        public bool isDaban { get; set; }
     }
 
     private static SoldItemRow ProcessSoldItem(SoldItemRaw x, long totalSauGiamAll, DateTime now)
@@ -89,7 +91,8 @@ public partial class admin_theo_doi_hang_da_ban_Default : System.Web.UI.Page
             maKH = x.maKH,
             thangBaoHanh = x.thangBaoHanh,
             warrantyExpiry = warrantyExpiry,
-            warrantyExpired = warrantyExpiry.HasValue && warrantyExpiry.Value < now
+            warrantyExpired = warrantyExpiry.HasValue && warrantyExpiry.Value < now,
+            isDaban = x.isDaban
         };
     }
 
@@ -141,7 +144,8 @@ public partial class admin_theo_doi_hang_da_ban_Default : System.Web.UI.Page
                         maKH = ct.MaKichHoat,
                         thangBaoHanh = ct.Thang_BaoHanh,
                         vat = bg.vat ?? 0,
-                        giamgiadacbiet = bg.giamgiadacbiet ?? 0
+                        giamgiadacbiet = bg.giamgiadacbiet ?? 0,
+                        isDaban = sp != null ? (sp.daban ?? false) : false
                     };
 
                 string key = txt_timkiem.Text.Trim();
