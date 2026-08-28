@@ -447,12 +447,20 @@ public partial class admin_quan_ly_nhan_vien_bang_cham_cong : System.Web.UI.Page
         htmlTable.Append("<td class='text-center bg-cobalt fg-white' style='width:1px;min-width:1px'>Xăng<br/>xe</td>");
         htmlTable.Append("<td class='text-center bg-cobalt fg-white' style='width:1px;min-width:1px'>Ăn<br/>trưa</td>");
         htmlTable.Append("<td class='text-center bg-cobalt fg-white' style='width:1px;min-width:1px'>Điện<br/>thoại</td>");
-        htmlTable.Append("<td class='text-center bg-cobalt fg-white' style='width:1px;min-width:1px'>Trách<br/>nhiệm</td>");
+                htmlTable.Append("<td class='text-center bg-cobalt fg-white' style='width:1px;min-width:1px'>Trách<br/>nhiệm</td>");
+        htmlTable.Append("<td class='text-center bg-cobalt fg-white' style='width:1px;min-width:1px'>R&D</td>");
+        htmlTable.Append("<td class='text-center bg-cobalt fg-white' style='width:1px;min-width:1px'>Trực<br/>hotline</td>");
+        htmlTable.Append("<td class='text-center bg-cobalt fg-white' style='width:1px;min-width:1px'>Hỗ trợ<br/>D.A</td>");
         htmlTable.Append("<td class='text-center bg-cobalt fg-white' style='width:1px;min-width:1px'>Doanh<br/>số</td>");
         htmlTable.Append("<td class='text-center bg-cobalt fg-white' style='width:1px;min-width:1px'>Thưởng<br/>D.số</td>");
-        htmlTable.Append("<td class='text-center bg-cobalt fg-white' style='width:1px;min-width:1px'>Tổng<br/>cộng</td>");
-        //htmlTable.Append("<td class='text-center bg-orange fg-white' style='width:1px;min-width:1px'>Phạt</td>");
-        htmlTable.Append("<td class='text-center bg-red fg-white' style='width:1px;min-width:1px'>Thực<br/>nhận</td>");
+        htmlTable.Append("<td class='text-center bg-cobalt fg-white' style='width:1px;min-width:1px'>Tổng GROSS<br/>dự kiến</td>");
+        htmlTable.Append("<td class='text-center bg-cobalt fg-white' style='width:1px;min-width:1px'>NLĐ đóng BH<br/>(10,5%)</td>");
+        htmlTable.Append("<td class='text-center bg-red fg-white' style='width:1px;min-width:1px'>Thực nhận<br/>trước PIT</td>");
+        htmlTable.Append("<td class='text-center bg-cobalt fg-white' style='width:1px;min-width:1px'>DN đóng BH<br/>(21,5%)</td>");
+        htmlTable.Append("<td class='text-center bg-cobalt fg-white' style='width:1px;min-width:1px'>Kinh phí CĐ<br/>(2%)</td>");
+        htmlTable.Append("<td class='text-center bg-cobalt fg-white' style='width:1px;min-width:1px'>Tổng chi phí<br/>DN</td>");
+        htmlTable.Append("<td class='text-center bg-cobalt fg-white' style='width:1px;min-width:1px'>Ngân sách<br/>tối đa</td>");
+        htmlTable.Append("<td class='text-center bg-cobalt fg-white' style='width:1px;min-width:1px'>Chênh lệch</td>");
 
         // Kết thúc hàng đầu tiên
         htmlTable.Append("</tr>");
@@ -483,7 +491,7 @@ public partial class admin_quan_ly_nhan_vien_bang_cham_cong : System.Web.UI.Page
             .ToList();
 
         int counter = 1; // Đếm số thứ tự
-        int TongKet_NgayCong = 0; Int64 TongKet_LCB = 0, TongKet_XangXe = 0, TongKet_AnUong = 0, TongKet_DienThoai = 0, TongKet_TrachNhiem = 0, TongKet_DoanhSo = 0, TongKet_ThuongDoanhSo = 0, TongKet_TongCong = 0, TongKet_Phat = 0, TongKet_ThucNhan = 0;
+        int TongKet_NgayCong = 0; Int64 TongKet_LCB = 0, TongKet_XangXe = 0, TongKet_AnUong = 0, TongKet_DienThoai = 0, TongKet_TrachNhiem = 0, TongKet_RnD = 0, TongKet_TrucHotline = 0, TongKet_HoTroDA = 0, TongKet_BaoHiem = 0, TongKet_DoanhSo = 0, TongKet_ThuongDoanhSo = 0, TongKet_TongCong = 0, TongKet_Phat = 0, TongKet_ThucNhan = 0, TongKet_DNBH = 0, TongKet_KinhPhiCD = 0, TongKet_ChiPhiDN = 0, TongKet_NganSach = 0, TongKet_ChenhLech = 0;
         // Tạo dòng dữ liệu cho mỗi nhân viên
         foreach (var nhanVien in nhanVienList)
         {
@@ -558,11 +566,20 @@ public partial class admin_quan_ly_nhan_vien_bang_cham_cong : System.Web.UI.Page
             long pcAnUong = (long)Math.Round((q_nv.PhuCap_AnUong ?? 0) * mealEligibleDays / 26m, MidpointRounding.AwayFromZero);
             long pcDienThoai = (long)Math.Round(q_nv.PhuCap_DienThoai.Value * heSoNgayCong, MidpointRounding.AwayFromZero);
             long pcTrachNhiem = (long)Math.Round(q_nv.PhuCap_TrachNhiem.Value * heSoNgayCong, MidpointRounding.AwayFromZero);
+            long pcRnD = (long)Math.Round((q_nv.PhuCap_RnD ?? 0) * heSoNgayCong, MidpointRounding.AwayFromZero);
+            long pcTrucHotline = (long)Math.Round((q_nv.PhuCap_TrucHotline ?? 0) * heSoNgayCong, MidpointRounding.AwayFromZero);
+            long pcHoTroDA = (long)Math.Round((q_nv.Thuong_DuAn_Max ?? 0) * heSoNgayCong, MidpointRounding.AwayFromZero);
+            long luongDongBH = (long)(q_nv.LuongDongBH ?? 0);
+
             // Hiển thị các cột phụ cấp đã quy đổi
             htmlTable.Append("<td class='text-right '>" + pcXangXe.ToString("#,##0") + "</td>");
             htmlTable.Append("<td class='text-right '>" + pcAnUong.ToString("#,##0") + "</td>");
             htmlTable.Append("<td class='text-right '>" + pcDienThoai.ToString("#,##0") + "</td>");
             htmlTable.Append("<td class='text-right '>" + pcTrachNhiem.ToString("#,##0") + "</td>");
+            htmlTable.Append("<td class='text-right '>" + pcRnD.ToString("#,##0") + "</td>");
+            htmlTable.Append("<td class='text-right '>" + pcTrucHotline.ToString("#,##0") + "</td>");
+            htmlTable.Append("<td class='text-right '>" + pcHoTroDA.ToString("#,##0") + "</td>");
+            
             #endregion
 
 
@@ -591,19 +608,28 @@ public partial class admin_quan_ly_nhan_vien_bang_cham_cong : System.Web.UI.Page
                 _doanhso = _doanhso + q_baohanh.Sum(p => p.tongtien.Value);
                 _thuongdoanhso = _thuongdoanhso + q_baohanh.Sum(p => p.thuongdoanhso.Value);
             }
-            //_doanhsoHangBaoHanh
-
+            
             htmlTable.Append("<td class='text-right '>" + _doanhso.ToString("#,##0") + "</td>");//doanh số
             htmlTable.Append("<td class='text-right '>" + _thuongdoanhso.ToString("#,##0") + "</td>");//thưởng doanh số
 
-            //_tongcong = LuongCB + q_nv.PhuCap_Xangxe.Value + q_nv.PhuCap_AnUong.Value + (long)q_nv.PhuCap_DienThoai.Value + q_nv.PhuCap_TrachNhiem.Value + _thuongdoanhso;
-            _tongcong = LuongCB + pcXangXe + pcAnUong + pcDienThoai + pcTrachNhiem + _thuongdoanhso;
+            _tongcong = LuongCB + pcXangXe + pcAnUong + pcDienThoai + pcTrachNhiem + pcRnD + pcTrucHotline + pcHoTroDA + _thuongdoanhso;
+            long nldDongBH = (long)Math.Round(luongDongBH * 0.105m, MidpointRounding.AwayFromZero);
+            _thucnhan = _tongcong - _phat - nldDongBH;
+            
+            long dnDongBH = (long)Math.Round(luongDongBH * 0.215m, MidpointRounding.AwayFromZero);
+            long kpCD = (long)Math.Round(luongDongBH * 0.02m, MidpointRounding.AwayFromZero);
+            long tongChiPhiDN = _tongcong + dnDongBH + kpCD;
+            long nganSachMax = (long)(q_nv.NganSach_Max ?? 0);
+            long chenhLech = nganSachMax - tongChiPhiDN;
 
-
-            htmlTable.Append("<td class='text-right text-bold'>" + _tongcong.ToString("#,##0") + "</td>");
-            //htmlTable.Append("<td class='text-right fg-orange'>" + _phat.ToString("#,##0") + "</td>");
-            _thucnhan = _tongcong; // _thucnhan = _tongcong - _phat;
+                        htmlTable.Append("<td class='text-right text-bold'>" + _tongcong.ToString("#,##0") + "</td>");
+            htmlTable.Append("<td class='text-right '>" + nldDongBH.ToString("#,##0") + "</td>");
             htmlTable.Append("<td class='text-right text-bold fg-red'>" + _thucnhan.ToString("#,##0") + "</td>");
+            htmlTable.Append("<td class='text-right '>" + dnDongBH.ToString("#,##0") + "</td>");
+            htmlTable.Append("<td class='text-right '>" + kpCD.ToString("#,##0") + "</td>");
+            htmlTable.Append("<td class='text-right text-bold'>" + tongChiPhiDN.ToString("#,##0") + "</td>");
+            htmlTable.Append("<td class='text-right '>" + nganSachMax.ToString("#,##0") + "</td>");
+            htmlTable.Append("<td class='text-right text-bold " + (chenhLech < 0 ? "fg-red" : "fg-green") + "'>" + chenhLech.ToString("#,##0") + "</td>");
 
             htmlTable.Append("</tr>");
             counter++; // Tăng số thứ tự
@@ -611,21 +637,18 @@ public partial class admin_quan_ly_nhan_vien_bang_cham_cong : System.Web.UI.Page
             //TỔNG KẾT
             TongKet_NgayCong = TongKet_NgayCong + tongNgayCong;
             TongKet_LCB = TongKet_LCB + LuongCB;
-
-            //TongKet_XangXe = TongKet_XangXe + q_nv.PhuCap_Xangxe.Value;
-            //TongKet_AnUong = TongKet_AnUong + q_nv.PhuCap_AnUong.Value;
-            //TongKet_DienThoai = TongKet_DienThoai + (long)q_nv.PhuCap_DienThoai.Value;
-            //TongKet_TrachNhiem = TongKet_TrachNhiem + q_nv.PhuCap_TrachNhiem.Value;
             TongKet_XangXe = TongKet_XangXe + pcXangXe;
             TongKet_AnUong = TongKet_AnUong + pcAnUong;
             TongKet_DienThoai = TongKet_DienThoai + pcDienThoai;
             TongKet_TrachNhiem = TongKet_TrachNhiem + pcTrachNhiem;
-
+            TongKet_RnD = TongKet_RnD + pcRnD;
+            TongKet_TrucHotline = TongKet_TrucHotline + pcTrucHotline;
+            TongKet_HoTroDA = TongKet_HoTroDA + pcHoTroDA;
+            TongKet_BaoHiem = TongKet_BaoHiem + nldDongBH;
 
             TongKet_DoanhSo = TongKet_DoanhSo + _doanhso;
             TongKet_ThuongDoanhSo = TongKet_ThuongDoanhSo + _thuongdoanhso;
             TongKet_TongCong = TongKet_TongCong + _tongcong;
-            TongKet_Phat = TongKet_Phat + _phat;
             TongKet_ThucNhan = TongKet_ThucNhan + _thucnhan;
         }
         htmlTable.Append("<tr class='bg-gray'><td class='bg-gray'></td><td class='bg-gray'></td>");
@@ -638,11 +661,19 @@ public partial class admin_quan_ly_nhan_vien_bang_cham_cong : System.Web.UI.Page
         htmlTable.Append("<td class='text-right text-bold'>" + TongKet_AnUong.ToString("#,##0") + "</td>");
         htmlTable.Append("<td class='text-right text-bold'>" + TongKet_DienThoai.ToString("#,##0") + "</td>");
         htmlTable.Append("<td class='text-right text-bold'>" + TongKet_TrachNhiem.ToString("#,##0") + "</td>");
+        htmlTable.Append("<td class='text-right text-bold'>" + TongKet_RnD.ToString("#,##0") + "</td>");
+        htmlTable.Append("<td class='text-right text-bold'>" + TongKet_TrucHotline.ToString("#,##0") + "</td>");
+                htmlTable.Append("<td class='text-right text-bold'>" + TongKet_HoTroDA.ToString("#,##0") + "</td>");
         htmlTable.Append("<td class='text-right text-bold'>" + TongKet_DoanhSo.ToString("#,##0") + "</td>");
         htmlTable.Append("<td class='text-right text-bold'>" + TongKet_ThuongDoanhSo.ToString("#,##0") + "</td>");
         htmlTable.Append("<td class='text-right text-bold'>" + TongKet_TongCong.ToString("#,##0") + "</td>");
-        //htmlTable.Append("<td class='text-right text-bold fg-orange'>" + TongKet_Phat.ToString("#,##0") + "</td>");
+        htmlTable.Append("<td class='text-right text-bold'>" + TongKet_BaoHiem.ToString("#,##0") + "</td>");
         htmlTable.Append("<td class='text-right text-bold fg-red'>" + TongKet_ThucNhan.ToString("#,##0") + "</td>");
+        htmlTable.Append("<td class='text-right text-bold'>" + TongKet_DNBH.ToString("#,##0") + "</td>");
+        htmlTable.Append("<td class='text-right text-bold'>" + TongKet_KinhPhiCD.ToString("#,##0") + "</td>");
+        htmlTable.Append("<td class='text-right text-bold'>" + TongKet_ChiPhiDN.ToString("#,##0") + "</td>");
+        htmlTable.Append("<td class='text-right text-bold'>" + TongKet_NganSach.ToString("#,##0") + "</td>");
+        htmlTable.Append("<td class='text-right text-bold'>" + TongKet_ChenhLech.ToString("#,##0") + "</td>");
         htmlTable.Append("</tr>");
         // Đóng thẻ table
         htmlTable.Append("</tbody>");

@@ -177,6 +177,20 @@ public partial class admin_Default : System.Web.UI.Page
         }
     }
 
+    
+    protected string FormatPhucapItem(string title, object value)
+    {
+        if (value != null)
+        {
+            decimal val = 0;
+            if (decimal.TryParse(value.ToString(), out val) && val > 0)
+            {
+                return "<div>- " + title + ": " + val.ToString("#,##0") + "</div>";
+            }
+        }
+        return "";
+    }
+    
     public void show_main()
     {
         try
@@ -229,6 +243,12 @@ public partial class admin_Default : System.Web.UI.Page
                                     ob1.PhuCap_DienThoai,
                                     ob1.PhuCap_TrachNhiem,
                                     ob1.PhuCap_Xangxe,
+                                      ob1.PhuCap_RnD,
+                                      ob1.PhuCap_TrucHotline,
+                                      ob1.Thuong_DuAn_Max,
+                                      ob1.LuongDongBH,
+                                      ob1.NganSach_Max,
+                                      ob1.chucdanh,
                                     TongThuNhapThang = (ob1.LuongCoBan ?? 0) + (ob1.PhuCap_AnUong ?? 0) + (ob1.PhuCap_DienThoai ?? 0) + (ob1.PhuCap_TrachNhiem ?? 0) + (ob1.PhuCap_Xangxe ?? 0),
                                     ob1.sdt_nguoithan,
                                     ob1.ten_nguoithan,
@@ -263,10 +283,12 @@ public partial class admin_Default : System.Web.UI.Page
                 //sắp xếp
                 list_all = list_all.OrderByDescending(p => p.ngayvaolam);
                 int _Tong_Record = list_all.Count();
-                ViewState["tongLCB"] = (list_all.Sum(p => (long?)p.LuongCoBan) ?? 0).ToString("#,##0");
-                decimal _tong_phucap = list_all.Sum(p => (decimal?)((p.PhuCap_Xangxe ?? 0) + (p.PhuCap_AnUong ?? 0) + (p.PhuCap_DienThoai ?? 0) + (p.PhuCap_TrachNhiem ?? 0))) ?? 0;
-                ViewState["tongPhuCap"] = _tong_phucap.ToString("#,##0");
-                ViewState["tongThuNhap"] = (list_all.Sum(p => (decimal?)p.TongThuNhapThang) ?? 0).ToString("#,##0");
+                                  ViewState["tongLCB"] = (list_all.Sum(p => (long?)p.LuongCoBan) ?? 0).ToString("#,##0");
+                  decimal _tong_phucap = list_all.Sum(p => (decimal?)((p.PhuCap_Xangxe ?? 0) + (p.PhuCap_AnUong ?? 0) + (p.PhuCap_DienThoai ?? 0) + (p.PhuCap_TrachNhiem ?? 0) + (p.PhuCap_RnD ?? 0) + (p.PhuCap_TrucHotline ?? 0) + (p.Thuong_DuAn_Max ?? 0))) ?? 0;
+                  ViewState["tongPhuCap"] = _tong_phucap.ToString("#,##0");
+                  ViewState["tongBaoHiem"] = (list_all.Sum(p => (long?)p.LuongDongBH) ?? 0).ToString("#,##0");
+                  ViewState["tongThuNhap"] = (list_all.Sum(p => (decimal?)p.TongThuNhapThang) ?? 0).ToString("#,##0");
+                  ViewState["tongNganSach"] = (list_all.Sum(p => (long?)p.NganSach_Max) ?? 0).ToString("#,##0");
                 #endregion
 
                 #region phân trang OK, k sửa
@@ -447,6 +469,13 @@ public partial class admin_Default : System.Web.UI.Page
             Button2.Visible = false; Button1.Visible = false; Button3.Visible = false;
             Label2.Text = ""; Label3.Text = ""; Label4.Text = "";
             txt_luongcoban.Text = ""; txt_phucap_xangxe.Text = ""; txt_phucap_anuong.Text = ""; txt_phucap_dienthoai.Text = ""; txt_phucap_trachniem.Text = "";
+        txt_chucdanh.Text = "";
+        txt_phucap_rnd.Text = "";
+        txt_phucap_hotline.Text = "";
+        txt_hotro_da_max.Text = "";
+        txt_luong_dong_bh.Text = "";
+        txt_ngansach_max.Text = "";
+
             txt_sdt_nguoithan.Text = "";
             txt_tennguoithan.Text = "";
             txt_phantram_doanhso.Text = "";
@@ -622,6 +651,17 @@ public partial class admin_Default : System.Web.UI.Page
                     PlaceHolder1.Visible = false;
                     if (q.LuongCoBan != null)
                         txt_luongcoban.Text = q.LuongCoBan.Value.ToString("#,##0");
+                    if (q.PhuCap_RnD != null)
+                        txt_phucap_rnd.Text = q.PhuCap_RnD.Value.ToString("#,##0");
+                    if (q.PhuCap_TrucHotline != null)
+                        txt_phucap_hotline.Text = q.PhuCap_TrucHotline.Value.ToString("#,##0");
+                    if (q.Thuong_DuAn_Max != null)
+                        txt_hotro_da_max.Text = q.Thuong_DuAn_Max.Value.ToString("#,##0");
+                    if (q.LuongDongBH != null)
+                        txt_luong_dong_bh.Text = q.LuongDongBH.Value.ToString("#,##0");
+                    if (q.NganSach_Max != null)
+                        txt_ngansach_max.Text = q.NganSach_Max.Value.ToString("#,##0");
+                    txt_chucdanh.Text = q.chucdanh;
                     if (q.PhuCap_Xangxe != null)
                         txt_phucap_xangxe.Text = q.PhuCap_Xangxe.Value.ToString("#,##0");
                     if (q.PhuCap_AnUong != null)
@@ -736,6 +776,12 @@ public partial class admin_Default : System.Web.UI.Page
             string _ngayvaolam = txt_ngayvaolam.Text;
 
             Int64 _luongcoban = Number_cl.Check_Int64(txt_luongcoban.Text.Trim());
+            Int64 _phucap_rnd = Number_cl.Check_Int64(txt_phucap_rnd.Text.Trim());
+            Int64 _phucap_hotline = Number_cl.Check_Int64(txt_phucap_hotline.Text.Trim());
+            Int64 _hotro_da_max = Number_cl.Check_Int64(txt_hotro_da_max.Text.Trim());
+            Int64 _luong_dong_bh = Number_cl.Check_Int64(txt_luong_dong_bh.Text.Trim());
+            Int64 _ngansach_max = Number_cl.Check_Int64(txt_ngansach_max.Text.Trim());
+            string _chucdanh = txt_chucdanh.Text.Trim();
             Int64 _phucap_xangxe = Number_cl.Check_Int64(txt_phucap_xangxe.Text.Trim());
             Int64 _phucap_anuong = Number_cl.Check_Int64(txt_phucap_anuong.Text.Trim());
             decimal _phucap_dienthoai = (decimal)Number_cl.Check_Int64(txt_phucap_dienthoai.Text.Trim());
@@ -840,6 +886,12 @@ public partial class admin_Default : System.Web.UI.Page
                     _ob.tenchu_tknganhang = _tenchu_tknganhang;
                     _ob.loai_nhanvien = _loai_nhanvien;
                     _ob.LuongCoBan = _luongcoban;
+                    _ob.PhuCap_RnD = _phucap_rnd;
+                    _ob.PhuCap_TrucHotline = _phucap_hotline;
+                    _ob.Thuong_DuAn_Max = _hotro_da_max;
+                    _ob.LuongDongBH = _luong_dong_bh;
+                    _ob.NganSach_Max = _ngansach_max;
+                    _ob.chucdanh = _chucdanh;
                     _ob.PhuCap_AnUong = _phucap_anuong;
                     _ob.PhuCap_DienThoai = _phucap_dienthoai;
                     _ob.PhuCap_TrachNhiem = _phucap_trachnhiem;
@@ -886,6 +938,12 @@ public partial class admin_Default : System.Web.UI.Page
                         _ob.tenchu_tknganhang = _tenchu_tknganhang;
                         _ob.loai_nhanvien = _loai_nhanvien;
                         _ob.LuongCoBan = _luongcoban;
+                    _ob.PhuCap_RnD = _phucap_rnd;
+                    _ob.PhuCap_TrucHotline = _phucap_hotline;
+                    _ob.Thuong_DuAn_Max = _hotro_da_max;
+                    _ob.LuongDongBH = _luong_dong_bh;
+                    _ob.NganSach_Max = _ngansach_max;
+                    _ob.chucdanh = _chucdanh;
                         _ob.PhuCap_AnUong = _phucap_anuong;
                         _ob.PhuCap_DienThoai = _phucap_dienthoai;
                         _ob.PhuCap_TrachNhiem = _phucap_trachnhiem;

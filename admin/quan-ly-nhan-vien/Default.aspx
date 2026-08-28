@@ -192,6 +192,7 @@
                             <%--pl-4 pl-8-md pr-8-md pr-4--%>
                             <div class="row">
                                 <div class="cell-lg-6 pr-4-lg">
+                                    <h4 class="fw-600 fg-red mt-0 mb-4">THÔNG TIN TÀI KHOẢN</h4>
                                     <div class="mt-3">
                                         <label class="fw-600 fg-red">Tài khoản</label>
                                         <div>
@@ -256,6 +257,23 @@
                                     </div>
 
                                     <div class="mt-3">
+                                        <label class="fw-600 fg-red">Họ và tên</label>
+                                        <div>
+                                            <asp:TextBox ID="txt_hoten" runat="server" data-role="input"></asp:TextBox>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3">
+                                        <label class="fw-600 fg-red">Giới tính</label>
+                                        <div>
+                                            <asp:DropDownList ID="ddl_gioitinh" runat="server" data-role="select">
+                                                <asp:ListItem Value="Nam">Nam</asp:ListItem>
+                                                <asp:ListItem Value="Nữ">Nữ</asp:ListItem>
+                                            </asp:DropDownList>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3">
                                         <label class="fw-600 fg-red">Số CCCD</label>
                                         <div>
                                             <asp:TextBox ID="txt_so_cccd" runat="server" data-role="input"></asp:TextBox>
@@ -263,9 +281,9 @@
                                     </div>
 
                                     <div class="mt-3">
-                                        <label class="fw-600 fg-red">Họ và tên</label>
+                                        <label class="fw-600">Chức danh</label>
                                         <div>
-                                            <asp:TextBox ID="txt_hoten" runat="server" data-role="input"></asp:TextBox>
+                                            <asp:TextBox ID="txt_chucdanh" runat="server" data-role="input"></asp:TextBox>
                                         </div>
                                     </div>
                                     <div class="mt-3">
@@ -331,28 +349,11 @@
                                 </div>
                                 <div class="cell-lg-6 pl-4-lg">
                                     <asp:PlaceHolder ID="PlaceHolder4" runat="server" Visible="false">
+                                        <h4 class="fw-600 fg-red mt-0 mb-4">THÔNG TIN LƯƠNG & PHỤ CẤP</h4>
                                         <div class="mt-3">
-                                            <label class="fw-600">Lương cơ bản</label>
+                                            <label class="fw-600 fg-red">Lương chức danh / Lương cơ bản</label>
                                             <div>
                                                 <asp:TextBox ID="txt_luongcoban" runat="server" data-role="input" MaxLength="14" oninput="format_sotien_new(this)"></asp:TextBox>
-                                            </div>
-                                        </div>
-                                        <div class="mt-3">
-                                            <label class="fw-600">Phụ cấp xăng xe /tháng</label>
-                                            <div>
-                                                <asp:TextBox ID="txt_phucap_xangxe" runat="server" data-role="input" MaxLength="14" oninput="format_sotien_new(this)"></asp:TextBox>
-                                            </div>
-                                        </div>
-                                        <div class="mt-3">
-                                            <label class="fw-600">Phụ cấp ăn trưa /tháng</label>
-                                            <div>
-                                                <asp:TextBox ID="txt_phucap_anuong" runat="server" data-role="input" MaxLength="14" oninput="format_sotien_new(this)"></asp:TextBox>
-                                            </div>
-                                        </div>
-                                        <div class="mt-3">
-                                            <label class="fw-600">Phụ cấp điện thoại /tháng</label>
-                                            <div>
-                                                <asp:TextBox ID="txt_phucap_dienthoai" runat="server" data-role="input" MaxLength="14" oninput="format_sotien_new(this)"></asp:TextBox>
                                             </div>
                                         </div>
                                         <div class="mt-3">
@@ -362,9 +363,57 @@
                                             </div>
                                         </div>
                                         <div class="mt-3">
-                                            <label class="fw-600">% thưởng doanh số bán hàng</label>
+                                            <label class="fw-600">Phụ cấp R&D /tháng</label>
+                                            <div>
+                                                <asp:TextBox ID="txt_phucap_rnd" runat="server" data-role="input" MaxLength="14" oninput="format_sotien_new(this)"></asp:TextBox>
+                                            </div>
+                                        </div>
+                                        <div class="mt-3">
+                                            <label class="fw-600">Phụ cấp trực Hotline /tháng</label>
+                                            <div>
+                                                <asp:TextBox ID="txt_phucap_hotline" runat="server" data-role="input" MaxLength="14" oninput="format_sotien_new(this)"></asp:TextBox>
+                                            </div>
+                                        </div>
+                                        <div class="mt-3">
+                                            <label class="fw-600">Thưởng/Hỗ trợ theo DA (Tối đa)</label>
+                                            <div>
+                                                <asp:TextBox ID="txt_hotro_da_max" runat="server" data-role="input" MaxLength="14" oninput="format_sotien_new(this)"></asp:TextBox>
+                                            </div>
+                                        </div>
+                                        <div class="mt-3">
+                                            <label class="fw-600">Hỗ trợ ăn trưa /tháng</label>
+                                            <div>
+                                                <asp:TextBox ID="txt_phucap_anuong" runat="server" data-role="input" MaxLength="14" oninput="format_sotien_new(this)"></asp:TextBox>
+                                            </div>
+                                        </div>
+                                        <div class="mt-3">
+                                            <label class="fw-600">Hỗ trợ điện thoại /tháng</label>
+                                            <div>
+                                                <asp:TextBox ID="txt_phucap_dienthoai" runat="server" data-role="input" MaxLength="14" oninput="format_sotien_new(this)"></asp:TextBox>
+                                            </div>
+                                        </div>
+                                        <div class="mt-3">
+                                            <label class="fw-600">Hỗ trợ xăng xe /tháng</label>
+                                            <div>
+                                                <asp:TextBox ID="txt_phucap_xangxe" runat="server" data-role="input" MaxLength="14" oninput="format_sotien_new(this)"></asp:TextBox>
+                                            </div>
+                                        </div>
+                                        <div class="mt-3">
+                                            <label class="fw-600">% thưởng doanh số bán hàng (KPI/Hoa hồng)</label>
                                             <div>
                                                 <asp:TextBox ID="txt_phantram_doanhso" runat="server" data-role="input" MaxLength="3" oninput="format_sotien_new(this)"></asp:TextBox>
+                                            </div>
+                                        </div>
+                                        <div class="mt-3">
+                                            <label class="fw-600 fg-red">Mức lương đóng Bảo hiểm</label>
+                                            <div>
+                                                <asp:TextBox ID="txt_luong_dong_bh" runat="server" data-role="input" MaxLength="14" oninput="format_sotien_new(this)"></asp:TextBox>
+                                            </div>
+                                        </div>
+                                        <div class="mt-3">
+                                            <label class="fw-600">Ngân sách tối đa</label>
+                                            <div>
+                                                <asp:TextBox ID="txt_ngansach_max" runat="server" data-role="input" MaxLength="14" oninput="format_sotien_new(this)"></asp:TextBox>
                                             </div>
                                         </div>
                                     </asp:PlaceHolder>
@@ -416,6 +465,7 @@
                         <div class="bg-white border bd-transparent pl-4 pl-8-md pr-8-md pr-4" style="padding-top: 52px">
                             <div class="row">
                                 <div class="cell-lg-6 pr-4-lg">
+                                    <h4 class="fw-600 fg-red mt-0 mb-4">THÔNG TIN TÀI KHOẢN</h4>
                                     <div class="fw-600 mt-3">Số lượng hiển thị mỗi trang</div>
                                     <asp:TextBox ID="txt_show" MaxLength="7" runat="server" data-role="input" data-clear-button="true"></asp:TextBox>
                                     <div class="mt-3" style="display: none">
@@ -518,6 +568,7 @@
                         <div class="bg-white border bd-transparent pl-4 pl-8-md pr-8-md pr-4" style="padding-top: 52px">
                             <div class="row">
                                 <div class="cell-lg-6 pr-4-lg">
+                                    <h4 class="fw-600 fg-red mt-0 mb-4">THÔNG TIN TÀI KHOẢN</h4>
                                     <div class="mt-3">
                                         <div class="fw-600">Chọn mục muốn xuất</div>
                                         <div class="mt-1">
@@ -694,8 +745,9 @@
                                         <th class="text-center" style="width: 150px; min-width: 150px;">Thông tin Ngân hàng</th>
 
                                         <asp:PlaceHolder ID="PlaceHolder2" runat="server" Visible="false">
-                                            <th class="text-center" style="width: 60px; min-width: 60px;">Lương CB</th>
-                                            <th class="text-center" style="width: 150px; min-width: 150px;">Phụ cấp</th>
+                                            <th class="text-center" style="width: 80px; min-width: 80px;">Lương CB</th>
+                                            <th class="text-center" style="width: 180px; min-width: 180px;">Phụ cấp</th>
+                                            <th class="text-center" style="width: 100px; min-width: 100px;">Bảo hiểm</th>
                                             <th class="text-center" style="width: 120px; min-width: 120px;">TN tháng</th>
                                         </asp:PlaceHolder>
                                         <th class="text-center" style="width: 100px; min-width: 100px; display:none;">Người thân</th>
@@ -767,24 +819,21 @@
                                                     <small>Chủ TK: <b><%#Eval("tenchu_tknganhang") %></b></small>
                                                 </td>
 
-                                                <asp:PlaceHolder ID="lblLuongCoBan" runat="server" Visible="false">
+                                                                                                <asp:PlaceHolder ID="lblLuongCoBan" runat="server" Visible="false">
                                                     <td class="text-right">
                                                         <%# Eval("LuongCoBan", "{0:#,##0}") %>
                                                     </td>
                                                     <td class="text-normal">
-                                                        <div style="float: left; width"><small>Xăng xe</small></div>
-                                                        <div style="float: right"><small><%# Eval("PhuCap_Xangxe", "{0:#,##0}") %></small></div>
-                                                        <div style="clear: both"></div>
-                                                        <div style="float: left; width"><small>Ăn trưa</small></div>
-                                                        <div style="float: right"><small><%# Eval("PhuCap_AnUong", "{0:#,##0}") %></small></div>
-                                                        <div style="clear: both"></div>
-                                                        <div style="float: left; width"><small>Trách nhiệm</small></div>
-                                                        <div style="float: right"><small><%# Eval("PhuCap_TrachNhiem", "{0:#,##0}") %></small></div>
-                                                        <div style="clear: both"></div>
-                                                        <div style="float: left; width"><small>Điện thoại</small></div>
-                                                        <div style="float: right"><small><%# Eval("PhuCap_DienThoai", "{0:#,##0}") %></small></div>
-                                                        <div style="clear: both"></div>
-
+                                                        <%# FormatPhucapItem("Trách nhiệm", Eval("PhuCap_TrachNhiem")) %>
+                                                        <%# FormatPhucapItem("R&D", Eval("PhuCap_RnD")) %>
+                                                        <%# FormatPhucapItem("Trực Hotline", Eval("PhuCap_TrucHotline")) %>
+                                                        <%# FormatPhucapItem("Hỗ trợ DA", Eval("Thuong_DuAn_Max")) %>
+                                                        <%# FormatPhucapItem("Xăng xe", Eval("PhuCap_Xangxe")) %>
+                                                        <%# FormatPhucapItem("Ăn trưa", Eval("PhuCap_AnUong")) %>
+                                                        <%# FormatPhucapItem("Điện thoại", Eval("PhuCap_DienThoai")) %>
+                                                    </td>
+                                                    <td class="text-right">
+                                                        <%# Eval("LuongDongBH", "{0:#,##0}") %>
                                                     </td>
                                                     <td class="text-right">
                                                         <b><%# Eval("TongThuNhapThang", "{0:#,##0}") %></b>
@@ -851,12 +900,13 @@
                                             </tr>
                                         </ItemTemplate>
                                     </asp:Repeater>
-                                    <asp:PlaceHolder ID="PlaceHolder3" runat="server" Visible="false">
+                                                                        <asp:PlaceHolder ID="PlaceHolder3" runat="server" Visible="false">
                                         <tr>
                                             <td class=" bg-white"></td>
                                             <td colspan="6" class="text-right text-bold bg-white">TỔNG</td>
                                             <td class="text-right text-bold"><%=ViewState["tongLCB"] %></td>
                                             <td class="text-right text-bold"><%=ViewState["tongPhuCap"] %></td>
+                                            <td class="text-right text-bold"><%=ViewState["tongBaoHiem"] %></td>
                                             <td class="text-right text-bold"><%=ViewState["tongThuNhap"] %></td>
                                             <td style="display:none;"></td>
                                             <td></td>
