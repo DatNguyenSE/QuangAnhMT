@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -93,16 +93,44 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
         return customers;
     }
 
-    private static List<DropdownOption> GetProducts(dbDataContext db)
+    private void HandleWarrantyProductSearch()
     {
-        var products = db.KhoSanPham_tbs
-            .OrderByDescending(p => p.id)
-            .Select(p => new { p.id, p.ten, p.so_seri })
-            .Take(1000)
-            .ToList()
-            .Select(p => new DropdownOption { Id = p.id.ToString(), Text = p.ten + " - " + p.so_seri })
-            .ToList();
-        return products;
+        check_login_cl.check_login_admin("35", "35");
+        Response.Clear();
+        Response.ContentType = "application/json";
+        Response.Cache.SetCacheability(HttpCacheability.NoCache);
+
+        int page;
+        if (!int.TryParse(Request.QueryString["page"], out page) || page < 1)
+            page = 1;
+        const int pageSize = 30;
+        page = Math.Min(page, int.MaxValue / pageSize);
+        string term = (Request.QueryString["term"] ?? "").Trim();
+
+        using (dbDataContext db = new dbDataContext())
+        {
+            db.ObjectTrackingEnabled = false;
+            var query = db.KhoSanPham_tbs.AsQueryable();
+            if (term.Length > 0)
+                query = query.Where(p => p.ten.Contains(term) || p.so_seri.Contains(term));
+
+            var products = query.OrderByDescending(p => p.id)
+                .Select(p => new { p.id, p.ten, p.so_seri })
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize + 1)
+                .ToList();
+            var result = new
+            {
+                results = products.Take(pageSize).Select(p => new
+                {
+                    id = p.id.ToString(),
+                    text = p.ten + " - " + p.so_seri
+                }).ToList(),
+                pagination = new { more = products.Count > pageSize }
+            };
+            Response.Write(new JavaScriptSerializer().Serialize(result));
+        }
+        Response.End();
     }
 
     public void set_dulieu_macdinh()
@@ -186,6 +214,12 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
             ScriptManager.GetCurrent(this.Page).RegisterPostBackControl(but_xuat_excel);
         }
 
+        if (Request.QueryString["action"] == "searchWarrantyProducts")
+        {
+            HandleWarrantyProductSearch();
+            return;
+        }
+
         if (Request.QueryString["action"] == "lookupWarrantyProduct")
         {
             HandleWarrantyProductLookup();
@@ -236,6 +270,9 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
                 ddl_dvt_add.DataTextField = "ten";
                 ddl_dvt_add.DataBind();
                 ddl_dvt_add.Items.Insert(0, new ListItem("Chọn ĐVT", ""));
+
+                hf_linhkien_id.Value = "";
+                hf_linhkien_text.Value = "";
             }
             set_dulieu_macdinh();
             show_main();
@@ -668,14 +705,8 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
         DropDownList2.DataSource = null;
         DropDownList2.DataBind();
         
-        using (dbDataContext db = new dbDataContext())
-        {
-            DropDownList1.DataSource = GetProducts(db);
-            DropDownList1.DataTextField = "Text";
-            DropDownList1.DataValueField = "Id";
-            DropDownList1.DataBind();
-        }
-        DropDownList1.Items.Insert(0, new ListItem("Tìm theo tên SP, số seri", ""));
+        hf_sanpham_id.Value = "";
+        hf_sanpham_text.Value = "";
         
         Repeater5.DataSource = null;
         Repeater5.DataBind();
@@ -946,6 +977,7 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
                 if (q.congno != null)
                     _congno = q.congno.Value;
                 load_congno(db, _id, _congno, q.trangthai);
+                load_linhkien_thaythe(db, _id);
 
                 pn_add.Visible = !pn_add.Visible;
                 up_add.Update();
@@ -1166,6 +1198,13 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
                         if (isNewDetail)
                         {
                             db.HangBaoHanh_ChiTiet_tbs.InsertOnSubmit(q_chitiet);
+                        }
+
+                        // Cập nhật tên chương trình mượn nếu có thay đổi
+                        var muontb = db.PhieuMuonHang_tbs.FirstOrDefault(p => p.id_baohanh == _id_phieu);
+                        if (muontb != null)
+                        {
+                            muontb.tenchuongtrinh = txt_tenchuongtrinh_muon.Text.Trim();
                         }
 
                         db.SubmitChanges();
@@ -1505,9 +1544,9 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
     {
         using (dbDataContext db = new dbDataContext())
         {
-            if (!string.IsNullOrEmpty(DropDownList1.SelectedValue))
+            if (!string.IsNullOrEmpty(hf_sanpham_id.Value))
             {
-                string id_sp = DropDownList1.SelectedValue;
+                string id_sp = hf_sanpham_id.Value;
                 var sp = db.KhoSanPham_tbs.FirstOrDefault(p => p.id.ToString() == id_sp);
                 if (sp != null)
                 {
@@ -2219,5 +2258,126 @@ public partial class admin_hang_bao_hanh_Default : System.Web.UI.Page
             ScriptManager.RegisterStartupScript(this.Page, this.GetType(), "err_export", "alert('Lỗi xuất file: " + _ex.Message.Replace("'", "\\'").Replace("\r", "").Replace("\n", " ") + "');", true);
         }
     }
+    #endregion
+
+    #region Quản lý linh kiện xuất kho (Mượn hàng)
+    public void load_linhkien_thaythe(dbDataContext db, string idPhieu)
+    {
+        var header = db.PhieuMuonHang_tbs.FirstOrDefault(p => p.id_baohanh == idPhieu);
+        if (header != null)
+        {
+            txt_tenchuongtrinh_muon.Text = header.tenchuongtrinh;
+            var q = (from dt in db.PhieuMuonHang_ChiTiet_tbs
+                     join sp in db.KhoSanPham_tbs on dt.id_sanpham equals sp.id.ToString()
+                     where dt.id_PhieuMuon == header.id.ToString()
+                     select new {
+                         dt.id,
+                         ten_sanpham = sp.ten,
+                         soluong_nhap = dt.SoLuongMuon
+                     }).ToList();
+            rpt_linhkien_thaythe.DataSource = q;
+            rpt_linhkien_thaythe.DataBind();
+        }
+        else
+        {
+            txt_tenchuongtrinh_muon.Text = "Mượn cho phiếu bảo hành - " + idPhieu;
+            rpt_linhkien_thaythe.DataSource = null;
+            rpt_linhkien_thaythe.DataBind();
+        }
+    }
+
+    protected void but_them_linhkien_Click(object sender, EventArgs e)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(ViewState["id_edit"] as string))
+            {
+                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng lưu phiếu bảo hành trước khi thêm linh kiện mượn.", "false", "false", "OK", "alert", ""), true);
+                return;
+            }
+
+            string _id_phieu = ViewState["id_edit"].ToString();
+            string _id_linhkien = hf_linhkien_id.Value;
+            int _soluong = Number_cl.Check_Int(txt_sl_linhkien.Text);
+
+            if (string.IsNullOrEmpty(_id_linhkien) || _soluong <= 0)
+            {
+                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng chọn linh kiện và nhập số lượng hợp lệ.", "false", "false", "OK", "alert", ""), true);
+                return;
+            }
+
+            using (dbDataContext db = new dbDataContext())
+            {
+                var sanpham = db.KhoSanPham_tbs.FirstOrDefault(p => p.id.ToString() == _id_linhkien);
+                if (sanpham == null)
+                {
+                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Không tìm thấy linh kiện trong kho.", "false", "false", "OK", "alert", ""), true);
+                    return;
+                }
+
+                if ((sanpham.soluong_hientai ?? 0) < _soluong)
+                {
+                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Số lượng tồn kho không đủ (hiện còn " + (sanpham.soluong_hientai ?? 0) + ").", "false", "false", "OK", "alert", ""), true);
+                    return;
+                }
+
+                var header = db.PhieuMuonHang_tbs.FirstOrDefault(p => p.id_baohanh == _id_phieu);
+                if (header == null)
+                {
+                    header = new PhieuMuonHang_tb();
+                    header.ngaytao = DateTime.Now;
+                    header.nguoitao = ViewState["taikhoan"] as string;
+                    header.tenchuongtrinh = txt_tenchuongtrinh_muon.Text.Trim();
+                    header.id_baohanh = _id_phieu;
+                    db.PhieuMuonHang_tbs.InsertOnSubmit(header);
+                    db.SubmitChanges();
+                }
+                else
+                {
+                    // Update name in case user modified it
+                    header.tenchuongtrinh = txt_tenchuongtrinh_muon.Text.Trim();
+                    db.SubmitChanges();
+                }
+
+                // Ghi nhận mượn hàng
+                PhieuMuonHang_ChiTiet_tb detail = new PhieuMuonHang_ChiTiet_tb();
+                detail.id_PhieuMuon = header.id.ToString();
+                detail.id_sanpham = sanpham.id.ToString();
+                detail.NgayMuon = DateTime.Now;
+                detail.SoLuongMuon = _soluong;
+                detail.NguoiMuon = ViewState["taikhoan"] as string;
+                db.PhieuMuonHang_ChiTiet_tbs.InsertOnSubmit(detail);
+
+                // Ghi vào lịch sử nhập xuất
+                NhapXuatKho_tb nxk = new NhapXuatKho_tb();
+                nxk.nhap_hay_xuat = false; // Xuất mượn
+                nxk.id_sanpham = sanpham.id.ToString();
+                nxk.ten_sanpham = sanpham.ten;
+                nxk.soluong_nhap = _soluong;
+                nxk.gia_nhap = sanpham.gianhap ?? 0;
+                nxk.ngaynhap = DateTime.Now;
+                nxk.nguoinhap = ViewState["taikhoan"] as string;
+                nxk.ton_hientai = sanpham.soluong_hientai;
+                nxk.id_baogia = "Xuất mượn BH-" + _id_phieu;
+                db.NhapXuatKho_tbs.InsertOnSubmit(nxk);
+
+                db.SubmitChanges();
+
+                            // Trừ tồn kho sẽ được trigger tự động xử lý khi insert vào Nhập xuất kho
+
+
+                load_linhkien_thaythe(db, _id_phieu);
+                if (up_add != null) up_add.Update();
+                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Đã ghi nhận mượn linh kiện và tự động trừ kho.", "1500", "success"), true);
+                txt_sl_linhkien.Text = "1";
+            }
+        }
+        catch (Exception ex)
+        {
+            Log_cl.Add_Log(ex.Message, ViewState["taikhoan"] as string, ex.StackTrace);
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Lỗi xử lý: " + ex.Message, "false", "false", "OK", "alert", ""), true);
+        }
+    }
+
     #endregion
 }

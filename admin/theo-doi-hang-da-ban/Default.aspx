@@ -395,6 +395,9 @@
                                 </small>
                             </a>
                         </li>
+                        <li>
+                            <asp:LinkButton ID="btn_export_excel" runat="server" CssClass="button success warranty-filter-button" OnClick="btn_export_excel_Click" CausesValidation="false" ToolTip="Xuất tất cả kết quả theo bộ lọc hiện tại"><span class="mif-file-excel"></span> Xuất Excel</asp:LinkButton>
+                        </li>
                         <li data-role="hint" data-hint-position="top" data-hint-text="Lùi">
                             <asp:LinkButton ID="btn_prev" OnClick="btn_prev_Click" runat="server"><span class="mif-chevron-left"></span></asp:LinkButton>
                         </li>
@@ -492,6 +495,9 @@
                 </div>
             </div>
         </ContentTemplate>
+        <Triggers>
+            <asp:PostBackTrigger ControlID="btn_export_excel" />
+        </Triggers>
     </asp:UpdatePanel>
 
     <asp:UpdateProgress ID="UpdateProgress1" runat="server" AssociatedUpdatePanelID="up_main">

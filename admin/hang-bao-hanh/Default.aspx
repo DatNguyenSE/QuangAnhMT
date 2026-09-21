@@ -1,4 +1,4 @@
-<%@ Page Title="Hàng bảo hành" Language="C#" MasterPageFile="~/admin/MasterPageAdmin.master" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="admin_hang_bao_hanh_Default" %>
+﻿<%@ Page Title="Hàng bảo hành" Language="C#" MasterPageFile="~/admin/MasterPageAdmin.master" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="admin_hang_bao_hanh_Default" %>
 
 <%@ Register Assembly="AjaxControlToolkit" Namespace="AjaxControlToolkit" TagPrefix="ajaxToolkit" %>
 <%@ Register Assembly="CKEditor.NET" Namespace="CKEditor.NET" TagPrefix="CKEditor" %>
@@ -168,6 +168,7 @@
                                         <asp:DropDownList ID="ddl_trangthai" runat="server" data-role="select">
                                             <asp:ListItem Value="Đang xử lý">Đang xử lý</asp:ListItem>
                                             <asp:ListItem Value="Đã nhận">Đã nhận</asp:ListItem>
+                                            <asp:ListItem Value="Đã sửa xong">Đã sửa xong</asp:ListItem>
                                             <asp:ListItem Value="Đã trả">Đã trả</asp:ListItem>
                                             <asp:ListItem Value="Đã hủy">Đã hủy</asp:ListItem>
                                         </asp:DropDownList>
@@ -203,7 +204,9 @@
                                                     <div class="cell-12 mt-2">
                                                         <small class="fg-red fw-600">Chọn từ kho</small>
                                                          <div class="d-flex">
-                                                             <asp:DropDownList ID="DropDownList1" runat="server" CssClass="select2-dropdown"></asp:DropDownList>
+                                                             <select id="warrantyProduct" class="warranty-product-dropdown" style="width:100%"><option value=""></option></select>
+                                                             <asp:HiddenField ID="hf_sanpham_id" runat="server" />
+                                                             <asp:HiddenField ID="hf_sanpham_text" runat="server" />
                                                              <asp:Button ID="but_check_sp" OnClick="DropDownList1_SelectedIndexChanged" runat="server" Text="Check" CssClass="button" />
                                                              <button type="button" class="button info" onclick="openWarrantyProductScanner()" title="Quét barcode theo số seri"><span class="mif-camera"></span> Quét barcode</button>
                                                          </div>
@@ -317,6 +320,52 @@
                                                 </div>
                                             </div>
                                             
+                                            <!-- Khối Lọc linh kiện -->
+                                            <div class="cell-lg-12 pb-4 mb-4" style="border: 1px dashed #d32f2f; padding: 15px; background: #fff9f9;">
+                                                <div class="text-bold mb-4" style="font-size: 18px; color: #d32f2f; text-transform: uppercase;">MƯỢN LINH KIỆN TRONG KHO</div>
+                                                <div class="row">
+                                                    <div class="cell-lg-8 mt-2">
+                                                        <small class="fw-600 fg-red">Tên linh kiện</small>
+                                                        <select id="warrantyPart" class="warranty-product-dropdown" style="width:100%"><option value=""></option></select>
+                                                        <asp:HiddenField ID="hf_linhkien_id" runat="server" />
+                                                        <asp:HiddenField ID="hf_linhkien_text" runat="server" />
+                                                    </div>
+                                                    <div class="cell-lg-2 mt-2">
+                                                        <small class="fw-600 fg-red">Số lượng</small>
+                                                        <asp:TextBox data-role="spinner" data-buttons-position="right" ID="txt_sl_linhkien" runat="server" Text="1" data-min-value="1" oninput="format_sotien_new(this)"></asp:TextBox>
+                                                    </div>
+                                                    <div class="cell-lg-2 mt-2" style="display: flex; align-items: flex-end;">
+                                                        <asp:LinkButton ID="but_them_linhkien" OnClick="but_them_linhkien_Click" runat="server" CssClass="button alert" Width="100%">
+                                                            Cho mượn
+                                                        </asp:LinkButton>
+                                                    </div>
+                                                    <div class="cell-lg-12 mt-2">
+                                                        <small class="fw-600">Tên chương trình (Mượn cho ai / phiếu nào)</small>
+                                                        <asp:TextBox ID="txt_tenchuongtrinh_muon" runat="server" data-role="input"></asp:TextBox>
+                                                    </div>
+                                                </div>
+
+                                                <div class="mt-4">
+                                                    <table class="table row-hover table-border cell-border compact striped bg-white">
+                                                        <thead>
+                                                            <tr class="bg-light">
+                                                                <th>Các linh kiện đang mượn</th>
+                                                                <th width="80" class="text-center">Số lượng</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <asp:Repeater ID="rpt_linhkien_thaythe" runat="server">
+                                                                <ItemTemplate>
+                                                                    <tr>
+                                                                        <td><%#Eval("ten_sanpham") %></td>
+                                                                        <td class="text-center"><%#Eval("soluong_nhap") %></td>
+                                                                    </tr>
+                                                                </ItemTemplate>
+                                                            </asp:Repeater>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
                                             <!-- Khối 4: Trả khách hàng -->
                                             <div class="cell-lg-12 pb-4 mb-4 border-bottom bd-lightGray">
                                                 <div class="text-bold mb-4" style="font-size: 18px; color: #d32f2f; text-transform: uppercase;">4. Bàn giao Khách hàng</div>
@@ -1448,7 +1497,41 @@
 
     <script type="text/javascript">
         var $jq = jQuery.noConflict(); // Trả lại $ cho m4q của Metro UI
+        function initWarrantyProductPicker(selector, idSelector, textSelector) {
+            var picker = $jq(selector);
+            if (!picker.length || picker.hasClass('select2-hidden-accessible')) return;
+            var idField = $jq(idSelector);
+            var textField = $jq(textSelector);
+            if (idField.val()) {
+                picker.append(new Option(textField.val(), idField.val(), true, true));
+            }
+            picker.select2({
+                width: '100%',
+                placeholder: 'Tìm theo tên SP, số seri',
+                allowClear: true,
+                ajax: {
+                    url: window.location.pathname,
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return { action: 'searchWarrantyProducts', term: params.term || '', page: params.page || 1 };
+                    },
+                    processResults: function (data) { return data; }
+                },
+                language: {
+                    searching: function () { return 'Đang tìm kiếm...'; },
+                    loadingMore: function () { return 'Đang tải thêm sản phẩm...'; },
+                    noResults: function () { return 'Không tìm thấy sản phẩm'; },
+                    errorLoading: function () { return 'Không tải được sản phẩm. Vui lòng thử lại.'; }
+                }
+            }).on('change', function () {
+                idField.val(picker.val() || '');
+                textField.val(picker.val() ? picker.find('option:selected').text() : '');
+            });
+        }
         function initSelect2() {
+            initWarrantyProductPicker('#warrantyProduct', '#<%= hf_sanpham_id.ClientID %>', '#<%= hf_sanpham_text.ClientID %>');
+            initWarrantyProductPicker('#warrantyPart', '#<%= hf_linhkien_id.ClientID %>', '#<%= hf_linhkien_text.ClientID %>');
             $jq('.select2-dropdown').select2({
                 width: '100%',
                 placeholder: "Tìm kiếm...",

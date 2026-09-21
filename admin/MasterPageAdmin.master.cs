@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -22,12 +22,12 @@ public partial class admin_MasterPageAdmin : System.Web.UI.MasterPage
 
                     if (q != null)
                     {
-                        string baseUrl = $"{Request.Url.Scheme}://{Request.Url.Authority}";
+                        string baseUrl = string.Format("{0}://{1}", Request.Url.Scheme, Request.Url.Authority);
 
-                        string iconUrl = $"{baseUrl}{q.thongtin_icon}";
-                        string appleTouchIconUrl = $"{baseUrl}{q.thongtin_apple_touch_icon}";
+                        string iconUrl = string.Format("{0}{1}", baseUrl, q.thongtin_icon);
+                        string appleTouchIconUrl = string.Format("{0}{1}", baseUrl, q.thongtin_apple_touch_icon);
 
-                        string iconsHtml = $@"
+                        string iconsHtml = @"
                 <!-- Favicon -->
                 <link rel='icon' href='{iconUrl}' sizes='16x16' type='image/x-icon'>
                 <link rel='icon' href='{iconUrl}' sizes='32x32' type='image/x-icon'>
@@ -107,3 +107,5 @@ public partial class admin_MasterPageAdmin : System.Web.UI.MasterPage
         }
     }
 }
+
+

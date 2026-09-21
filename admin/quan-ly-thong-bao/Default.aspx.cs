@@ -1,4 +1,4 @@
-﻿using OfficeOpenXml;
+using OfficeOpenXml;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -426,7 +426,7 @@ public partial class admin_quan_ly_thong_bao_Default : System.Web.UI.Page
             for (int i = 1; i <= int.Parse(ViewState["total_page"].ToString()); i++)
             {
                 // Tạo một ListItem mới với văn bản và giá trị là số thứ tự
-                ListItem item = new ListItem($"Trang {i}", i.ToString());
+                ListItem item = new ListItem(string.Format("Trang {0}", i), i.ToString());
 
                 // Thêm mục vào CheckBoxList
                 check_list_page.Items.Add(item);
@@ -1369,7 +1369,7 @@ public partial class admin_quan_ly_thong_bao_Default : System.Web.UI.Page
             string url = "/admin/quan-ly-thong-bao/in.aspx";
 
             // Script để mở trang mới trong tab mới
-            string script = $"window.open('{url}', '_blank');";
+            string script = string.Format("window.open('{0}', '_blank');", url);
 
             // Đăng ký script để thực thi sau khi UpdatePanel postback hoàn thành
             ScriptManager.RegisterStartupScript(this, GetType(), "OpenNewTab", script, true);

@@ -513,16 +513,16 @@ public partial class admin_thong_ke_ban_hang : System.Web.UI.Page
         if (previous == 0)
         {
             if (current == 0) return "<span class='fg-gray'>- (0)</span>";
-            return $"<span class='fg-green'>↑ 100% (+{current.ToString("N0")} {unit})</span>";
+            return string.Format("<span class='fg-green'>↑ 100% (+{0} {1})</span>", current.ToString("N0"), unit);
         }
         
         decimal diff = current - previous;
         decimal pct = (diff / Math.Abs(previous)) * 100;
 
         if (diff > 0)
-            return $"<span class='fg-green'>↑ {pct:0.#}% (+{diff.ToString("N0")} {unit})</span>";
+            return string.Format("<span class='fg-green'>↑ {0:0.#}% (+{1} {2})</span>", pct, diff.ToString("N0"), unit);
         else if (diff < 0)
-            return $"<span class='fg-red'>↓ {Math.Abs(pct):0.#}% ({diff.ToString("N0")} {unit})</span>";
+            return string.Format("<span class='fg-red'>↓ {0:0.#}% ({1} {2})</span>", Math.Abs(pct), diff.ToString("N0"), unit);
         else
             return "<span class='fg-gray'>- (0)</span>";
     }

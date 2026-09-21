@@ -317,7 +317,7 @@
 
                 <div class="row mt-3">
                     <div class="bg-white cell-lg-12 p-3">
-                        <div><b>Hàng bảo hành chưa trả</b></div>
+                        <div><b>HÀNG BẢO HÀNH MỚI NHẤT ĐANG XỬ LÝ</b></div>
                         <asp:PlaceHolder ID="PlaceHolder7" runat="server">
                             <div class="bcorn-fix-title-table-container">
                                 <table class="bcorn-fix-title-table">
@@ -386,8 +386,25 @@
                                                     <td><%#Eval("ghichu") %></td>
 
                                                     <td style="vertical-align: middle">
-                                                        <a href="/admin/hang-bao-hanh/default.aspx?id=<%#Eval("id") %>">Xác nhận đã trả hàng</a>
-                                                      
+                                                        <asp:LinkButton ID="btn_xacnhansua" runat="server" CssClass="button small success" CommandArgument='<%#Eval("id") %>' OnClick="btn_xacnhansua_Click">Xác nhận sửa</asp:LinkButton>
+                                                        
+                                                        <div class="dropdown-button place-right" style="display: inline-block;">
+                                                            <button class="button small bg-transparent" type="button">
+                                                                <span class="mif mif-more-horiz"></span>
+                                                            </button>
+                                                            <ul class="d-menu place-right" data-role="dropdown">
+                                                                <li>
+                                                                    <asp:LinkButton ID="btn_xacnhantra" runat="server" CommandArgument='<%#Eval("id") %>' OnClick="btn_xacnhantra_Click" OnClientClick="return confirm('Bạn có chắc chắn muốn xác nhận trả hàng?');">
+                                                                        Xác nhận trả hàng
+                                                                    </asp:LinkButton>
+                                                                </li>
+                                                                <li>
+                                                                    <a href="/admin/hang-bao-hanh/default.aspx?id=<%#Eval("id") %>">
+                                                                        Xem / Chỉnh sửa
+                                                                    </a>
+                                                                </li>
+                                                            </ul>
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             </ItemTemplate>

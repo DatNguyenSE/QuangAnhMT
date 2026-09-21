@@ -1,4 +1,4 @@
-﻿using NPOI.SS.Formula.Functions;
+using NPOI.SS.Formula.Functions;
 using NPOI.XSSF.UserModel;
 using OfficeOpenXml;
 using System;
@@ -472,7 +472,7 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
             for (int i = 1; i <= int.Parse(ViewState["total_page"].ToString()); i++)
             {
                 // Tạo một ListItem mới với văn bản và giá trị là số thứ tự
-                ListItem item = new ListItem($"Trang {i}", i.ToString());
+                ListItem item = new ListItem(string.Format("Trang {0}", i), i.ToString());
 
                 // Thêm mục vào CheckBoxList
                 check_list_page.Items.Add(item);
@@ -865,7 +865,7 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                     // URL bạn muốn chuyển hướng đến
                     string url = filePath;
                     // Script để mở trang mới trong tab mới
-                    string script = $"window.open('{url}', '_blank');";
+                    string script = string.Format("window.open('{0}', '_blank');", url);
                     // Đăng ký script để thực thi sau khi UpdatePanel postback hoàn thành
                     ScriptManager.RegisterStartupScript(this, GetType(), "OpenNewTab", script, true);
 
@@ -2329,7 +2329,7 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                     idbg = _idbg,
                     sotien_thanhtoan = _thanhtoan,
                     ngay_thanhtoan = DateTime.Now,
-                    nguoixacnhan = ViewState["taikhoan"]?.ToString()
+                    nguoixacnhan = (ViewState["taikhoan"] != null ? ViewState["taikhoan"].ToString() : null)
                 };
                 db.LichSu_ThanhToan_tbs.InsertOnSubmit(lichSuThanhToan);
 
@@ -2349,7 +2349,7 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                         // Kiểm tra số lượng tồn
                         if (sanPhamKho.soluong_hientai < chiTiet.soluong)
                         {
-                            sanPhamThieu.Add($"Sản phẩm {sanPhamKho.ten} không đủ số lượng. Tồn: {sanPhamKho.soluong_hientai} Xuất: {chiTiet.soluong}");
+                            sanPhamThieu.Add(string.Format("Sản phẩm {0} không đủ số lượng. Tồn: {1} Xuất: {2}", sanPhamKho.ten, sanPhamKho.soluong_hientai, chiTiet.soluong));
                         }
                         else
                         {
@@ -2506,7 +2506,7 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                     idbg = _idbg,
                     sotien_thanhtoan = _thanhtoan,
                     ngay_thanhtoan = DateTime.Now,
-                    nguoixacnhan = ViewState["taikhoan"]?.ToString()
+                    nguoixacnhan = (ViewState["taikhoan"] != null ? ViewState["taikhoan"].ToString() : null)
                 };
                 db.LichSu_ThanhToan_tbs.InsertOnSubmit(lichSuThanhToan);
                 baoGia.congno = baoGia.congno - _thanhtoan;
@@ -2552,8 +2552,8 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                     tenkh = q.ten_khachhang;
                     sdtkh = q.sdt_khachhang;
                     diachikh = q.diachi_khachhang;
-                    ngaybg = q.ngaybaogia?.ToString("dd/MM/yyyy");
-                    hanbg = q.ngayhethan?.ToString("dd/MM/yyyy");
+                    ngaybg = (q.ngaybaogia != null ? q.ngaybaogia.Value.ToString("dd/MM/yyyy") : null);
+                    hanbg = (q.ngayhethan != null ? q.ngayhethan.Value.ToString("dd/MM/yyyy") : null);
                     sobg = q.id.ToString();
 
                     var q_nv = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == q.nguoibaogia);
@@ -2582,9 +2582,9 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                 { "SĐT nhân viên", sdtnv },
                 { "Giảm giá đặc biệt", giamgia },
                 { "VAT (%)", vat },
-                { "Tổng tiền trước thuế", ViewState["TongSauGiam_ChiTiet"]?.ToString() ?? "0" },
-                { "Tiền VAT", ViewState["thanhtien_vat_chitiet"]?.ToString() ?? "0" },
-                { "Tổng thanh toán", ViewState["donhang_saugiamgia"]?.ToString() ?? "0" }
+                { "Tổng tiền trước thuế", (ViewState["TongSauGiam_ChiTiet"] != null ? ViewState["TongSauGiam_ChiTiet"].ToString() : null) ?? "0" },
+                { "Tiền VAT", (ViewState["thanhtien_vat_chitiet"] != null ? ViewState["thanhtien_vat_chitiet"].ToString() : null) ?? "0" },
+                { "Tổng thanh toán", (ViewState["donhang_saugiamgia"] != null ? ViewState["donhang_saugiamgia"].ToString() : null) ?? "0" }
             };
 
                 var workbook = new XSSFWorkbook();

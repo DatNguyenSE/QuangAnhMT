@@ -177,7 +177,7 @@ public partial class bao_gia : System.Web.UI.Page
                             // --- Lấy và parse amount từ ViewState ---
                             long amount = 0;
                             var rawAmountObj = ViewState["donhang_saugiamgia"];
-                            var rawAmount = rawAmountObj?.ToString()?.Trim() ?? string.Empty;
+                            var rawAmount = (rawAmountObj != null && rawAmountObj.ToString() != null ? rawAmountObj.ToString().Trim() : null) ?? string.Empty;
 
                             if (string.IsNullOrWhiteSpace(rawAmount))
                                 throw new FormatException("Giá trị 'donhang_saugiamgia' rỗng hoặc không tồn tại trong ViewState.");
@@ -192,11 +192,11 @@ public partial class bao_gia : System.Web.UI.Page
                                 .Trim();
 
                             if (!long.TryParse(rawAmount, NumberStyles.Integer, CultureInfo.InvariantCulture, out amount))
-                                throw new FormatException($"Không thể chuyển '{rawAmountObj}' sang số nguyên hợp lệ.");
+                                throw new FormatException(string.Format("Không thể chuyển '{0}' sang số nguyên hợp lệ.", rawAmountObj));
 
                             // --- Chuẩn bị các tham số gọi fload ---
                             string accountNo;
-                            string description = $"{tenkh} TT {sobg}";
+                            string description = string.Format("{0} TT {1}", tenkh, sobg);
 
                             var vatFlag = (ViewState["vat_chitiet"] ?? string.Empty).ToString();
                             if (vatFlag == "0")

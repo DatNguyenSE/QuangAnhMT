@@ -101,6 +101,25 @@ public partial class admin_Default : System.Web.UI.Page
                         _khoangcach = ViTri_cl.TinhKhoanCach(lat, lon, _vido_congty, _kinhdo_congty);
                         q_check.khoangcach_raca = _khoangcach;
 
+                        // Tính số giờ dư (overtime)
+                        // Giả sử làm 8 tiếng + 1 tiếng nghỉ trưa = 9 tiếng tại công ty. Số giờ vượt 9 tiếng là tăng ca.
+                        // Hoặc theo yêu cầu "vượt quá 8 tiếng/ngày", nếu không trừ nghỉ trưa thì là TotalHours - 8.
+                        // Thường hành chính 8h-17h là 9 tiếng. Tính TotalHours - 9. Nếu >= 0 thì lưu, không thì 0.
+                        double totalHours = (q_check.baoraca.Value - q_check.ngaychamcong.Value).TotalHours;
+                        // Tạm trừ 1 tiếng nghỉ trưa, mốc chuẩn là 9 tiếng ở công ty (ví dụ 8h-17h). 
+                        // Nếu user muốn chuẩn khác, họ có thể sửa tay hoặc yêu cầu đổi sau.
+                        double overtime = totalHours - 9.0;
+                        if (overtime > 0)
+                        {
+                            q_check.SoGioDu = (decimal)overtime;
+                            q_check.HeSoTangCa = 1.5m; // Mặc định 150%
+                        }
+                        else
+                        {
+                            q_check.SoGioDu = 0;
+                            q_check.HeSoTangCa = 1.5m;
+                        }
+
                         db.SubmitChanges();
                         Session["thongbao"] = thongbao_class.metro_notifi_onload("Thông báo", "Báo ra ca thành công.", "1000", "warning");
                         Response.Redirect(Request.Url.AbsoluteUri);
@@ -500,7 +519,7 @@ public partial class admin_Default : System.Web.UI.Page
                 #region lấy dữ liệu
               var base_phieu = db.HangBaoHanh_tbs
                                    .Where(p => p.trangthai != "Đã trả")
-                                   .OrderBy(p => p.NgayHenKhachTra)
+                                   .OrderByDescending(p => p.ngaytao)
                                    .Take(50)
                                    .ToList();
 
@@ -549,4 +568,40 @@ public partial class admin_Default : System.Web.UI.Page
 
 
 
+    protected void btn_xacnhansua_Click(object sender, EventArgs e)
+    {
+        using (dbDataContext db = new dbDataContext())
+        {
+            LinkButton button = (LinkButton)sender;
+            string _id = button.CommandArgument;
+            var q = db.HangBaoHanh_tbs.FirstOrDefault(p => p.id.ToString() == _id);
+            if (q != null)
+            {
+                q.trangthai = "Đã sửa xong";
+                db.SubmitChanges();
+                load_baohanh_chuatra(db);
+                UpdatePanel1.Update();
+                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Đã xác nhận sửa xong.", "1000", "success"), true);
+            }
+        }
+    }
+
+    protected void btn_xacnhantra_Click(object sender, EventArgs e)
+    {
+        using (dbDataContext db = new dbDataContext())
+        {
+            LinkButton button = (LinkButton)sender;
+            string _id = button.CommandArgument;
+            var q = db.HangBaoHanh_tbs.FirstOrDefault(p => p.id.ToString() == _id);
+            if (q != null)
+            {
+                q.trangthai = "Đã trả";
+                q.NgayTra_ThucTe = DateTime.Now;
+                db.SubmitChanges();
+                load_baohanh_chuatra(db);
+                UpdatePanel1.Update();
+                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Đã xác nhận trả hàng.", "1000", "success"), true);
+            }
+        }
+    }
 }

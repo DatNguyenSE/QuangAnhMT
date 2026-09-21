@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Emit;
@@ -201,7 +201,7 @@ public class DanhMuc_cl
         else
         {
             // Kiểm tra giá trị của q.other_url
-            string url = string.IsNullOrEmpty(q.url_other) ? $"/{q.name_en}-{q.id}" : q.url_other;
+            string url = string.IsNullOrEmpty(q.url_other) ? "/" + q.name_en + "-" + q.id : q.url_other;
             _kq.AppendFormat("<li><a href='{0}'>{1}</a></li>", url, q.name);
         }    
 
@@ -231,3 +231,4 @@ public class DanhMuc_cl
     //    return false;
     //}
 }
+

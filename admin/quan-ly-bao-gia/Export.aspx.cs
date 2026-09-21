@@ -1,4 +1,4 @@
-﻿using NPOI.XSSF.UserModel;
+using NPOI.XSSF.UserModel;
 using QRCoder;
 using System;
 using System.Collections;
@@ -58,8 +58,8 @@ public partial class Export : System.Web.UI.Page
                 tenkh = q.ten_khachhang;
                 sdtkh = q.sdt_khachhang;
                 diachikh = q.diachi_khachhang;
-                ngaybg = q.ngaybaogia?.ToString("dd/MM/yyyy");
-                hanbg = q.ngayhethan?.ToString("dd/MM/yyyy");
+                ngaybg = (q.ngaybaogia != null ? q.ngaybaogia.Value.ToString("dd/MM/yyyy") : null);
+                hanbg = (q.ngayhethan != null ? q.ngayhethan.Value.ToString("dd/MM/yyyy") : null);
                 sobg = q.id.ToString();
 
                 var q_nv = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == q.nguoibaogia);
@@ -88,9 +88,9 @@ public partial class Export : System.Web.UI.Page
                 { "SĐT nhân viên", sdtnv },
                 { "Giảm giá đặc biệt", giamgia },
                 { "VAT (%)", vat },
-                { "Tổng tiền trước thuế", ViewState["TongSauGiam_ChiTiet"]?.ToString() ?? "0" },
-                { "Tiền VAT", ViewState["thanhtien_vat_chitiet"]?.ToString() ?? "0" },
-                { "Tổng thanh toán", ViewState["donhang_saugiamgia"]?.ToString() ?? "0" }
+                { "Tổng tiền trước thuế", (ViewState["TongSauGiam_ChiTiet"] != null ? ViewState["TongSauGiam_ChiTiet"].ToString() : null) ?? "0" },
+                { "Tiền VAT", (ViewState["thanhtien_vat_chitiet"] != null ? ViewState["thanhtien_vat_chitiet"].ToString() : null) ?? "0" },
+                { "Tổng thanh toán", (ViewState["donhang_saugiamgia"] != null ? ViewState["donhang_saugiamgia"].ToString() : null) ?? "0" }
             };
 
             var workbook = new XSSFWorkbook();

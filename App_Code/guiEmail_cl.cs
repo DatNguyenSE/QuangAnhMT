@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Configuration;
 using System.Net;
 using System.Net.Mail;
-using static OfficeOpenXml.ExcelErrorValue;
+
 using System.IO;
 using System.Collections.Generic;
 using System.Web;
@@ -26,7 +26,7 @@ public class guiEmail_cl
         string password = ConfigurationManager.AppSettings["EmailPassword"];
 
         int randomNumber = Random.Next(1, 21);
-        string fromAddress = $"auto{randomNumber}@Hotasoft.com";
+        string fromAddress = string.Format("auto{0}@Hotasoft.com", randomNumber);
 
         try
         {
@@ -110,3 +110,4 @@ public class guiEmail_cl
 //        Label1.Text += $"Error sending email to {_email_nhan}: {ex.Message}<br />";
 //    }
 //}
+

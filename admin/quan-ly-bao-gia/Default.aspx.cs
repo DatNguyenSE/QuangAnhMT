@@ -1,4 +1,4 @@
-using NPOI.SS.Formula.Functions;
+﻿using NPOI.SS.Formula.Functions;
 using NPOI.XSSF.UserModel;
 using OfficeOpenXml;
 using System;
@@ -10,7 +10,7 @@ using System.Security.Cryptography;
 using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
-using System.Web.Services;
+using System.Web.Script.Serialization;
 
 public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
 {
@@ -40,43 +40,45 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
         return customers;
     }
 
-    [WebMethod]
-    public static List<DropdownOption> SearchProductsAjax(string keyword)
+    private void HandleQuoteProductSearch()
     {
+        check_login_cl.check_login_admin("16", "17");
+        Response.Clear();
+        Response.ContentType = "application/json";
+        Response.Cache.SetCacheability(HttpCacheability.NoCache);
+
+        int page;
+        if (!int.TryParse(Request.QueryString["page"], out page) || page < 1)
+            page = 1;
+        const int pageSize = 30;
+        page = Math.Min(page, int.MaxValue / pageSize);
+        string term = (Request.QueryString["term"] ?? "").Trim();
+
         using (dbDataContext db = new dbDataContext())
         {
-            var q = db.KhoSanPham_tbs.AsQueryable();
-            if (!string.IsNullOrEmpty(keyword))
-            {
-                q = q.Where(p => p.ten.Contains(keyword) || p.so_seri.Contains(keyword) || p.model.Contains(keyword));
-            }
-            return q.OrderByDescending(p => p.id)
-                    .Select(p => new { p.id, p.so_seri, p.ten, p.soluong_hientai })
-                    .Take(100) // limit for fast response
-                    .ToList()
-                    .Select(p => new DropdownOption
-                    {
-                        Id = p.id.ToString(),
-                        Seri = p.so_seri,
-                        Text = p.ten + (!string.IsNullOrEmpty(p.so_seri) ? " - " + p.so_seri : "") + " <span class='fg-red'> (" + (p.soluong_hientai ?? 0) + ")</span>"
-                    }).ToList();
-        }
-    }
+            db.ObjectTrackingEnabled = false;
+            var query = db.KhoSanPham_tbs.AsQueryable();
+            if (term.Length > 0)
+                query = query.Where(p => p.ten.Contains(term) || p.so_seri.Contains(term) || p.model.Contains(term));
 
-    private static List<DropdownOption> GetProducts(dbDataContext db)
-    {
-        var products = db.KhoSanPham_tbs
-            .OrderByDescending(p => p.id)
-            .Select(p => new { p.id, p.so_seri, p.ten, p.soluong_hientai })
-            .ToList()
-            .Select(p => new DropdownOption
+            var products = query.OrderByDescending(p => p.id)
+                .Select(p => new { p.id, p.ten, p.so_seri, p.soluong_hientai })
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize + 1)
+                .ToList();
+            var result = new
             {
-                Id = p.id.ToString(),
-                Seri = p.so_seri,
-                Text = p.ten + (!string.IsNullOrEmpty(p.so_seri) ? " - " + p.so_seri : "") + " <span class='fg-red'> (" + (p.soluong_hientai ?? 0) + ")</span>"
-            })
-            .ToList();
-        return products;
+                results = products.Take(pageSize).Select(p => new
+                {
+                    id = p.id.ToString(),
+                    text = p.ten + (!string.IsNullOrEmpty(p.so_seri) ? " - " + p.so_seri : "") + " (" + (p.soluong_hientai ?? 0) + ")",
+                    seri = p.so_seri ?? ""
+                }).ToList(),
+                pagination = new { more = products.Count > pageSize }
+            };
+            Response.Write(new JavaScriptSerializer().Serialize(result));
+        }
+        Response.End();
     }
 
     public void set_dulieu_macdinh()
@@ -164,8 +166,25 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
 
 
     }
+    protected override void OnPreRender(EventArgs e)
+    {
+        long quoteId;
+        link_in_phieu_xuat.Visible = pn_add.Visible
+            && Convert.ToString(ViewState["add_edit"]) == "edit"
+            && long.TryParse(Convert.ToString(ViewState["id_edit"]), out quoteId);
+        if (link_in_phieu_xuat.Visible)
+            link_in_phieu_xuat.NavigateUrl = "InPhieuXuatKho.aspx?id="
+                + HttpUtility.UrlEncode(Convert.ToString(ViewState["id_edit"]));
+        base.OnPreRender(e);
+    }
     protected void Page_Load(object sender, EventArgs e)
     {
+        if (Request.QueryString["action"] == "searchQuoteProducts")
+        {
+            HandleQuoteProductSearch();
+            return;
+        }
+
         ScriptManager.GetCurrent(this).RegisterPostBackControl(but_show_form_xuat);
         ScriptManager.GetCurrent(this).RegisterPostBackControl(but_xuat_excel);
 
@@ -238,9 +257,7 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                 DropDownList2.DataTextField = "Text";
                 DropDownList2.DataBind();
                 DropDownList2.Items.Insert(0, new ListItem("Khách hàng đã báo giá", ""));
-                BindProductDropdown(db);
-                if (DropDownList1.Items.FindByValue(parsedProductId.ToString()) != null)
-                    DropDownList1.SelectedValue = parsedProductId.ToString();
+                SelectQuoteProduct(db, parsedProductId);
 
                 var selectedProduct = db.KhoSanPham_tbs
                     .Where(p => p.id == parsedProductId)
@@ -269,7 +286,7 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
             #region lấy dữ liệu tối ưu
             var query = db.BaoGia_tbs.AsQueryable();
 
-            string currentUser = ViewState["taikhoan"]?.ToString();
+            string currentUser = (ViewState["taikhoan"] != null ? ViewState["taikhoan"].ToString() : null);
             if (check_login_cl.CheckQuyen(db, currentUser, "17"))
                 query = query.Where(p => p.nguoibaogia == currentUser);
 
@@ -679,7 +696,7 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
             for (int i = 1; i <= int.Parse(ViewState["total_page"].ToString()); i++)
             {
                 // Tạo một ListItem mới với văn bản và giá trị là số thứ tự
-                ListItem item = new ListItem($"Trang {i}", i.ToString());
+                ListItem item = new ListItem(string.Format("Trang {0}", i), i.ToString());
 
                 // Thêm mục vào CheckBoxList
                 check_list_page.Items.Add(item);
@@ -1064,7 +1081,7 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                     // URL bạn muốn chuyển hướng đến
                     //string url = filePath;
                     // Script để mở trang mới trong tab mới
-                    //string script = $"window.open('{url}', '_blank');";
+                    //string script = string.Format("window.open('{0}', '_blank');", url);
                     // Đăng ký script để thực thi sau khi UpdatePanel postback hoàn thành
                     //ScriptManager.RegisterStartupScript(this, GetType(), "OpenNewTab", script, true);
 
@@ -1104,7 +1121,7 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
             Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
 
             string errMsg = _ex.Message.Replace("'", "\\'").Replace("\r", "").Replace("\n", " ");
-            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), $"alert('Lỗi xuất Excel: {errMsg}');", true);
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), string.Format("alert('Lỗi xuất Excel: {0}');", errMsg), true);
         }
 
     }
@@ -1243,8 +1260,8 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
             ViewState["quick_quote_product"] = null;
             but_add_sp_chitiet.Visible = true;
             but_add_edit.Visible = true;
-            DropDownList1.DataSource = null;
-            DropDownList1.DataBind();
+            hf_quote_product_id.Value = "";
+            hf_quote_product_text.Value = "";
             txt_soluong.Text = "1";
             txt_giamgia_phantram.Text = "0";
             txt_so_seri.Text = "";
@@ -1301,7 +1318,6 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                 DropDownList2.DataTextField = "Text";
                 DropDownList2.DataBind();
                 DropDownList2.Items.Insert(0, new ListItem("Khách hàng đã báo giá", ""));
-                BindProductDropdown(db);
             }
 
             //hiện form add_edit trong updatePanel_add
@@ -1345,8 +1361,6 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
     //chỉnh sửa
     public void load_edit(dbDataContext db, string _idbg)
     {
-
-        BindProductDropdown(db);
 
         // Lấy danh sách chi tiết bao giá cùng thông tin sản phẩm
         var q_chitiet = from chitiet in db.BaoGia_ChiTiet_tbs
@@ -1451,22 +1465,15 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
 
     }
 
-    private void BindProductDropdown(dbDataContext db)
+    private void SelectQuoteProduct(dbDataContext db, long productId)
     {
-        // Web Forms restores the dropdown items from ViewState on postback.
-        // Keep them instead of querying and rendering the whole product list again.
-        if (DropDownList1.Items.Count > 1)
-            return;
-
-        DropDownList1.Items.Clear();
-        DropDownList1.Items.Add(new ListItem("Chọn", ""));
-        foreach (var item in GetProducts(db))
-        {
-            ListItem option = new ListItem(item.Text, item.Id);
-            if (!string.IsNullOrEmpty(item.Seri))
-                option.Attributes.Add("data-seri", item.Seri);
-            DropDownList1.Items.Add(option);
-        }
+        var product = db.KhoSanPham_tbs.Where(p => p.id == productId)
+            .Select(p => new { p.id, p.ten, p.so_seri, p.soluong_hientai })
+            .FirstOrDefault();
+        hf_quote_product_id.Value = product == null ? "" : product.id.ToString();
+        hf_quote_product_text.Value = product == null ? "" : product.ten
+            + (!string.IsNullOrEmpty(product.so_seri) ? " - " + product.so_seri : "")
+            + " (" + (product.soluong_hientai ?? 0) + ")";
     }
     public void load_congno(dbDataContext db, string _idbg, Int64 _congno, string _trangthai)
     {
@@ -1658,7 +1665,7 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
 
             using (dbDataContext db = new dbDataContext())
             {
-                if (ViewState["add_edit"]?.ToString() == "add"
+                if ((ViewState["add_edit"] != null ? ViewState["add_edit"].ToString() : null) == "add"
                     && !Convert.ToBoolean(ViewState["customer_checked"] ?? false)
                     && !string.IsNullOrEmpty(DropDownList2.SelectedValue))
                 {
@@ -1828,8 +1835,8 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                         but_add_sp_chitiet.Visible = true;
                         but_add_edit.Visible = true;
                         but_add_edit.Text = "CẬP NHẬT BÁO GIÁ";
-                        if (DropDownList1.Items.FindByValue("") != null)
-                            DropDownList1.SelectedValue = "";
+                        hf_quote_product_id.Value = "";
+                        hf_quote_product_text.Value = "";
                         txt_soluong.Text = "1";
                         txt_giamgia_phantram.Text = "0";
                         txt_so_seri.Text = "";
@@ -2602,7 +2609,7 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
     {
         check_login_cl.check_login_admin("18", "19");
         long productId;
-        if (!long.TryParse(DropDownList1.SelectedValue, out productId))
+        if (!long.TryParse(hf_quote_product_id.Value, out productId))
             return;
 
         using (dbDataContext db = new dbDataContext())
@@ -2630,13 +2637,13 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
     {
 
         check_login_cl.check_login_admin("18", "19");
-        string _idbg = ViewState["id_edit"]?.ToString();
+        string _idbg = (ViewState["id_edit"] != null ? ViewState["id_edit"].ToString() : null);
         if (string.IsNullOrEmpty(_idbg))
         {
             ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng tạo báo giá trước khi thêm sản phẩm.", "false", "false", "OK", "alert", ""), true);
             return;
         }
-        string _idsp = DropDownList1.SelectedValue.ToString();
+        string _idsp = hf_quote_product_id.Value.ToString();
         int _soluong_xuat = Number_cl.Check_Int(txt_soluong.Text.Trim());
         decimal _giamgia_phantram = Number_cl.Check_Decimal(txt_giamgia_phantram.Text.Trim());
         if (_idsp == "")
@@ -2916,7 +2923,7 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                         idbg = _idbg,
                         sotien_thanhtoan = _thanhtoan,
                         ngay_thanhtoan = DateTime.Now,
-                        nguoixacnhan = ViewState["taikhoan"]?.ToString()
+                        nguoixacnhan = (ViewState["taikhoan"] != null ? ViewState["taikhoan"].ToString() : null)
                     };
                     db.LichSu_ThanhToan_tbs.InsertOnSubmit(lichSuThanhToan);
                     baoGia.congno = (baoGia.congno ?? 0) - _thanhtoan;
@@ -2954,7 +2961,7 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                     idbg = _idbg,
                     sotien_thanhtoan = _thanhtoan,
                     ngay_thanhtoan = DateTime.Now,
-                    nguoixacnhan = ViewState["taikhoan"]?.ToString()
+                    nguoixacnhan = (ViewState["taikhoan"] != null ? ViewState["taikhoan"].ToString() : null)
                 };
                 db.LichSu_ThanhToan_tbs.InsertOnSubmit(lichSuThanhToanBan);
 
@@ -2974,7 +2981,7 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                         // Kiểm tra số lượng tồn
                         if (sanPhamKho.soluong_hientai < chiTiet.soluong)
                         {
-                            sanPhamThieu.Add($"Sản phẩm {sanPhamKho.ten} không đủ số lượng. Tồn: {sanPhamKho.soluong_hientai} Xuất: {chiTiet.soluong}");
+                            sanPhamThieu.Add(string.Format("Sản phẩm {0} không đủ số lượng. Tồn: {1} Xuất: {2}", sanPhamKho.ten, sanPhamKho.soluong_hientai, chiTiet.soluong));
                         }
                         else
                         {
@@ -3139,7 +3146,7 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                     idbg = _idbg,
                     sotien_thanhtoan = _thanhtoan,
                     ngay_thanhtoan = DateTime.Now,
-                    nguoixacnhan = ViewState["taikhoan"]?.ToString()
+                    nguoixacnhan = (ViewState["taikhoan"] != null ? ViewState["taikhoan"].ToString() : null)
                 };
                 db.LichSu_ThanhToan_tbs.InsertOnSubmit(lichSuThanhToan);
                 baoGia.congno = baoGia.congno - _thanhtoan;
@@ -3187,8 +3194,8 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                 tenkh = q.ten_khachhang;
                 sdtkh = q.sdt_khachhang;
                 diachikh = q.diachi_khachhang;
-                ngaybg = q.ngaybaogia?.ToString("dd/MM/yyyy");
-                hanbg = q.ngayhethan?.ToString("dd/MM/yyyy");
+                ngaybg = (q.ngaybaogia != null ? q.ngaybaogia.Value.ToString("dd/MM/yyyy") : null);
+                hanbg = (q.ngayhethan != null ? q.ngayhethan.Value.ToString("dd/MM/yyyy") : null);
                 sobg = q.id.ToString();
 
                 var q_nv = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == q.nguoibaogia);
@@ -3217,9 +3224,9 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                 { "SĐT nhân viên", sdtnv },
                 { "Giảm giá đặc biệt", giamgia },
                 { "VAT (%)", vat },
-                { "Tổng tiền trước thuế", ViewState["TongSauGiam_ChiTiet"]?.ToString() ?? "0" },
-                { "Tiền VAT", ViewState["thanhtien_vat_chitiet"]?.ToString() ?? "0" },
-                { "Tổng thanh toán", ViewState["donhang_saugiamgia"]?.ToString() ?? "0" }
+                { "Tổng tiền trước thuế", (ViewState["TongSauGiam_ChiTiet"] != null ? ViewState["TongSauGiam_ChiTiet"].ToString() : null) ?? "0" },
+                { "Tiền VAT", (ViewState["thanhtien_vat_chitiet"] != null ? ViewState["thanhtien_vat_chitiet"].ToString() : null) ?? "0" },
+                { "Tổng thanh toán", (ViewState["donhang_saugiamgia"] != null ? ViewState["donhang_saugiamgia"].ToString() : null) ?? "0" }
             };
 
             var workbook = new XSSFWorkbook();
@@ -3776,8 +3783,8 @@ public partial class admin_quan_ly_bao_gia_Default : System.Web.UI.Page
                                         .ToDictionary(g => g.Key, g => g.First());
                                 }
 
-                                string strSeri = worksheet.Cells[row, 7].Text?.Trim() ?? ""; // G2
-                                string strMaKH = worksheet.Cells[row, 8].Text?.Trim() ?? ""; // H2
+                                string strSeri = (worksheet.Cells[row, 7].Text != null ? worksheet.Cells[row, 7].Text.Trim() : null) ?? ""; // G2
+                                string strMaKH = (worksheet.Cells[row, 8].Text != null ? worksheet.Cells[row, 8].Text.Trim() : null) ?? ""; // H2
 
                                 if (!string.IsNullOrEmpty(strSeri) && !string.IsNullOrEmpty(strMaKH))
                                 {

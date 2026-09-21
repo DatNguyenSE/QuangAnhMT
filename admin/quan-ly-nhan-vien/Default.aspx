@@ -416,6 +416,18 @@
                                                 <asp:TextBox ID="txt_ngansach_max" runat="server" data-role="input" MaxLength="14" oninput="format_sotien_new(this)"></asp:TextBox>
                                             </div>
                                         </div>
+                                        <div class="mt-3">
+                                            <label class="fw-600">Tiền tăng ca /tháng</label>
+                                            <div>
+                                                <asp:TextBox ID="txt_tien_tangca" runat="server" data-role="input" MaxLength="14" oninput="format_sotien_new(this)"></asp:TextBox>
+                                            </div>
+                                        </div>
+                                        <div class="mt-3">
+                                            <label class="fw-600">Đã tạm ứng kỳ 1</label>
+                                            <div>
+                                                <asp:TextBox ID="txt_tamung_ky1" runat="server" data-role="input" MaxLength="14" oninput="format_sotien_new(this)"></asp:TextBox>
+                                            </div>
+                                        </div>
                                     </asp:PlaceHolder>
                                 </div>
                             </div>

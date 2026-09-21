@@ -1,7 +1,8 @@
-<%@ Page Title="Quản lý báo giá" Language="C#" MasterPageFile="~/admin/MasterPageAdmin.master" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="admin_quan_ly_bao_gia_Default" %>
+﻿<%@ Page Title="Quản lý báo giá" Language="C#" MasterPageFile="~/admin/MasterPageAdmin.master" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="admin_quan_ly_bao_gia_Default" %>
 
 <%@ Register Assembly="AjaxControlToolkit" Namespace="AjaxControlToolkit" TagPrefix="ajaxToolkit" %>
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="Server">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <style>
         .quote-expiry-cell {
             white-space: nowrap;
@@ -481,6 +482,7 @@
                             </div>
                             <div class="mt-6 text-right">
 
+                                <asp:HyperLink ID="link_in_phieu_xuat" runat="server" Visible="false" Target="_blank" rel="noopener" CssClass="button info small" ToolTip="In các mặt hàng đã lưu trong báo giá. Không trừ tồn kho.">In phiếu xuất kho</asp:HyperLink>
                                 <asp:Button ID="but_add_edit" runat="server" Text="" CssClass="button success small" OnClick="but_add_edit_Click" />
                             </div>
                             <hr />
@@ -495,7 +497,9 @@
                                                     <div class="mt-2">
                                                         <small class="fg-red fw-600">Sản phẩm</small>
                                              <div class="d-flex">
-                                                 <asp:DropDownList ID="DropDownList1" runat="server" data-role="select" data-filter-placeholder="Tìm theo tên, số seri"></asp:DropDownList>
+                                                 <select id="quoteProduct" style="width:100%"><option value=""></option></select>
+                                                 <asp:HiddenField ID="hf_quote_product_id" runat="server" />
+                                                 <asp:HiddenField ID="hf_quote_product_text" runat="server" />
                                                  <asp:Button ID="but_chon_sanpham" runat="server" Text="Chọn" CssClass="button" OnClick="but_chon_sanpham_Click" />
                                              </div>
                                                     </div>
@@ -1206,6 +1210,47 @@
     </asp:UpdateProgress>
 </asp:Content>
 <asp:Content ID="Content3" ContentPlaceHolderID="foot" runat="Server">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        var quoteJq = jQuery.noConflict();
+        function initQuoteProductPicker() {
+            var picker = quoteJq('#quoteProduct');
+            if (!picker.length || picker.hasClass('select2-hidden-accessible')) return;
+            var idField = quoteJq('#<%= hf_quote_product_id.ClientID %>');
+            var textField = quoteJq('#<%= hf_quote_product_text.ClientID %>');
+            if (idField.val()) picker.append(new Option(textField.val(), idField.val(), true, true));
+            picker.select2({
+                width: '100%',
+                placeholder: 'Tìm theo tên, số seri, model',
+                allowClear: true,
+                ajax: {
+                    url: window.location.pathname,
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return { action: 'searchQuoteProducts', term: params.term || '', page: params.page || 1 };
+                    },
+                    processResults: function (data) { return data; }
+                },
+                language: {
+                    searching: function () { return 'Đang tìm kiếm...'; },
+                    loadingMore: function () { return 'Đang tải thêm sản phẩm...'; },
+                    noResults: function () { return 'Không tìm thấy sản phẩm'; },
+                    errorLoading: function () { return 'Không tải được sản phẩm. Vui lòng thử lại.'; }
+                }
+            }).on('change', function () {
+                idField.val(picker.val() || '');
+                textField.val(picker.val() ? picker.find('option:selected').text() : '');
+            }).on('select2:select', function (event) {
+                quoteJq('#<%= txt_so_seri.ClientID %>').val(event.params.data.seri || '');
+            }).on('select2:clear', function () {
+                quoteJq('#<%= txt_so_seri.ClientID %>').val('');
+            });
+        }
+        quoteJq(document).ready(initQuoteProductPicker);
+        Sys.WebForms.PageRequestManager.getInstance().add_endRequest(initQuoteProductPicker);
+    </script>
     <script>
         function uploadFile() {
             var fileInput = document.getElementById("fileInput");

@@ -390,7 +390,7 @@ public partial class admin_thong_ke_cong_no_khach_hang : System.Web.UI.Page
                 bg.ten_khachhang = ten;
                 bg.ngaybaogia = ngayGhiNo;
                 bg.ngayban_kyhopdong = ngayGhiNo;
-                bg.nguoibaogia = Session["taikhoan"]?.ToString() ?? "";
+                bg.nguoibaogia = (Session["taikhoan"] != null ? Session["taikhoan"].ToString() : null) ?? "";
                 bg.trangthai = "Điều chỉnh công nợ";
                 bg.tongtien = tien;
                 bg.congno = tien;

@@ -32,6 +32,9 @@ public partial class admin_quan_ly_nhan_vien_bang_cham_cong : System.Web.UI.Page
             bool canEditAttendance = check_login_cl.CheckQuyen(db, _tk, "15");
             btn_edit_attendance.Visible = canEditAttendance;
             btn_export_attendance.Visible = canEditAttendance;
+            btn_nhap_tangca.Visible = canEditAttendance;
+            btn_chitiet_tangca.Visible = canEditAttendance;
+            btn_nhap_tamung.Visible = canEditAttendance;
             if (canEditAttendance)
                 ScriptManager.GetCurrent(Page).RegisterPostBackControl(btn_export_attendance_confirm);
 
@@ -51,7 +54,9 @@ public partial class admin_quan_ly_nhan_vien_bang_cham_cong : System.Web.UI.Page
             DateTime _dautuanHienThi = dt_cl.return_ngaydauthang(_ngayHienThi.Month.ToString(), _ngayHienThi.Year.ToString());
             DateTime _cuoituanHienThi = dt_cl.return_ngaycuoithang(_ngayHienThi.Month.ToString(), _ngayHienThi.Year.ToString());
             Label24.Text = "Từ " + _dautuanHienThi.ToShortDateString() + " đến " + _cuoituanHienThi.ToShortDateString();
-            main_bangdiemdanh(db, _dautuanHienThi, _cuoituanHienThi);
+            // Export builds its own report; avoid rendering/querying the on-screen table again.
+            if (Request.Form["__EVENTTARGET"] != btn_export_attendance_confirm.UniqueID)
+                main_bangdiemdanh(db, _dautuanHienThi, _cuoituanHienThi);
         }
     }
 
@@ -66,10 +71,18 @@ public partial class admin_quan_ly_nhan_vien_bang_cham_cong : System.Web.UI.Page
         ddl_edit_attendance_account.DataTextField = "hoten";
         ddl_edit_attendance_account.DataValueField = "taikhoan";
         ddl_edit_attendance_account.DataBind();
-        ddl_export_attendance_account.DataSource = accounts;
-        ddl_export_attendance_account.DataTextField = "hoten";
-        ddl_export_attendance_account.DataValueField = "taikhoan";
-        ddl_export_attendance_account.DataBind();
+        ddl_tangca_account.DataSource = accounts;
+        ddl_tangca_account.DataTextField = "hoten";
+        ddl_tangca_account.DataValueField = "taikhoan";
+        ddl_tangca_account.DataBind();
+        ddl_chitiet_tangca_account.DataSource = accounts;
+        ddl_chitiet_tangca_account.DataTextField = "hoten";
+        ddl_chitiet_tangca_account.DataValueField = "taikhoan";
+        ddl_chitiet_tangca_account.DataBind();
+        ddl_tamung_account.DataSource = accounts;
+        ddl_tamung_account.DataTextField = "hoten";
+        ddl_tamung_account.DataValueField = "taikhoan";
+        ddl_tamung_account.DataBind();
     }
 
     private bool TryGetAttendanceDate(out DateTime attendanceDate)
@@ -153,14 +166,21 @@ public partial class admin_quan_ly_nhan_vien_bang_cham_cong : System.Web.UI.Page
             }
 
             long currentBasicSalary = employee.LuongCoBan ?? 0;
+            DateTime vaoCa = attendanceDate.Date.Add(startTime);
+            DateTime raCa = attendanceDate.Date.Add(endTime);
+            double totalHours = (raCa - vaoCa).TotalHours;
+            double overtime = totalHours - 9.0;
+
             ChamCong_tb attendance = new ChamCong_tb
             {
                 taikhoan = account,
-                ngaychamcong = attendanceDate.Date.Add(startTime),
-                baoraca = attendanceDate.Date.Add(endTime),
+                ngaychamcong = vaoCa,
+                baoraca = raCa,
                 LCB_hientai = currentBasicSalary,
                 LuongNgay_ChamCong = currentBasicSalary / 26,
-                xacnhan_vaoca = true
+                xacnhan_vaoca = true,
+                SoGioDu = overtime > 0 ? (decimal)overtime : 0,
+                HeSoTangCa = 1.5m
             };
             db.ChamCong_tbs.InsertOnSubmit(attendance);
             db.SubmitChanges();
@@ -209,11 +229,280 @@ public partial class admin_quan_ly_nhan_vien_bang_cham_cong : System.Web.UI.Page
         pn_export_attendance.Visible = !pn_export_attendance.Visible;
     }
 
+    protected void btn_nhap_tangca_Click(object sender, EventArgs e)
+    {
+        EnsureAttendanceEditPermission();
+        pn_nhap_tangca.Visible = !pn_nhap_tangca.Visible;
+        lbl_tangca_message.Text = "";
+        if (pn_nhap_tangca.Visible)
+        {
+            // Load giá trị hiện tại của NV đang chọn cho tháng đang xem
+            DateTime displayDate;
+            if (!DateTime.TryParse(TextBox3.Text, out displayDate))
+                displayDate = DateTime.Now;
+            LoadTangCaValue(displayDate.Month, displayDate.Year);
+        }
+    }
+
+    protected void btn_save_tangca_Click(object sender, EventArgs e)
+    {
+        EnsureAttendanceEditPermission();
+        string account = ddl_tangca_account.SelectedValue;
+        DateTime displayDate;
+        if (!DateTime.TryParse(TextBox3.Text, out displayDate))
+            displayDate = DateTime.Now;
+        int thang = displayDate.Month;
+        int nam = displayDate.Year;
+        long tienTangCa = Number_cl.Check_Int64(txt_tien_tangca_nhap.Text.Trim());
+        string ghichu = txt_tangca_ghichu.Text.Trim();
+        string nguoiThucHien = ViewState["taikhoan"] != null ? ViewState["taikhoan"].ToString() : "";
+
+        using (dbDataContext db = new dbDataContext())
+        {
+            var existing = db.TangCa_tbs.FirstOrDefault(p =>
+                p.taikhoan == account && p.thang == thang && p.nam == nam);
+            if (existing != null)
+            {
+                existing.tien_tang_ca = tienTangCa;
+                existing.ghichu = ghichu;
+                existing.ngaytao = DateTime.Now;
+                existing.nguoitao = nguoiThucHien;
+            }
+            else
+            {
+                TangCa_tb newRecord = new TangCa_tb();
+                newRecord.taikhoan = account;
+                newRecord.thang = thang;
+                newRecord.nam = nam;
+                newRecord.tien_tang_ca = tienTangCa;
+                newRecord.ghichu = ghichu;
+                newRecord.ngaytao = DateTime.Now;
+                newRecord.nguoitao = nguoiThucHien;
+                db.TangCa_tbs.InsertOnSubmit(newRecord);
+            }
+            db.SubmitChanges();
+        }
+        lbl_tangca_message.CssClass = "d-block mt-1 fg-green";
+        lbl_tangca_message.Text = "✔ Đã lưu tiền tăng ca tháng " + thang + "/" + nam + " cho nhân viên này.";
+        RefreshAttendanceTable();
+    }
+
+    protected void btn_nhap_tamung_Click(object sender, EventArgs e)
+    {
+        EnsureAttendanceEditPermission();
+        pn_nhap_tamung.Visible = !pn_nhap_tamung.Visible;
+        lbl_tamung_message.Text = "";
+        if (pn_nhap_tamung.Visible)
+        {
+            // Load giá trị hiện tại của NV đang chọn cho tháng đang xem
+            DateTime displayDate;
+            if (!DateTime.TryParse(TextBox3.Text, out displayDate))
+                displayDate = DateTime.Now;
+            LoadTamUngValue(displayDate.Month, displayDate.Year);
+        }
+    }
+
+    private void LoadTamUngValue(int thang, int nam)
+    {
+        using (dbDataContext db = new dbDataContext())
+        {
+            var record = db.TangCa_tbs.FirstOrDefault(p => p.taikhoan == ddl_tamung_account.SelectedValue && p.thang == thang && p.nam == nam);
+            if (record != null && record.tamung_ky1.HasValue)
+                txt_tien_tamung_nhap.Text = record.tamung_ky1.Value.ToString("#,##0");
+            else
+                txt_tien_tamung_nhap.Text = "0";
+        }
+    }
+
+    protected void btn_save_tamung_Click(object sender, EventArgs e)
+    {
+        EnsureAttendanceEditPermission();
+        string account = ddl_tamung_account.SelectedValue;
+        DateTime displayDate;
+        if (!DateTime.TryParse(TextBox3.Text, out displayDate))
+            displayDate = DateTime.Now;
+        int thang = displayDate.Month;
+        int nam = displayDate.Year;
+        long tienTamUng = Number_cl.Check_Int64(txt_tien_tamung_nhap.Text.Trim());
+        string nguoiThucHien = ViewState["taikhoan"] != null ? ViewState["taikhoan"].ToString() : "";
+
+        using (dbDataContext db = new dbDataContext())
+        {
+            var existing = db.TangCa_tbs.FirstOrDefault(p =>
+                p.taikhoan == account && p.thang == thang && p.nam == nam);
+            if (existing != null)
+            {
+                existing.tamung_ky1 = tienTamUng;
+                existing.ngaytao = DateTime.Now;
+                existing.nguoitao = nguoiThucHien;
+            }
+            else
+            {
+                TangCa_tb newRecord = new TangCa_tb();
+                newRecord.taikhoan = account;
+                newRecord.thang = thang;
+                newRecord.nam = nam;
+                newRecord.tamung_ky1 = tienTamUng;
+                newRecord.ngaytao = DateTime.Now;
+                newRecord.nguoitao = nguoiThucHien;
+                db.TangCa_tbs.InsertOnSubmit(newRecord);
+            }
+            db.SubmitChanges();
+        }
+        lbl_tamung_message.CssClass = "d-block mt-1 fg-green";
+        lbl_tamung_message.Text = "✔ Đã lưu tiền tạm ứng tháng " + thang + "/" + nam + " cho nhân viên này.";
+        RefreshAttendanceTable();
+    }
+
+    protected void btn_chitiet_tangca_Click(object sender, EventArgs e)
+    {
+        EnsureAttendanceEditPermission();
+        pn_chitiet_tangca.Visible = !pn_chitiet_tangca.Visible;
+        lbl_chitiet_tangca_message.Text = "";
+        pn_chitiet_table.Visible = false; // Ẩn bảng cho đến khi bấm Xem
+    }
+
+    protected void btn_xem_chitiet_tangca_Click(object sender, EventArgs e)
+    {
+        EnsureAttendanceEditPermission();
+        lbl_chitiet_tangca_message.Text = "";
+        ViewState["EditMode_TangCa"] = false; // Mặc định là chế độ View
+        btn_edit_chitiet_tangca.Visible = true;
+        btn_save_chitiet_tangca.Visible = false;
+
+        string selectedAccount = ddl_chitiet_tangca_account.SelectedValue;
+        lbl_chitiet_tangca_hoten.Text = ddl_chitiet_tangca_account.SelectedItem.Text;
+        
+        LoadChiTietTangCa(selectedAccount);
+        pn_chitiet_table.Visible = true;
+    }
+
+    protected void btn_edit_chitiet_tangca_Click(object sender, EventArgs e)
+    {
+        ViewState["EditMode_TangCa"] = true;
+        btn_edit_chitiet_tangca.Visible = false;
+        btn_save_chitiet_tangca.Visible = true;
+        
+        string selectedAccount = ddl_chitiet_tangca_account.SelectedValue;
+        LoadChiTietTangCa(selectedAccount);
+    }
+
+    private void LoadChiTietTangCa(string account)
+    {
+        DateTime displayDate;
+        if (!DateTime.TryParse(TextBox3.Text, out displayDate))
+            displayDate = DateTime.Now;
+
+        DateTime _dautuan = dt_cl.return_ngaydauthang(displayDate.Month.ToString(), displayDate.Year.ToString());
+        DateTime _cuoituan = dt_cl.return_ngaycuoithang(displayDate.Month.ToString(), displayDate.Year.ToString());
+
+        using (dbDataContext db = new dbDataContext())
+        {
+            var query = from cc in db.ChamCong_tbs
+                        join tk in db.taikhoan_tbs on cc.taikhoan equals tk.taikhoan
+                        where cc.ngaychamcong >= _dautuan.Date && cc.ngaychamcong <= _cuoituan.Date
+                              && cc.SoGioDu > 0 && cc.taikhoan == account
+                        orderby cc.ngaychamcong
+                        select new
+                        {
+                            cc.id,
+                            tk.hoten,
+                            cc.ngaychamcong,
+                            SoGioDu = cc.SoGioDu ?? 0,
+                            HeSoTangCa = cc.HeSoTangCa ?? 1.5m,
+                            Luong1Gio = tk.LuongCoBan > 0 ? (tk.LuongCoBan.Value / 26m / 8m) : 0,
+                            ThanhTien = (cc.SoGioDu ?? 0) * (cc.HeSoTangCa ?? 1.5m) * (tk.LuongCoBan > 0 ? (tk.LuongCoBan.Value / 26m / 8m) : 0)
+                        };
+
+            rpt_chitiet_tangca.DataSource = query.ToList();
+            rpt_chitiet_tangca.DataBind();
+        }
+    }
+
+    protected void rpt_chitiet_tangca_ItemDataBound(object sender, RepeaterItemEventArgs e)
+    {
+        if (e.Item.ItemType == ListItemType.Item || e.Item.ItemType == ListItemType.AlternatingItem)
+        {
+            bool isEditMode = ViewState["EditMode_TangCa"] != null && (bool)ViewState["EditMode_TangCa"];
+            
+            Label lbl_sogiodu = (Label)e.Item.FindControl("lbl_sogiodu");
+            TextBox txt_sogiodu = (TextBox)e.Item.FindControl("txt_sogiodu");
+            Label lbl_heso = (Label)e.Item.FindControl("lbl_heso");
+            TextBox txt_heso = (TextBox)e.Item.FindControl("txt_heso");
+
+            if (lbl_sogiodu != null && txt_sogiodu != null)
+            {
+                lbl_sogiodu.Visible = !isEditMode;
+                txt_sogiodu.Visible = isEditMode;
+            }
+            if (lbl_heso != null && txt_heso != null)
+            {
+                lbl_heso.Visible = !isEditMode;
+                txt_heso.Visible = isEditMode;
+            }
+        }
+    }
+
+    protected void btn_save_chitiet_tangca_Click(object sender, EventArgs e)
+    {
+        EnsureAttendanceEditPermission();
+        using (dbDataContext db = new dbDataContext())
+        {
+            foreach (RepeaterItem item in rpt_chitiet_tangca.Items)
+            {
+                if (item.ItemType == ListItemType.Item || item.ItemType == ListItemType.AlternatingItem)
+                {
+                    HiddenField hdf_id = (HiddenField)item.FindControl("hdf_id_chamcong");
+                    TextBox txt_sogiodu = (TextBox)item.FindControl("txt_sogiodu");
+                    TextBox txt_heso = (TextBox)item.FindControl("txt_heso");
+
+                    long id = Convert.ToInt64(hdf_id.Value);
+                    decimal soGioDu = 0, heSo = 0;
+                    decimal.TryParse(txt_sogiodu.Text.Replace(",", "."), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out soGioDu);
+                    decimal.TryParse(txt_heso.Text.Replace(",", "."), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out heSo);
+
+                    var record = db.ChamCong_tbs.FirstOrDefault(p => p.id == id);
+                    if (record != null)
+                    {
+                        record.SoGioDu = soGioDu;
+                        record.HeSoTangCa = heSo;
+                    }
+                }
+            }
+            db.SubmitChanges();
+        }
+        
+        ViewState["EditMode_TangCa"] = false;
+        btn_edit_chitiet_tangca.Visible = true;
+        btn_save_chitiet_tangca.Visible = false;
+
+        lbl_chitiet_tangca_message.CssClass = "d-block mt-1 fg-green";
+        lbl_chitiet_tangca_message.Text = "✔ Đã lưu chi tiết tăng ca ngày thành công.";
+        
+        string selectedAccount = ddl_chitiet_tangca_account.SelectedValue;
+        LoadChiTietTangCa(selectedAccount);
+        RefreshAttendanceTable();
+    }
+
+    private void LoadTangCaValue(int thang, int nam)
+    {
+        string account = ddl_tangca_account.SelectedValue;
+        using (dbDataContext db = new dbDataContext())
+        {
+            var existing = db.TangCa_tbs.FirstOrDefault(p =>
+                p.taikhoan == account && p.thang == thang && p.nam == nam);
+            txt_tien_tangca_nhap.Text = existing != null && existing.tien_tang_ca.HasValue
+                ? existing.tien_tang_ca.Value.ToString("#,##0") : "";
+            txt_tangca_ghichu.Text = existing != null ? (existing.ghichu ?? "") : "";
+        }
+    }
+
     protected void btn_export_attendance_confirm_Click(object sender, EventArgs e)
     {
         EnsureAttendanceEditPermission();
+        Server.ScriptTimeout = 600;
 
-        string account = ddl_export_attendance_account.SelectedValue;
+
         DateTime displayDate;
         if (!DateTime.TryParse(TextBox3.Text, out displayDate))
             displayDate = DateTime.Now;
@@ -223,128 +512,375 @@ public partial class admin_quan_ly_nhan_vien_bang_cham_cong : System.Web.UI.Page
 
         using (dbDataContext db = new dbDataContext())
         {
-            var employee = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == account);
-            if (employee == null)
+            var employees = db.taikhoan_tbs
+                .Where(p => p.phanloai == "Nhân viên" || p.phanloai == "Quản trị")
+                .OrderBy(p => p.hoten).ToList();
+            if (employees.Count == 0)
             {
-                SetAttendanceEditMessage("Không tìm thấy tài khoản cần xuất dữ liệu.", false);
+                SetAttendanceEditMessage("Không tìm thấy nhân viên cần xuất dữ liệu.", false);
                 return;
             }
-
-            var attendanceRecords = db.ChamCong_tbs
-                .Where(p => p.taikhoan == account
-                    && p.ngaychamcong.HasValue
-                    && p.ngaychamcong.Value.Date >= startDate
-                    && p.ngaychamcong.Value.Date <= endDate)
-                .OrderBy(p => p.ngaychamcong)
-                .ToList();
-
-            long basicSalary = attendanceRecords.Sum(p => p.LuongNgay_ChamCong ?? 0);
-            int workingDays = attendanceRecords
-                .Where(p => p.ngaychamcong.HasValue)
-                .Select(p => p.ngaychamcong.Value.Date)
-                .Distinct()
-                .Count();
-            int mealEligibleDays = attendanceRecords
-                .Where(p => p.ngaychamcong.HasValue
-                    && p.baoraca.HasValue
-                    && p.baoraca.Value - p.ngaychamcong.Value >= TimeSpan.FromHours(7.5))
-                .Select(p => p.ngaychamcong.Value.Date)
-                .Distinct()
-                .Count();
-            decimal allowanceRatio = workingDays / 26m;
-            long travelAllowance = (long)Math.Round((employee.PhuCap_Xangxe ?? 0) * allowanceRatio, MidpointRounding.AwayFromZero);
-            long mealAllowance = (long)Math.Round((employee.PhuCap_AnUong ?? 0) * mealEligibleDays / 26m, MidpointRounding.AwayFromZero);
-            long phoneAllowance = (long)Math.Round((employee.PhuCap_DienThoai ?? 0) * allowanceRatio, MidpointRounding.AwayFromZero);
-            long responsibilityAllowance = (long)Math.Round((employee.PhuCap_TrachNhiem ?? 0) * allowanceRatio, MidpointRounding.AwayFromZero);
-
-            // Dùng định dạng Excel 97-2003 để các máy/Excel đời cũ vẫn mở được.
+            // Load each monthly source once; lookups avoid queries for every employee.
+            DateTime nextMonth = endDate.AddDays(1);
+            var attendanceByAccount = db.ChamCong_tbs
+                .Where(p => p.ngaychamcong >= startDate && p.ngaychamcong < nextMonth)
+                .OrderBy(p => p.ngaychamcong).ToList().ToLookup(p => p.taikhoan);
+            var monthlyByAccount = db.TangCa_tbs
+                .Where(p => p.thang == startDate.Month && p.nam == startDate.Year)
+                .ToList().ToLookup(p => p.taikhoan);
+            var salesByAccount = db.BaoGia_tbs
+                .Where(p => p.trangthai == "Đã ký HĐ" && p.ngayban_kyhopdong >= startDate && p.ngayban_kyhopdong < nextMonth)
+                .Select(p => new { p.nguoibaogia, p.giatri_thuc_donhang, p.thuongdoanhso })
+                .ToList().ToLookup(p => p.nguoibaogia);
+            var warrantyByAccount = db.HangBaoHanh_tbs
+                .Where(p => p.trangthai == "Đã trả" && p.NgayTra_ThucTe >= startDate && p.NgayTra_ThucTe < nextMonth)
+                .Select(p => new { p.nguoitao, p.tongtien, p.thuongdoanhso })
+                .ToList().ToLookup(p => p.nguoitao);
             HSSFWorkbook workbook = new HSSFWorkbook();
-            ISheet sheet = workbook.CreateSheet("Chấm công");
+            ISheet sheet = workbook.CreateSheet("Chấm công tổng hợp");
             ICellStyle titleStyle = workbook.CreateCellStyle();
             IFont titleFont = workbook.CreateFont();
             titleFont.IsBold = true;
             titleStyle.SetFont(titleFont);
-
-            int rowIndex = 0;
-            IRow employeeRow = sheet.CreateRow(rowIndex++);
-            employeeRow.CreateCell(0).SetCellValue("Nhân viên");
-            employeeRow.CreateCell(1).SetCellValue((employee.hoten ?? "") + " (" + employee.taikhoan + ")");
-            employeeRow.GetCell(0).CellStyle = titleStyle;
-            employeeRow.GetCell(1).CellStyle = titleStyle;
-
-            IRow periodRow = sheet.CreateRow(rowIndex++);
-            periodRow.CreateCell(0).SetCellValue("Kỳ chấm công");
-            periodRow.CreateCell(1).SetCellValue(startDate.ToString("dd/MM/yyyy") + " - " + endDate.ToString("dd/MM/yyyy"));
-            periodRow.GetCell(0).CellStyle = titleStyle;
-            periodRow.GetCell(1).CellStyle = titleStyle;
-            rowIndex++;
-
-            IRow summaryTitle = sheet.CreateRow(rowIndex++);
-            summaryTitle.CreateCell(0).SetCellValue("TỔNG QUÁT THÁNG");
-            summaryTitle.GetCell(0).CellStyle = titleStyle;
-            IRow summaryHeader = sheet.CreateRow(rowIndex++);
-            string[] summaryHeaders = { "Ngày công", "Lương ngày công", "Xăng xe", "Ăn trưa", "Điện thoại", "Trách nhiệm", "Tổng thu nhập cố định" };
+            titleStyle.WrapText = true;
+            ICellStyle numberStyle = workbook.CreateCellStyle();
+            numberStyle.DataFormat = workbook.CreateDataFormat().GetFormat("#,##0");
+            ICellStyle decimalStyle = workbook.CreateCellStyle();
+            decimalStyle.DataFormat = workbook.CreateDataFormat().GetFormat("#,##0.00");
+            ICellStyle attendanceStyle = workbook.CreateCellStyle();
+            attendanceStyle.WrapText = true;
+            sheet.CreateRow(0).CreateCell(0).SetCellValue("BẢNG CHẤM CÔNG TOÀN BỘ NHÂN VIÊN");
+            sheet.GetRow(0).GetCell(0).CellStyle = titleStyle;
+            sheet.CreateRow(1).CreateCell(0).SetCellValue("Kỳ: " + startDate.ToString("dd/MM/yyyy") + " - " + endDate.ToString("dd/MM/yyyy"));
+            string[] summaryHeaders = { "Ngày công", "LCB", "Xăng xe", "Ăn trưa", "Điện thoại", "Trách nhiệm", "R&D", "Trực hotline", "Hỗ trợ D.A", "Doanh số", "Thưởng D.số", "Tổng tiền tăng ca", "Tổng GROSS dự kiến", "NLĐ đóng BH (10,5%)", "Thực nhận trước PIT", "DN đóng BH (21,5%)", "Kinh phí CĐ (2%)", "Tổng chi phí DN", "Tạm ứng kỳ 1", "Nhận kỳ 2", "Ngân sách Max", "Chênh lệch chờ PL" };
+            int daysInMonth = (endDate - startDate).Days + 1;
+            int summaryOffset = 3;
+            int calendarOffset = summaryOffset + summaryHeaders.Length;
+            IRow header = sheet.CreateRow(3);
+            header.HeightInPoints = 45;
+            header.CreateCell(0).SetCellValue("STT");
+            header.CreateCell(1).SetCellValue("Tài khoản");
+            header.CreateCell(2).SetCellValue("Nhân viên");
+            for (int day = 0; day < daysInMonth; day++)
+                header.CreateCell(calendarOffset + day).SetCellValue(dt_cl.return_thuvietnam_viettat(startDate.AddDays(day)) + "\n" + startDate.AddDays(day).ToString("dd/MM"));
             for (int i = 0; i < summaryHeaders.Length; i++)
+                header.CreateCell(summaryOffset + i).SetCellValue(summaryHeaders[i]);
+            foreach (ICell cell in header.Cells)
+                cell.CellStyle = titleStyle;
+            int rowIndex = 4;
+            long[] totals = new long[summaryHeaders.Length];
+            int overtimeRowIndex = employees.Count + 8;
+            sheet.CreateRow(overtimeRowIndex++).CreateCell(0).SetCellValue("CHI TIẾT TĂNG CA TẤT CẢ NHÂN VIÊN");
+            sheet.GetRow(overtimeRowIndex - 1).GetCell(0).CellStyle = titleStyle;
+            IRow overtimeHeader = sheet.CreateRow(overtimeRowIndex++);
+            string[] overtimeHeaders = { "STT", "Tài khoản", "Nhân viên", "Ngày công", "Giờ vào", "Giờ ra", "Giờ tăng ca / ngày", "Hệ số", "Lương 1 giờ", "Tiền tăng ca / ngày", "Ghi chú", "Tổng giờ tăng ca", "Tổng tiền tăng ca" };
+            for (int i = 0; i < overtimeHeaders.Length; i++)
             {
-                summaryHeader.CreateCell(i).SetCellValue(summaryHeaders[i]);
-                summaryHeader.GetCell(i).CellStyle = titleStyle;
+                overtimeHeader.CreateCell(i).SetCellValue(overtimeHeaders[i]);
+                overtimeHeader.GetCell(i).CellStyle = titleStyle;
             }
-            long fixedIncome = basicSalary + travelAllowance + mealAllowance + phoneAllowance + responsibilityAllowance;
-            IRow summaryRow = sheet.CreateRow(rowIndex++);
-            long[] summaryValues = { workingDays, basicSalary, travelAllowance, mealAllowance, phoneAllowance, responsibilityAllowance, fixedIncome };
-            for (int i = 0; i < summaryValues.Length; i++)
-                summaryRow.CreateCell(i).SetCellValue(summaryValues[i]);
-            rowIndex++;
-
-            IRow calendarTitle = sheet.CreateRow(rowIndex++);
-            calendarTitle.CreateCell(0).SetCellValue("THEO DÕI NGÀY LÀM VIỆC");
-            calendarTitle.GetCell(0).CellStyle = titleStyle;
-            IRow calendarHeader = sheet.CreateRow(rowIndex++);
-            calendarHeader.CreateCell(0).SetCellValue("Ngày trong tháng");
-            calendarHeader.GetCell(0).CellStyle = titleStyle;
-            int calendarColumn = 1;
-            for (DateTime currentDate = startDate; currentDate <= endDate; currentDate = currentDate.AddDays(1))
+            decimal totalOvertimeHours = 0;
+            foreach (var employee in employees)
             {
-                calendarHeader.CreateCell(calendarColumn).SetCellValue(currentDate.ToString("dd/MM"));
-                calendarHeader.GetCell(calendarColumn).CellStyle = titleStyle;
-                calendarColumn++;
-            }
+                var attendanceRecords = attendanceByAccount[employee.taikhoan].ToList();
 
-            IRow calendarRow = sheet.CreateRow(rowIndex++);
-            calendarRow.CreateCell(0).SetCellValue("Chấm công");
-            calendarRow.GetCell(0).CellStyle = titleStyle;
-            calendarColumn = 1;
-            for (DateTime currentDate = startDate; currentDate <= endDate; currentDate = currentDate.AddDays(1))
-            {
-                var attendance = attendanceRecords.FirstOrDefault(p => p.ngaychamcong.HasValue && p.ngaychamcong.Value.Date == currentDate.Date);
-                string attendanceText = "";
-                if (attendance != null)
+                long basicSalary = attendanceRecords.Sum(p => p.LuongNgay_ChamCong ?? 0);
+                int workingDays = attendanceRecords
+                    .Where(p => p.ngaychamcong.HasValue)
+                    .Select(p => p.ngaychamcong.Value.Date)
+                    .Distinct()
+                    .Count();
+                int mealEligibleDays = attendanceRecords
+                    .Where(p => p.ngaychamcong.HasValue
+                        && p.baoraca.HasValue
+                        && p.baoraca.Value - p.ngaychamcong.Value >= TimeSpan.FromHours(7.5))
+                    .Select(p => p.ngaychamcong.Value.Date)
+                    .Distinct()
+                    .Count();
+                decimal allowanceRatio = workingDays / 26m;
+                long travelAllowance = (long)Math.Round((employee.PhuCap_Xangxe ?? 0) * allowanceRatio, MidpointRounding.AwayFromZero);
+                long mealAllowance = (long)Math.Round((employee.PhuCap_AnUong ?? 0) * mealEligibleDays / 26m, MidpointRounding.AwayFromZero);
+                long phoneAllowance = (long)Math.Round((employee.PhuCap_DienThoai ?? 0) * allowanceRatio, MidpointRounding.AwayFromZero);
+                long responsibilityAllowance = (long)Math.Round((employee.PhuCap_TrachNhiem ?? 0) * allowanceRatio, MidpointRounding.AwayFromZero);
+
+                long research = (long)Math.Round((employee.PhuCap_RnD ?? 0) * allowanceRatio, MidpointRounding.AwayFromZero);
+                long hotline = (long)Math.Round((employee.PhuCap_TrucHotline ?? 0) * allowanceRatio, MidpointRounding.AwayFromZero);
+                long project = (long)Math.Round((employee.Thuong_DuAn_Max ?? 0) * allowanceRatio, MidpointRounding.AwayFromZero);
+                var monthly = monthlyByAccount[employee.taikhoan].ToList();
+                long manualOvertime = monthly.Sum(p => (long)(p.tien_tang_ca ?? 0));
+                long advance = monthly.Sum(p => (long)(p.tamung_ky1 ?? 0));
+                decimal hourlySalary = employee.LuongCoBan > 0 ? employee.LuongCoBan.Value / 26m / 8m : 0;
+                var overtimeRecords = attendanceRecords.Where(p => p.SoGioDu > 0).ToList();
+                long dailyOvertime = overtimeRecords.Sum(p => (long)Math.Round((p.SoGioDu ?? 0) * (p.HeSoTangCa ?? 1.5m) * hourlySalary, MidpointRounding.AwayFromZero));
+                var sales = salesByAccount[employee.taikhoan];
+                var warranty = warrantyByAccount[employee.taikhoan];
+                long revenue = sales.Sum(p => p.giatri_thuc_donhang ?? 0) + warranty.Sum(p => p.tongtien ?? 0);
+                long bonus = sales.Sum(p => p.thuongdoanhso ?? 0) + warranty.Sum(p => p.thuongdoanhso ?? 0);
+                long gross = basicSalary + travelAllowance + mealAllowance + phoneAllowance + responsibilityAllowance
+                    + research + hotline + project + bonus + manualOvertime + dailyOvertime;
+                long insuranceBase = (long)(employee.LuongDongBH ?? 0);
+                long employeeInsurance = (long)Math.Round(insuranceBase * 0.105m, MidpointRounding.AwayFromZero);
+                long employerInsurance = (long)Math.Round(insuranceBase * 0.215m, MidpointRounding.AwayFromZero);
+                long union = (long)Math.Round(insuranceBase * 0.02m, MidpointRounding.AwayFromZero);
+                long net = gross - employeeInsurance;
+                long employerCost = gross + employerInsurance + union;
+                long budget = (long)(employee.NganSach_Max ?? 0);
+
+                IRow summaryRow = sheet.CreateRow(rowIndex++);
+                summaryRow.CreateCell(0).SetCellValue(rowIndex - 4);
+                summaryRow.CreateCell(1).SetCellValue(employee.taikhoan);
+                summaryRow.CreateCell(2).SetCellValue(employee.hoten ?? "");
+                for (int day = 0; day < daysInMonth; day++)
                 {
-                    string startTime = attendance.ngaychamcong.Value.ToString("HH'h'mm");
-                    string endTime = attendance.baoraca.HasValue ? attendance.baoraca.Value.ToString("HH'h'mm") : "";
-                    attendanceText = "Có [" + startTime + "]" + (string.IsNullOrEmpty(endTime) ? "" : "-[" + endTime + "]");
+                    DateTime date = startDate.AddDays(day);
+                    var records = attendanceRecords.Where(p => p.ngaychamcong.Value.Date == date).ToList();
+                    string times = string.Join("\n", records.Select(p => p.ngaychamcong.Value.ToString("HH:mm") + " - "
+                        + (p.baoraca.HasValue ? p.baoraca.Value.ToString("HH:mm") : "Chưa ra ca")).ToArray());
+                    summaryRow.CreateCell(calendarOffset + day).SetCellValue(times);
+                    summaryRow.GetCell(calendarOffset + day).CellStyle = attendanceStyle;
+                    summaryRow.HeightInPoints = Math.Max(summaryRow.HeightInPoints, Math.Max(1, records.Count) * 16);
                 }
-                calendarRow.CreateCell(calendarColumn++).SetCellValue(attendanceText);
+                long[] summaryValues = { workingDays, basicSalary, travelAllowance, mealAllowance, phoneAllowance, responsibilityAllowance, research, hotline, project, revenue, bonus, manualOvertime + dailyOvertime, gross, employeeInsurance, net, employerInsurance, union, employerCost, advance, net - advance, budget, budget - employerCost };
+                for (int i = 0; i < summaryValues.Length; i++)
+                {
+                    summaryRow.CreateCell(summaryOffset + i).SetCellValue(summaryValues[i]);
+                    summaryRow.GetCell(summaryOffset + i).CellStyle = numberStyle;
+                    totals[i] += summaryValues[i];
+                }
+                totalOvertimeHours += overtimeRecords.Sum(p => p.SoGioDu ?? 0);
+                var manualRecords = monthly.Where(p => (p.tien_tang_ca ?? 0) != 0).ToList();
+                if (overtimeRecords.Count > 0 || manualRecords.Count > 0)
+                {
+                    IRow detail = sheet.CreateRow(overtimeRowIndex++);
+                    detail.CreateCell(0).SetCellValue(overtimeRowIndex - overtimeHeader.RowNum - 1);
+                    detail.CreateCell(1).SetCellValue(employee.taikhoan);
+                    detail.CreateCell(2).SetCellValue(employee.hoten ?? "");
+                    var lines = Enumerable.Range(0, 8).Select(i => new List<string>()).ToArray();
+                    var culture = System.Globalization.CultureInfo.GetCultureInfo("en-US");
+                    foreach (var overtime in overtimeRecords)
+                    {
+                        lines[0].Add(overtime.ngaychamcong.Value.ToString("dd'/'MM'/'yyyy"));
+                        lines[1].Add(overtime.ngaychamcong.Value.ToString("HH:mm"));
+                        lines[2].Add(overtime.baoraca.HasValue ? overtime.baoraca.Value.ToString("HH:mm") : "—");
+                        lines[3].Add((overtime.SoGioDu ?? 0).ToString("0.00", culture));
+                        lines[4].Add((overtime.HeSoTangCa ?? 1.5m).ToString("0.00", culture));
+                        lines[5].Add(hourlySalary.ToString("#,##0.00", culture));
+                        lines[6].Add(Math.Round((overtime.SoGioDu ?? 0) * (overtime.HeSoTangCa ?? 1.5m)
+                            * hourlySalary, MidpointRounding.AwayFromZero).ToString("#,##0", culture));
+                        lines[7].Add("—");
+                    }
+                    foreach (var manual in manualRecords)
+                    {
+                        lines[0].Add("Nhập tay " + startDate.ToString("MM'/'yyyy"));
+                        for (int i = 1; i <= 5; i++) lines[i].Add("—");
+                        lines[6].Add((manual.tien_tang_ca ?? 0).ToString("#,##0", culture));
+                        lines[7].Add((manual.ghichu ?? "—").Replace("\r", " ").Replace("\n", " "));
+                    }
+                    for (int i = 0; i < lines.Length; i++)
+                        detail.CreateCell(3 + i).SetCellValue(string.Join("\n", lines[i].ToArray()));
+                    // Numeric employee totals remain directly summable by accounting.
+                    detail.CreateCell(11).SetCellValue((double)overtimeRecords.Sum(p => p.SoGioDu ?? 0));
+                    detail.CreateCell(12).SetCellValue(manualOvertime + dailyOvertime);
+                }
             }
-            rowIndex++;
-
-            for (int i = 0; i < calendarColumn; i++)
-                sheet.AutoSizeColumn(i);
-
+            IRow totalRow = sheet.CreateRow(rowIndex);
+            totalRow.CreateCell(2).SetCellValue("TỔNG CỘNG");
+            totalRow.GetCell(2).CellStyle = titleStyle;
+            for (int i = 0; i < totals.Length; i++)
+            {
+                totalRow.CreateCell(summaryOffset + i).SetCellValue(totals[i]);
+                totalRow.GetCell(summaryOffset + i).CellStyle = numberStyle;
+            }
+            if (overtimeRowIndex == overtimeHeader.RowNum + 1)
+                sheet.CreateRow(overtimeRowIndex++).CreateCell(2).SetCellValue("Không phát sinh tăng ca trong tháng.");
+            IRow overtimeTotal = sheet.CreateRow(overtimeRowIndex++);
+            overtimeTotal.CreateCell(2).SetCellValue("TỔNG TĂNG CA");
+            overtimeTotal.GetCell(2).CellStyle = titleStyle;
+            overtimeTotal.CreateCell(11).SetCellValue((double)totalOvertimeHours);
+            overtimeTotal.CreateCell(12).SetCellValue(totals[11]);
+            for (int row = overtimeHeader.RowNum + 1; row < overtimeRowIndex; row++)
+                for (int col = 6; col <= 9; col++)
+                {
+                    ICell cell = sheet.GetRow(row).GetCell(col);
+                    if (cell != null)
+                        cell.CellStyle = col == 9 ? numberStyle : decimalStyle;
+                }
+            FormatAttendanceExport(workbook, sheet, startDate, employees.Count, calendarOffset, daysInMonth,
+                header.RowNum, totalRow.RowNum, overtimeHeader.RowNum, overtimeTotal.RowNum);
             using (MemoryStream stream = new MemoryStream())
             {
                 workbook.Write(stream);
                 Response.Clear();
                 Response.Buffer = true;
                 Response.ContentType = "application/vnd.ms-excel";
-                Response.AddHeader("Content-Disposition", "attachment;filename=ChamCong_" + account + "_" + startDate.ToString("yyyyMM") + ".xls");
+                Response.AddHeader("Content-Disposition", "attachment;filename=ChamCong_" + "TatCa" + "_" + startDate.ToString("yyyyMM") + ".xls");
                 Response.BinaryWrite(stream.ToArray());
                 Response.Flush();
+                Response.SuppressContent = true;
                 HttpContext.Current.ApplicationInstance.CompleteRequest();
             }
         }
     }
 
+    private static ICellStyle AttendanceExportStyle(IWorkbook workbook, short fill, bool bold, bool white, string format)
+    {
+        IFont font = workbook.CreateFont();
+        font.FontName = "Arial";
+        font.FontHeightInPoints = 10;
+        font.IsBold = bold;
+        font.Color = white ? IndexedColors.White.Index : IndexedColors.Black.Index;
+        ICellStyle style = workbook.CreateCellStyle();
+        style.SetFont(font);
+        style.VerticalAlignment = VerticalAlignment.Center;
+        style.WrapText = true;
+        if (fill >= 0)
+        {
+            style.FillForegroundColor = fill;
+            style.FillPattern = FillPattern.SolidForeground;
+        }
+        if (format != null)
+        {
+            style.DataFormat = workbook.CreateDataFormat().GetFormat(format);
+            style.Alignment = HorizontalAlignment.Right;
+        }
+        return style;
+    }
+
+    private static void FormatAttendanceExport(IWorkbook workbook, ISheet sheet, DateTime startDate,
+        int employeeCount, int calendarOffset, int daysInMonth, int headerRow, int totalRow,
+        int overtimeHeaderRow, int overtimeTotalRow)
+    {
+        const string moneyFormat = "#,##0;[Red](#,##0);–";
+        const string decimalFormat = "#,##0.00;[Red](#,##0.00);–";
+        HSSFPalette palette = ((HSSFWorkbook)workbook).GetCustomPalette();
+        palette.SetColorAtIndex(IndexedColors.DarkBlue.Index, 23, 43, 77);
+        palette.SetColorAtIndex(IndexedColors.Grey25Percent.Index, 244, 247, 250);
+        palette.SetColorAtIndex(IndexedColors.Grey40Percent.Index, 221, 228, 235);
+        palette.SetColorAtIndex(IndexedColors.LightTurquoise.Index, 225, 241, 235);
+        var heading = AttendanceExportStyle(workbook, IndexedColors.DarkBlue.Index, true, true, null);
+        heading.Alignment = HorizontalAlignment.Center;
+        var group = AttendanceExportStyle(workbook, IndexedColors.Grey40Percent.Index, true, false, null);
+        var text = AttendanceExportStyle(workbook, -1, false, false, null);
+        var alternate = AttendanceExportStyle(workbook, IndexedColors.Grey25Percent.Index, false, false, null);
+        var money = AttendanceExportStyle(workbook, -1, false, false, moneyFormat);
+        var alternateMoney = AttendanceExportStyle(workbook, IndexedColors.Grey25Percent.Index, false, false, moneyFormat);
+        var decimalStyle = AttendanceExportStyle(workbook, -1, false, false, decimalFormat);
+        var alternateDecimal = AttendanceExportStyle(workbook, IndexedColors.Grey25Percent.Index, false, false, decimalFormat);
+        var keyMoney = AttendanceExportStyle(workbook, IndexedColors.LightTurquoise.Index, true, false, moneyFormat);
+        var totalMoney = AttendanceExportStyle(workbook, IndexedColors.DarkBlue.Index, true, true, moneyFormat);
+        var weekend = AttendanceExportStyle(workbook, IndexedColors.LightYellow.Index, false, false, null);
+        weekend.Alignment = HorizontalAlignment.Center;
+        var warning = AttendanceExportStyle(workbook, IndexedColors.LightOrange.Index, false, false, null);
+        var title = AttendanceExportStyle(workbook, -1, true, false, null);
+        IFont titleFont = workbook.CreateFont();
+        titleFont.FontName = "Arial";
+        titleFont.FontHeightInPoints = 15;
+        titleFont.IsBold = true;
+        title.SetFont(titleFont);
+        sheet.DisplayGridlines = false;
+        sheet.GetRow(0).HeightInPoints = 30;
+        sheet.GetRow(0).GetCell(0).CellStyle = title;
+        sheet.AddMergedRegion(new NPOI.SS.Util.CellRangeAddress(0, 0, 0, 10));
+        sheet.GetRow(1).GetCell(0).SetCellValue("Tháng " + startDate.ToString("MM/yyyy") + "  |  "
+            + employeeCount + " nhân viên  |  Đơn vị tiền: VNĐ");
+        sheet.GetRow(1).GetCell(0).CellStyle = text;
+        sheet.GetRow(1).HeightInPoints = 25;
+        sheet.AddMergedRegion(new NPOI.SS.Util.CellRangeAddress(1, 1, 0, 10));
+        IRow groups = sheet.CreateRow(2);
+        groups.HeightInPoints = 26;
+        int[] starts = { 0, 3, 5, 12, 15, 18, 21, 23, calendarOffset };
+        int[] ends = { 2, 4, 11, 14, 17, 20, 22, 24, calendarOffset + daysInMonth - 1 };
+        string[] labels = { "NHÂN VIÊN", "NGÀY CÔNG / LƯƠNG", "PHỤ CẤP", "DOANH SỐ / TĂNG CA",
+            "THU NHẬP", "CHI PHÍ DOANH NGHIỆP", "THANH TOÁN", "NGÂN SÁCH", "GIỜ VÀO – RA THEO NGÀY" };
+        for (int i = 0; i < starts.Length; i++)
+        {
+            for (int col = starts[i]; col <= ends[i]; col++)
+                groups.CreateCell(col).CellStyle = group;
+            groups.GetCell(starts[i]).SetCellValue(labels[i]);
+            sheet.AddMergedRegion(new NPOI.SS.Util.CellRangeAddress(2, 2, starts[i], ends[i]));
+        }
+        sheet.GetRow(headerRow).HeightInPoints = 48;
+        foreach (ICell cell in sheet.GetRow(headerRow).Cells)
+            cell.CellStyle = heading;
+        for (int row = headerRow + 1; row < totalRow; row++)
+        {
+            bool band = (row - headerRow) % 2 == 0;
+            IRow data = sheet.GetRow(row);
+            data.HeightInPoints = Math.Max(32, data.HeightInPoints);
+            foreach (ICell cell in data.Cells)
+            {
+                cell.CellStyle = cell.ColumnIndex < 3 || cell.ColumnIndex >= calendarOffset
+                    ? (band ? alternate : text) : (band ? alternateMoney : money);
+                if (cell.ColumnIndex == 15 || cell.ColumnIndex == 17 || cell.ColumnIndex == 22)
+                    cell.CellStyle = keyMoney;
+                if (cell.ColumnIndex >= calendarOffset)
+                {
+                    DayOfWeek day = startDate.AddDays(cell.ColumnIndex - calendarOffset).DayOfWeek;
+                    if (day == DayOfWeek.Saturday || day == DayOfWeek.Sunday)
+                        cell.CellStyle = weekend;
+                    if (cell.StringCellValue.Contains("Chưa ra ca"))
+                        cell.CellStyle = warning;
+                }
+            }
+        }
+        sheet.GetRow(totalRow).HeightInPoints = 30;
+        for (int col = 0; col < calendarOffset; col++)
+        {
+            ICell cell = sheet.GetRow(totalRow).GetCell(col) ?? sheet.GetRow(totalRow).CreateCell(col);
+            cell.CellStyle = col < 3 ? heading : totalMoney;
+        }
+        IRow note = sheet.CreateRow(totalRow + 2);
+        note.CreateCell(0).SetCellValue("Vàng nhạt: cuối tuần. Cam: chưa có giờ ra ca. Tăng ca gồm chi tiết ngày và khoản nhập tay.");
+        note.GetCell(0).CellStyle = text;
+        note.HeightInPoints = 28;
+        sheet.AddMergedRegion(new NPOI.SS.Util.CellRangeAddress(note.RowNum, note.RowNum, 0, 10));
+        sheet.GetRow(overtimeHeaderRow - 1).GetCell(0).CellStyle = title;
+        sheet.GetRow(overtimeHeaderRow - 1).HeightInPoints = 30;
+        sheet.AddMergedRegion(new NPOI.SS.Util.CellRangeAddress(overtimeHeaderRow - 1, overtimeHeaderRow - 1, 0, 10));
+        sheet.GetRow(overtimeHeaderRow).HeightInPoints = 36;
+        foreach (ICell cell in sheet.GetRow(overtimeHeaderRow).Cells)
+            cell.CellStyle = heading;
+        var detailStyles = new ICellStyle[2];
+        for (int band = 0; band < 2; band++)
+        {
+            detailStyles[band] = AttendanceExportStyle(workbook,
+                band == 0 ? (short)-1 : IndexedColors.Grey25Percent.Index, false, false, null);
+            detailStyles[band].VerticalAlignment = VerticalAlignment.Top;
+            // Explicit newlines align each date with its hours, rate and amount.
+            detailStyles[band].WrapText = true;
+            IFont detailFont = workbook.CreateFont();
+            detailFont.FontName = "Arial";
+            detailFont.FontHeightInPoints = 9;
+            detailStyles[band].SetFont(detailFont);
+        }
+        for (int row = overtimeHeaderRow + 1; row < overtimeTotalRow; row++)
+        {
+            IRow data = sheet.GetRow(row);
+            int band = (row - overtimeHeaderRow - 1) % 2;
+            int lineCount = data.GetCell(3) == null ? 1 : data.GetCell(3).StringCellValue.Split('\n').Length;
+            data.HeightInPoints = Math.Min(409, Math.Max(32, lineCount * 12 + 8));
+            for (int col = 0; col <= 12; col++)
+            {
+                ICell cell = data.GetCell(col) ?? data.CreateCell(col);
+                cell.CellStyle = col == 12 ? keyMoney : col == 11 ? (band == 0 ? decimalStyle : alternateDecimal)
+                    : col >= 3 ? detailStyles[band] : (band == 0 ? text : alternate);
+            }
+        }
+        sheet.GetRow(overtimeTotalRow).HeightInPoints = 30;
+        for (int col = 0; col <= 12; col++)
+        {
+            ICell cell = sheet.GetRow(overtimeTotalRow).GetCell(col) ?? sheet.GetRow(overtimeTotalRow).CreateCell(col);
+            cell.CellStyle = col == 12 ? totalMoney : heading;
+        }
+        for (int col = 0; col < calendarOffset + daysInMonth; col++)
+            sheet.SetColumnWidth(col, (col == 0 ? 7 : col == 1 ? 20 : col == 2 ? 28 : col >= calendarOffset ? 21 : 18) * 256);
+        sheet.CreateFreezePane(3, headerRow + 1);
+        sheet.SetZoom(85);
+        sheet.PrintSetup.Landscape = true;
+        // Preserve readable print size instead of squeezing 50+ columns onto one page.
+        sheet.PrintSetup.Scale = 85;
+        sheet.FitToPage = false;
+    }
     private void SetAttendanceEditMessage(string message, bool success)
     {
         lbl_edit_attendance_message.Text = message;
@@ -453,14 +989,17 @@ public partial class admin_quan_ly_nhan_vien_bang_cham_cong : System.Web.UI.Page
         htmlTable.Append("<td class='text-center bg-cobalt fg-white' style='width:1px;min-width:1px'>Hỗ trợ<br/>D.A</td>");
         htmlTable.Append("<td class='text-center bg-cobalt fg-white' style='width:1px;min-width:1px'>Doanh<br/>số</td>");
         htmlTable.Append("<td class='text-center bg-cobalt fg-white' style='width:1px;min-width:1px'>Thưởng<br/>D.số</td>");
+        htmlTable.Append("<td class='text-center bg-cobalt fg-white' style='width:1px;min-width:1px'>Tổng tiền<br/>tăng ca</td>");
         htmlTable.Append("<td class='text-center bg-cobalt fg-white' style='width:1px;min-width:1px'>Tổng GROSS<br/>dự kiến</td>");
         htmlTable.Append("<td class='text-center bg-cobalt fg-white' style='width:1px;min-width:1px'>NLĐ đóng BH<br/>(10,5%)</td>");
         htmlTable.Append("<td class='text-center bg-red fg-white' style='width:1px;min-width:1px'>Thực nhận<br/>trước PIT</td>");
         htmlTable.Append("<td class='text-center bg-cobalt fg-white' style='width:1px;min-width:1px'>DN đóng BH<br/>(21,5%)</td>");
         htmlTable.Append("<td class='text-center bg-cobalt fg-white' style='width:1px;min-width:1px'>Kinh phí CĐ<br/>(2%)</td>");
         htmlTable.Append("<td class='text-center bg-cobalt fg-white' style='width:1px;min-width:1px'>Tổng chi phí<br/>DN</td>");
-        htmlTable.Append("<td class='text-center bg-cobalt fg-white' style='width:1px;min-width:1px'>Ngân sách<br/>tối đa</td>");
-        htmlTable.Append("<td class='text-center bg-cobalt fg-white' style='width:1px;min-width:1px'>Chênh lệch</td>");
+        htmlTable.Append("<td class='text-center bg-cobalt fg-white' style='width:1px;min-width:1px'>Tạm ứng<br/>kỳ 1</td>");
+        htmlTable.Append("<td class='text-center bg-red fg-white' style='width:1px;min-width:1px'>Nhận<br/>kỳ 2</td>");
+        htmlTable.Append("<td class='text-center bg-cobalt fg-white' style='width:1px;min-width:1px'>Ngân sách<br/>Max</td>");
+        htmlTable.Append("<td class='text-center bg-cobalt fg-white' style='width:1px;min-width:1px'>Chênh lệch<br/>chờ PL</td>");
 
         // Kết thúc hàng đầu tiên
         htmlTable.Append("</tr>");
@@ -479,6 +1018,8 @@ public partial class admin_quan_ly_nhan_vien_bang_cham_cong : System.Web.UI.Page
                                     cc.baoraca,
                                     cc.LuongNgay_ChamCong,
                                     tk.ten,
+                                    cc.SoGioDu,
+                                    cc.HeSoTangCa
                                 }).OrderBy(x => x.ten).ToList();  // Sắp xếp theo tên từ A-Z
 
         if (check_login_cl.CheckQuyen(db, ViewState["taikhoan"].ToString(), "28"))
@@ -491,7 +1032,13 @@ public partial class admin_quan_ly_nhan_vien_bang_cham_cong : System.Web.UI.Page
             .ToList();
 
         int counter = 1; // Đếm số thứ tự
-        int TongKet_NgayCong = 0; Int64 TongKet_LCB = 0, TongKet_XangXe = 0, TongKet_AnUong = 0, TongKet_DienThoai = 0, TongKet_TrachNhiem = 0, TongKet_RnD = 0, TongKet_TrucHotline = 0, TongKet_HoTroDA = 0, TongKet_BaoHiem = 0, TongKet_DoanhSo = 0, TongKet_ThuongDoanhSo = 0, TongKet_TongCong = 0, TongKet_Phat = 0, TongKet_ThucNhan = 0, TongKet_DNBH = 0, TongKet_KinhPhiCD = 0, TongKet_ChiPhiDN = 0, TongKet_NganSach = 0, TongKet_ChenhLech = 0;
+        int TongKet_NgayCong = 0; Int64 TongKet_LCB = 0, TongKet_XangXe = 0, TongKet_AnUong = 0, TongKet_DienThoai = 0, TongKet_TrachNhiem = 0, TongKet_RnD = 0, TongKet_TrucHotline = 0, TongKet_HoTroDA = 0, TongKet_BaoHiem = 0, TongKet_DoanhSo = 0, TongKet_ThuongDoanhSo = 0, TongKet_TongCong = 0, TongKet_Phat = 0, TongKet_ThucNhan = 0, TongKet_DNBH = 0, TongKet_KinhPhiCD = 0, TongKet_ChiPhiDN = 0, TongKet_NganSach = 0, TongKet_ChenhLech = 0, TongKet_TienTangCa = 0, TongKet_TamUng_Ky1 = 0, TongKet_NhanKy2 = 0;
+
+        // Load tất cả tiền tăng ca của tháng đang xem (1 lần, dùng chung)
+        var monthlyRecords = db.TangCa_tbs.Where(p => p.thang == _dautuan.Month && p.nam == _dautuan.Year).ToList();
+        var tangCaThang = monthlyRecords.ToDictionary(p => p.taikhoan ?? "", p => (long)(p.tien_tang_ca ?? 0));
+        var tamUngThang = monthlyRecords.ToDictionary(p => p.taikhoan ?? "", p => (long)(p.tamung_ky1 ?? 0));
+
         // Tạo dòng dữ liệu cho mỗi nhân viên
         foreach (var nhanVien in nhanVienList)
         {
@@ -592,8 +1139,8 @@ public partial class admin_quan_ly_nhan_vien_bang_cham_cong : System.Web.UI.Page
         p.nguoibaogia == nhanVien.taikhoan);
             if (q_ds.Any())
             {
-                _doanhso = q_ds.Sum(p => p.giatri_thuc_donhang.Value);
-                _thuongdoanhso = q_ds.Sum(p => p.thuongdoanhso.Value);
+                _doanhso = q_ds.Sum(p => p.giatri_thuc_donhang) ?? 0;
+                _thuongdoanhso = q_ds.Sum(p => p.thuongdoanhso) ?? 0;
             }
 
             var q_baohanh = db.HangBaoHanh_tbs
@@ -605,16 +1152,39 @@ public partial class admin_quan_ly_nhan_vien_bang_cham_cong : System.Web.UI.Page
         p.nguoitao == nhanVien.taikhoan);
             if (q_baohanh.Any())
             {
-                _doanhso = _doanhso + q_baohanh.Sum(p => p.tongtien.Value);
-                _thuongdoanhso = _thuongdoanhso + q_baohanh.Sum(p => p.thuongdoanhso.Value);
+                _doanhso = _doanhso + (q_baohanh.Sum(p => p.tongtien) ?? 0);
+                _thuongdoanhso = _thuongdoanhso + (q_baohanh.Sum(p => p.thuongdoanhso) ?? 0);
             }
             
             htmlTable.Append("<td class='text-right '>" + _doanhso.ToString("#,##0") + "</td>");//doanh số
             htmlTable.Append("<td class='text-right '>" + _thuongdoanhso.ToString("#,##0") + "</td>");//thưởng doanh số
 
-            _tongcong = LuongCB + pcXangXe + pcAnUong + pcDienThoai + pcTrachNhiem + pcRnD + pcTrucHotline + pcHoTroDA + _thuongdoanhso;
+            // Tiền tăng ca: đọc từ bảng TangCa_tb theo tháng (nhập tay) cộng với tổng tiền tăng ca theo ngày
+            long tienTangCaThuCong = tangCaThang.ContainsKey(nhanVien.taikhoan) ? tangCaThang[nhanVien.taikhoan] : 0;
+            
+            // Tính tổng tiền tăng ca tự động từ chấm công ngày
+            long tienTangCaNgay = 0;
+            decimal luong1GioDecimal = (q_nv != null && q_nv.LuongCoBan > 0) ? (q_nv.LuongCoBan.Value / 26m / 8m) : 0;
+            var overtimeDays = danhSachNhanVien.Where(p => p.taikhoan == nhanVien.taikhoan).ToList();
+            foreach (var cc in overtimeDays)
+            {
+                if (cc.SoGioDu > 0)
+                {
+                    decimal thanhTienThapPhan = (cc.SoGioDu ?? 0) * (cc.HeSoTangCa ?? 1.5m) * luong1GioDecimal;
+                    tienTangCaNgay += (long)Math.Round(thanhTienThapPhan, MidpointRounding.AwayFromZero);
+                }
+            }
+
+            long tienTangCa = tienTangCaThuCong + tienTangCaNgay;
+            htmlTable.Append("<td class='text-right '>" + tienTangCa.ToString("#,##0") + "</td>");//tăng ca
+
+            _tongcong = LuongCB + pcXangXe + pcAnUong + pcDienThoai + pcTrachNhiem + pcRnD + pcTrucHotline + pcHoTroDA + _thuongdoanhso + tienTangCa;
             long nldDongBH = (long)Math.Round(luongDongBH * 0.105m, MidpointRounding.AwayFromZero);
             _thucnhan = _tongcong - _phat - nldDongBH;
+
+            // Tạm ứng kỳ 1 và nhận kỳ 2
+            long tamUngKy1 = tamUngThang.ContainsKey(nhanVien.taikhoan) ? tamUngThang[nhanVien.taikhoan] : 0;
+            long nhanKy2 = _thucnhan - tamUngKy1;
             
             long dnDongBH = (long)Math.Round(luongDongBH * 0.215m, MidpointRounding.AwayFromZero);
             long kpCD = (long)Math.Round(luongDongBH * 0.02m, MidpointRounding.AwayFromZero);
@@ -628,6 +1198,8 @@ public partial class admin_quan_ly_nhan_vien_bang_cham_cong : System.Web.UI.Page
             htmlTable.Append("<td class='text-right '>" + dnDongBH.ToString("#,##0") + "</td>");
             htmlTable.Append("<td class='text-right '>" + kpCD.ToString("#,##0") + "</td>");
             htmlTable.Append("<td class='text-right text-bold'>" + tongChiPhiDN.ToString("#,##0") + "</td>");
+            htmlTable.Append("<td class='text-right '>" + tamUngKy1.ToString("#,##0") + "</td>");//tạm ứng kỳ 1
+            htmlTable.Append("<td class='text-right text-bold " + (nhanKy2 < 0 ? "fg-red" : "fg-green") + "'>" + nhanKy2.ToString("#,##0") + "</td>");//nhận kỳ 2
             htmlTable.Append("<td class='text-right '>" + nganSachMax.ToString("#,##0") + "</td>");
             htmlTable.Append("<td class='text-right text-bold " + (chenhLech < 0 ? "fg-red" : "fg-green") + "'>" + chenhLech.ToString("#,##0") + "</td>");
 
@@ -645,11 +1217,13 @@ public partial class admin_quan_ly_nhan_vien_bang_cham_cong : System.Web.UI.Page
             TongKet_TrucHotline = TongKet_TrucHotline + pcTrucHotline;
             TongKet_HoTroDA = TongKet_HoTroDA + pcHoTroDA;
             TongKet_BaoHiem = TongKet_BaoHiem + nldDongBH;
-
             TongKet_DoanhSo = TongKet_DoanhSo + _doanhso;
             TongKet_ThuongDoanhSo = TongKet_ThuongDoanhSo + _thuongdoanhso;
+            TongKet_TienTangCa = TongKet_TienTangCa + tienTangCa;
             TongKet_TongCong = TongKet_TongCong + _tongcong;
             TongKet_ThucNhan = TongKet_ThucNhan + _thucnhan;
+            TongKet_TamUng_Ky1 = TongKet_TamUng_Ky1 + tamUngKy1;
+            TongKet_NhanKy2 = TongKet_NhanKy2 + nhanKy2;
         }
         htmlTable.Append("<tr class='bg-gray'><td class='bg-gray'></td><td class='bg-gray'></td>");
         TimeSpan _songay = _cuoituan - _dautuan;
@@ -666,12 +1240,15 @@ public partial class admin_quan_ly_nhan_vien_bang_cham_cong : System.Web.UI.Page
                 htmlTable.Append("<td class='text-right text-bold'>" + TongKet_HoTroDA.ToString("#,##0") + "</td>");
         htmlTable.Append("<td class='text-right text-bold'>" + TongKet_DoanhSo.ToString("#,##0") + "</td>");
         htmlTable.Append("<td class='text-right text-bold'>" + TongKet_ThuongDoanhSo.ToString("#,##0") + "</td>");
+        htmlTable.Append("<td class='text-right text-bold'>" + TongKet_TienTangCa.ToString("#,##0") + "</td>");
         htmlTable.Append("<td class='text-right text-bold'>" + TongKet_TongCong.ToString("#,##0") + "</td>");
         htmlTable.Append("<td class='text-right text-bold'>" + TongKet_BaoHiem.ToString("#,##0") + "</td>");
         htmlTable.Append("<td class='text-right text-bold fg-red'>" + TongKet_ThucNhan.ToString("#,##0") + "</td>");
         htmlTable.Append("<td class='text-right text-bold'>" + TongKet_DNBH.ToString("#,##0") + "</td>");
         htmlTable.Append("<td class='text-right text-bold'>" + TongKet_KinhPhiCD.ToString("#,##0") + "</td>");
         htmlTable.Append("<td class='text-right text-bold'>" + TongKet_ChiPhiDN.ToString("#,##0") + "</td>");
+        htmlTable.Append("<td class='text-right text-bold'>" + TongKet_TamUng_Ky1.ToString("#,##0") + "</td>");
+        htmlTable.Append("<td class='text-right text-bold fg-red'>" + TongKet_NhanKy2.ToString("#,##0") + "</td>");
         htmlTable.Append("<td class='text-right text-bold'>" + TongKet_NganSach.ToString("#,##0") + "</td>");
         htmlTable.Append("<td class='text-right text-bold'>" + TongKet_ChenhLech.ToString("#,##0") + "</td>");
         htmlTable.Append("</tr>");

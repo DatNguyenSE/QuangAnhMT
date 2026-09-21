@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -64,7 +64,7 @@ public class xulyanh_cl
 
     private static ImageFormat GetImageFormatFromFileName(string fileName)
     {
-        string extension = Path.GetExtension(fileName)?.ToLower();
+        string extension = (Path.GetExtension(fileName) != null ? Path.GetExtension(fileName).ToLower() : null);
 
         switch (extension)
         {

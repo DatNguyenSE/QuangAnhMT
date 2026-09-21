@@ -1,4 +1,4 @@
-using OfficeOpenXml;
+﻿using OfficeOpenXml;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -475,6 +475,8 @@ public partial class admin_Default : System.Web.UI.Page
         txt_hotro_da_max.Text = "";
         txt_luong_dong_bh.Text = "";
         txt_ngansach_max.Text = "";
+        txt_tien_tangca.Text = "";
+        txt_tamung_ky1.Text = "";
 
             txt_sdt_nguoithan.Text = "";
             txt_tennguoithan.Text = "";
@@ -661,6 +663,10 @@ public partial class admin_Default : System.Web.UI.Page
                         txt_luong_dong_bh.Text = q.LuongDongBH.Value.ToString("#,##0");
                     if (q.NganSach_Max != null)
                         txt_ngansach_max.Text = q.NganSach_Max.Value.ToString("#,##0");
+                    if (q.TienTangCa != null)
+                        txt_tien_tangca.Text = q.TienTangCa.Value.ToString("#,##0");
+                    if (q.TamUng_Ky1 != null)
+                        txt_tamung_ky1.Text = q.TamUng_Ky1.Value.ToString("#,##0");
                     txt_chucdanh.Text = q.chucdanh;
                     if (q.PhuCap_Xangxe != null)
                         txt_phucap_xangxe.Text = q.PhuCap_Xangxe.Value.ToString("#,##0");
@@ -762,7 +768,7 @@ public partial class admin_Default : System.Web.UI.Page
             if (!Directory.Exists(Server.MapPath("~/uploads/img-handler/"))) Directory.CreateDirectory(Server.MapPath("~/uploads/img-handler/"));
             //xử lý dữ liệu đầu vào
             string _user = txt_taikhoan.Text.Trim().ToLower();
-            string _pass = txt_matkhau.Text.Trim().ToLower();
+            string _pass = txt_matkhau.Text.Trim();
             string _anhdaiien = txt_link_fileupload.Text;
             string _cccd_mattruoc = txt_link_fileupload1.Text;
             string _cccd_matsau = txt_link_fileupload2.Text;
@@ -781,6 +787,8 @@ public partial class admin_Default : System.Web.UI.Page
             Int64 _hotro_da_max = Number_cl.Check_Int64(txt_hotro_da_max.Text.Trim());
             Int64 _luong_dong_bh = Number_cl.Check_Int64(txt_luong_dong_bh.Text.Trim());
             Int64 _ngansach_max = Number_cl.Check_Int64(txt_ngansach_max.Text.Trim());
+            Int64 _tien_tangca = Number_cl.Check_Int64(txt_tien_tangca.Text.Trim());
+            Int64 _tamung_ky1 = Number_cl.Check_Int64(txt_tamung_ky1.Text.Trim());
             string _chucdanh = txt_chucdanh.Text.Trim();
             Int64 _phucap_xangxe = Number_cl.Check_Int64(txt_phucap_xangxe.Text.Trim());
             Int64 _phucap_anuong = Number_cl.Check_Int64(txt_phucap_anuong.Text.Trim());
@@ -899,6 +907,8 @@ public partial class admin_Default : System.Web.UI.Page
                     _ob.sdt_nguoithan = _sdt_nguoithan;
                     _ob.ten_nguoithan = _ten_nguoithan;
                     _ob.phantram_doanhso_banhang = _phantram_thuong_doanhso;
+                    _ob.TienTangCa = _tien_tangca;
+                    _ob.TamUng_Ky1 = _tamung_ky1;
 
                     db.taikhoan_tbs.InsertOnSubmit(_ob);
                     db.SubmitChanges();
@@ -951,6 +961,8 @@ public partial class admin_Default : System.Web.UI.Page
                         _ob.sdt_nguoithan = _sdt_nguoithan;
                         _ob.ten_nguoithan = _ten_nguoithan;
                         _ob.phantram_doanhso_banhang = _phantram_thuong_doanhso;
+                        _ob.TienTangCa = _tien_tangca;
+                        _ob.TamUng_Ky1 = _tamung_ky1;
                         db.SubmitChanges();
                         
                         if (_user != ViewState["id_edit"].ToString())
@@ -1011,7 +1023,7 @@ public partial class admin_Default : System.Web.UI.Page
             for (int i = 1; i <= int.Parse(ViewState["total_page"].ToString()); i++)
             {
                 // Tạo một ListItem mới với văn bản và giá trị là số thứ tự
-                ListItem item = new ListItem($"Trang {i}", i.ToString());
+                ListItem item = new ListItem(string.Format("Trang {0}", i), i.ToString());
 
                 // Thêm mục vào CheckBoxList
                 check_list_page.Items.Add(item);
@@ -1229,7 +1241,7 @@ public partial class admin_Default : System.Web.UI.Page
                     // URL bạn muốn chuyển hướng đến
                     string url = filePath;
                     // Script để mở trang mới trong tab mới
-                    string script = $"window.open('{url}', '_blank');";
+                    string script = string.Format("window.open('{0}', '_blank');", url);
                     // Đăng ký script để thực thi sau khi UpdatePanel postback hoàn thành
                     ScriptManager.RegisterStartupScript(this, GetType(), "OpenNewTab", script, true);
 

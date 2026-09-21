@@ -1,4 +1,4 @@
-using OfficeOpenXml;
+﻿using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -318,10 +318,10 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                     TongTon = g.Sum(p => p.soluong_hientai ?? 0)
                 }).FirstOrDefault();
 
-                int _Tong_Record = stats?.Count ?? 0;
-                Int64 _tongbanle = stats?.TongBanLe ?? 0;
-                Int64 _tonggianhap = stats?.TongGiaNhap ?? 0;
-                Int64 _tong_ton = stats?.TongTon ?? 0;
+                int _Tong_Record = (stats != null ? (int?)stats.Count : null) ?? 0;
+                Int64 _tongbanle = (stats != null ? (long?)stats.TongBanLe : null) ?? 0;
+                Int64 _tonggianhap = (stats != null ? (long?)stats.TongGiaNhap : null) ?? 0;
+                Int64 _tong_ton = (stats != null ? (long?)stats.TongTon : null) ?? 0;
                 ViewState["tong_ton"] = _tong_ton.ToString("#,##0");
                 ViewState["tong_giale"] = _tongbanle.ToString("#,##0");
                 ViewState["tong_gianhap"] = _tonggianhap.ToString("#,##0");
@@ -846,23 +846,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                     _ob.soluong_hientai = _add_soluong;
                     
                     _ob.daban = false;
-                    db.KhoSanPham_tbs.InsertOnSubmit(_ob);
-                    db.SubmitChanges();
-
-                    if (_add_soluong > 0)
-                    {
-                        NhapXuatKho_tb _nx = new NhapXuatKho_tb();
-                        _nx.nhap_hay_xuat = true;
-                        _nx.id_sanpham = _ob.id.ToString();
-                        _nx.ten_sanpham = _ob.ten;
-                        _nx.soluong_nhap = _add_soluong;
-                        _nx.gia_nhap = _gianhap;
-                        _nx.ngaynhap = _ngaytao;
-                        _nx.nguoinhap = _nguoitao;
-                        _nx.ton_hientai = 0;
-                        db.NhapXuatKho_tbs.InsertOnSubmit(_nx);
-                        db.SubmitChanges();
-                    }
+                    SaveNewProductsWithImportHistory(db, new List<KhoSanPham_tb> { _ob });
                     #endregion
                     #region cập nhật dữ liệu và update hiển thị
                     txt_so_seri.Text = ""; txt_name.Text = ""; txt_model.Text = ""; txt_thongso.Text = ""; txt_giaban.Text = "0"; txt_gianhap.Text = "0"; txt_ghichu.Text = ""; txt_link_fileupload.Text = "";
@@ -941,6 +925,52 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
         }
     }
 
+    private static void AddImportHistory(dbDataContext db, KhoSanPham_tb product, int quantity,
+        int previousStock, DateTime date, string user)
+    {
+        if (quantity <= 0) return;
+        db.NhapXuatKho_tbs.InsertOnSubmit(new NhapXuatKho_tb
+        {
+            nhap_hay_xuat = true,
+            id_sanpham = product.id.ToString(CultureInfo.InvariantCulture),
+            ten_sanpham = product.ten,
+            soluong_nhap = quantity,
+            gia_nhap = product.gianhap,
+            ngaynhap = date,
+            nguoinhap = user,
+            ton_hientai = previousStock
+        });
+    }
+
+    private static void SaveNewProductsWithImportHistory(dbDataContext db, List<KhoSanPham_tb> products)
+    {
+        db.Connection.Open();
+        using (var transaction = db.Connection.BeginTransaction())
+        {
+            db.Transaction = transaction;
+            try
+            {
+                db.KhoSanPham_tbs.InsertAllOnSubmit(products);
+                db.SubmitChanges(); // Obtain generated product IDs before writing history.
+                foreach (var product in products)
+                    AddImportHistory(db, product, product.soluong_hientai ?? 0, 0,
+                        product.ngaytao ?? DateTime.Now, product.nguoitao);
+                db.SubmitChanges();
+                transaction.Commit();
+            }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
+            finally
+            {
+                db.Transaction = null;
+                db.Connection.Close();
+            }
+        }
+    }
+
     private void SaveQuickProducts(dbDataContext db, string baseSerial, string name, string image, bool coHoaDon, bool hangThanhLy,
         long phanTramThanhLy, DateTime? hanBaoHanh, string idHang, string idNhom, string idDonViTinh, string model, string thongSo, string ghiChu,
         long giaBan, long giaNhap, string nguoiTao)
@@ -1015,6 +1045,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             return;
         }
 
+        var products = new List<KhoSanPham_tb>();
         foreach (string serial in newSerials)
         {
             KhoSanPham_tb product = new KhoSanPham_tb();
@@ -1038,9 +1069,9 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             product.nguoitao = nguoiTao;
             product.soluong_hientai = 1;
             product.daban = false;
-            db.KhoSanPham_tbs.InsertOnSubmit(product);
+            products.Add(product);
         }
-        db.SubmitChanges();
+        SaveNewProductsWithImportHistory(db, products);
 
         reset_control_add_edit();
         ViewState["quick_entry"] = false;
@@ -1106,7 +1137,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             check_list_page.Items.Clear();
             for (int i = 1; i <= int.Parse(ViewState["total_page"].ToString()); i++)
             {
-                ListItem item = new ListItem($"Trang {i}", i.ToString());
+                ListItem item = new ListItem(string.Format("Trang {0}", i), i.ToString());
                 check_list_page.Items.Add(item);
                 item.Selected = true;
             }
@@ -1887,6 +1918,10 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                     if (q != null)
                     {
                         int _new_soluong = Number_cl.Check_Int(txt_chinhsuasoluong.Text.Trim());
+                        int previousStock = q.soluong_hientai ?? 0;
+                        int increase = checked(_new_soluong - previousStock);
+                        AddImportHistory(db, q, increase, previousStock, DateTime.Now,
+                            mahoa_cl.giaima_Bcorn(Session["taikhoan"].ToString()));
                         q.soluong_hientai = _new_soluong;
                         q.daban = _new_soluong <= 0;
                         db.SubmitChanges();
@@ -1916,7 +1951,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
             Int64 _gianhap = Number_cl.Check_Int64(ViewState["gianhap_hientai"].ToString());
             using (dbDataContext db = new dbDataContext())
             {
-                if (_soluongnhap == 0)
+                if (_soluongnhap <= 0)
                 {
                     ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Số lượng nhập không hợp lệ.", "false", "false", "OK", "alert", ""), true);
                     return;
@@ -1936,7 +1971,7 @@ public partial class admin_quan_ly_kho_Default : System.Web.UI.Page
                     _ob.ngaynhap = _ngaynhap;
                     _ob.nguoinhap = _nguoinhap;
                     _ob.ton_hientai = q.soluong_hientai;
-                    q.soluong_hientai = q.soluong_hientai + _soluongnhap;
+                    q.soluong_hientai = checked((q.soluong_hientai ?? 0) + _soluongnhap);
                     q.daban = false;
                     db.NhapXuatKho_tbs.InsertOnSubmit(_ob);
                     db.SubmitChanges();

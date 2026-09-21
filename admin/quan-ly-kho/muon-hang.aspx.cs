@@ -180,7 +180,7 @@ public partial class admin_quan_ly_kho_muon_hang : System.Web.UI.Page
                                     TenSP = string.Join(", ", g.Select(x => x.ob3.ten).Distinct()),
                                     TenChuongTrinh = g.Key.tenchuongtrinh ?? "",
                                     ngaytao = g.Key.ngaytao,
-                                    nguoitao = g.Key.nguoitao,
+                                    nguoitao = db.taikhoan_tbs.Where(t => t.taikhoan == g.Key.nguoitao).Select(t => t.hoten).FirstOrDefault() ?? g.Key.nguoitao,
                                     soLuongMuon =  g.Sum(p=>p.ob2.SoLuongMuon) == null ? 0 : g.Sum(p => p.ob2.SoLuongMuon),
                                     soLuongTra = g.Sum(p => p.ob2.SoLuongTra) == null ? 0 : g.Sum(p => p.ob2.SoLuongTra),
                                     TinhTrang = (g.Sum(p => p.ob2.SoLuongMuon) == null ? 0 : g.Sum(p => p.ob2.SoLuongMuon)) - (g.Sum(p => p.ob2.SoLuongTra) == null ? 0 : g.Sum(p => p.ob2.SoLuongTra)) == 0 ? "Đã trả xong" : "Chưa trả hết",
@@ -565,7 +565,7 @@ public partial class admin_quan_ly_kho_muon_hang : System.Web.UI.Page
                                 SoLuongTra = g.Key.SoLuongTra,
                                 NgayMuon = g.Key.NgayMuon,
                                 NgayTra = g.Key.NgayTra,
-                                NguoiMuon = g.Key.NguoiMuon,
+                                NguoiMuon = db.taikhoan_tbs.Where(t => t.taikhoan == g.Key.NguoiMuon).Select(t => t.hoten).FirstOrDefault() ?? g.Key.NguoiMuon,
                             }).Where(p => p.idPhieuMuon.ToString() == _idbg).AsQueryable();
 
             list_all = list_all.OrderByDescending(p => p.id);
@@ -1076,7 +1076,13 @@ public partial class admin_quan_ly_kho_muon_hang : System.Web.UI.Page
             {
                 var detailPhieu = db.PhieuMuonHang_ChiTiet_tbs.FirstOrDefault(p => p.id_PhieuMuon == id && p.id_sanpham == _id_hang);
 
-                if ((detailPhieu?.SoLuongTra ?? 0) > 0)
+                if (detailPhieu == null)
+                {
+                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Không tìm thấy linh kiện mượn tương ứng (có thể đã bị xóa).", "false", "false", "OK", "alert", ""), true);
+                    return;
+                }
+
+                if (((detailPhieu != null ? (int?)detailPhieu.SoLuongTra : null) ?? 0) > 0)
                 {
                     if (soLuongTra + detailPhieu.SoLuongTra > detailPhieu.SoLuongMuon)
                     {
@@ -1099,6 +1105,35 @@ public partial class admin_quan_ly_kho_muon_hang : System.Web.UI.Page
                     detailPhieu.NgayTra = DateTime.Now;
                 }
                 
+                // Cập nhật tồn kho và ghi lịch sử nhập xuất
+                var sanpham = db.KhoSanPham_tbs.FirstOrDefault(p => p.id.ToString() == _id_hang);
+                if (sanpham != null)
+                {
+                    // Tồn kho sẽ được trigger tự động xử lý khi insert vào Nhập xuất kho
+
+                    // Ghi vào lịch sử nhập xuất
+                    NhapXuatKho_tb nxk = new NhapXuatKho_tb();
+                    nxk.nhap_hay_xuat = true; // Nhập hoàn trả
+                    nxk.id_sanpham = sanpham.id.ToString();
+                    nxk.ten_sanpham = sanpham.ten;
+                    nxk.soluong_nhap = soLuongTra;
+                    nxk.gia_nhap = sanpham.gianhap ?? 0;
+                    nxk.ngaynhap = DateTime.Now;
+                    nxk.nguoinhap = ViewState["taikhoan"] as string;
+                    nxk.ton_hientai = sanpham.soluong_hientai;
+                    
+                    var header = db.PhieuMuonHang_tbs.FirstOrDefault(p => p.id.ToString() == id);
+                    if (header != null && !string.IsNullOrEmpty(header.id_baohanh))
+                    {
+                        nxk.id_baogia = "Hoàn trả mượn BH-" + header.id_baohanh;
+                    }
+                    else
+                    {
+                        nxk.id_baogia = "Hoàn trả mượn phiếu " + id;
+                    }
+                    
+                    db.NhapXuatKho_tbs.InsertOnSubmit(nxk);
+                }
             }
 
             db.SubmitChanges();

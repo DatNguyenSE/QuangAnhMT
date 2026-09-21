@@ -108,7 +108,18 @@ public partial class admin_theo_doi_hang_da_ban_Default : System.Web.UI.Page
         }
     }
 
+    protected void btn_export_excel_Click(object sender, EventArgs e)
+    {
+        check_login_cl.check_login_admin("41", "41");
+        show_main(true);
+    }
+
     public void show_main()
+    {
+        show_main(false);
+    }
+
+    private void show_main(bool exportExcel)
     {
         try
         {
@@ -187,12 +198,19 @@ public partial class admin_theo_doi_hang_da_ban_Default : System.Web.UI.Page
                 if (!int.TryParse(Convert.ToString(ViewState["current_page"]), out currentPage) || currentPage < 1)
                     currentPage = 1;
 
+                // Export uses the same filters, ordering and calculations across every page.
+                if (exportExcel)
+                {
+                    pageSize = int.MaxValue;
+                    currentPage = 1;
+                }
+
                 DateTime now = DateTime.Now;
                 bool validWarrantyOnly = Convert.ToString(ViewState["warranty_filter"]) == "valid";
                 int totalRecords;
                 List<SoldItemRow> pagedList;
 
-                if (!validWarrantyOnly)
+                if (!validWarrantyOnly && !exportExcel)
                 {
                     totalRecords = rawQuery.Count();
                     int totalPagesTemp = number_of_page_class.return_total_page(totalRecords, pageSize);
@@ -225,7 +243,7 @@ public partial class admin_theo_doi_hang_da_ban_Default : System.Web.UI.Page
                 else
                 {
                     // Thang_BaoHanh đang là chuỗi nên SQL Server không thể AddMonths trực tiếp.
-                    // Chỉ ở bộ lọc này mới lấy tập dữ liệu tối thiểu về RAM để giữ nguyên logic hiện tại.
+                    // Lấy toàn bộ kết quả khi lọc bảo hành hoặc xuất Excel.
                     var warrantyRaw = rawQuery
                         .OrderByDescending(p => p.ngayban)
                         .ThenByDescending(p => p.baogiaId)
@@ -238,13 +256,19 @@ public partial class admin_theo_doi_hang_da_ban_Default : System.Web.UI.Page
 
                     var validRows = warrantyRaw
                         .Select(x => ProcessSoldItem(x, totalsByBaoGia[x.baogiaId], now))
-                        .Where(x => x.warrantyExpiry.HasValue && x.warrantyExpiry.Value >= now)
+                        .Where(x => !validWarrantyOnly || (x.warrantyExpiry.HasValue && x.warrantyExpiry.Value >= now))
                         .ToList();
 
                     totalRecords = validRows.Count;
                     int totalPagesTemp = number_of_page_class.return_total_page(totalRecords, pageSize);
                     if (totalPagesTemp > 0 && currentPage > totalPagesTemp) currentPage = totalPagesTemp;
                     pagedList = validRows.Skip((currentPage - 1) * pageSize).Take(pageSize).ToList();
+                }
+
+                if (exportExcel)
+                {
+                    ExportSoldItems(pagedList);
+                    return;
                 }
 
                 int totalPages = number_of_page_class.return_total_page(totalRecords, pageSize);
@@ -276,9 +300,128 @@ public partial class admin_theo_doi_hang_da_ban_Default : System.Web.UI.Page
             if (!string.IsNullOrEmpty(account)) account = mahoa_cl.giaima_Bcorn(account);
             else account = "";
             Log_cl.Add_Log(ex.Message, account, ex.StackTrace);
+            if (exportExcel)
+                ScriptManager.RegisterStartupScript(this, GetType(), "export_error",
+                    "alert('Không xuất được Excel. Vui lòng thử lại.');", true);
         }
     }
 
+    private bool excelResponse;
+
+    protected override void Render(HtmlTextWriter writer)
+    {
+        // CompleteRequest alone does not stop Web Forms from appending page HTML.
+        if (!excelResponse) base.Render(writer);
+    }
+
+    private void ExportSoldItems(List<SoldItemRow> items)
+    {
+        var workbook = new NPOI.XSSF.UserModel.XSSFWorkbook();
+        try
+        {
+            var sheet = workbook.CreateSheet("Hàng đã bán");
+            string[] headers = { "Ngày bán", "Ảnh", "Khách hàng", "Sản phẩm", "Số Seri", "Mã KH", "SL Bán", "Giá bán", "Tổng tiền cuối", "Bảo hành", "ID Báo giá" };
+            int[] widths = { 14, 22, 30, 42, 24, 22, 10, 18, 20, 30, 15 };
+            var font = workbook.CreateFont();
+            font.IsBold = true;
+            var headerStyle = workbook.CreateCellStyle();
+            headerStyle.SetFont(font);
+            headerStyle.WrapText = true;
+            headerStyle.FillForegroundColor = NPOI.SS.UserModel.IndexedColors.LightCornflowerBlue.Index;
+            headerStyle.FillPattern = NPOI.SS.UserModel.FillPattern.SolidForeground;
+            var textStyle = workbook.CreateCellStyle();
+            textStyle.WrapText = true;
+            textStyle.VerticalAlignment = NPOI.SS.UserModel.VerticalAlignment.Center;
+            var numberStyle = workbook.CreateCellStyle();
+            numberStyle.CloneStyleFrom(textStyle);
+            numberStyle.DataFormat = workbook.CreateDataFormat().GetFormat("#,##0");
+            var dateStyle = workbook.CreateCellStyle();
+            dateStyle.CloneStyleFrom(textStyle);
+            dateStyle.DataFormat = workbook.CreateDataFormat().GetFormat("dd/MM/yyyy");
+            var header = sheet.CreateRow(0);
+            header.HeightInPoints = 30;
+            for (int col = 0; col < headers.Length; col++)
+            {
+                var cell = header.CreateCell(col);
+                cell.SetCellValue(headers[col]);
+                cell.CellStyle = headerStyle;
+                sheet.SetColumnWidth(col, widths[col] * 256);
+            }
+
+            var drawing = sheet.CreateDrawingPatriarch();
+            var pictures = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            for (int index = 0; index < items.Count; index++)
+            {
+                var item = items[index];
+                var row = sheet.CreateRow(index + 1);
+                row.HeightInPoints = 65;
+                for (int col = 0; col < headers.Length; col++)
+                    row.CreateCell(col).CellStyle = textStyle;
+                if (item.ngayban.HasValue) row.GetCell(0).SetCellValue(item.ngayban.Value);
+                row.GetCell(0).CellStyle = dateStyle;
+                string imageUrl = string.IsNullOrEmpty(item.productImage) ? "/uploads/images/no-image.png" : item.productImage;
+                row.GetCell(1).SetCellValue(imageUrl);
+                // Embed local upload images only; other image URLs remain readable in the cell.
+                string virtualPath = imageUrl.StartsWith("~/") ? imageUrl.Substring(1) : imageUrl;
+                if (virtualPath.StartsWith("/uploads/", StringComparison.OrdinalIgnoreCase) && !virtualPath.Contains(".."))
+                {
+                    string path = Server.MapPath("~" + virtualPath);
+                    string extension = System.IO.Path.GetExtension(path).ToLowerInvariant();
+                    if ((extension == ".png" || extension == ".jpg" || extension == ".jpeg") && System.IO.File.Exists(path))
+                    {
+                        int picture;
+                        if (!pictures.TryGetValue(path, out picture))
+                        {
+                            picture = workbook.AddPicture(System.IO.File.ReadAllBytes(path),
+                                extension == ".png" ? NPOI.SS.UserModel.PictureType.PNG : NPOI.SS.UserModel.PictureType.JPEG);
+                            pictures[path] = picture;
+                        }
+                        var anchor = workbook.GetCreationHelper().CreateClientAnchor();
+                        anchor.Col1 = 1;
+                        anchor.Col2 = 2;
+                        anchor.Row1 = index + 1;
+                        anchor.Row2 = index + 2;
+                        drawing.CreatePicture(anchor, picture);
+                        row.GetCell(1).SetCellValue("");
+                    }
+                }
+                row.GetCell(2).SetCellValue((item.tenKhachHang ?? "") + "\n" + (item.sdtKhachHang ?? ""));
+                row.GetCell(3).SetCellValue((item.productName ?? "") + (item.isDaban ? "\nĐã đồng bộ" : ""));
+                row.GetCell(4).SetCellValue(item.productSerial ?? "");
+                row.GetCell(5).SetCellValue(item.maKH ?? "");
+                row.GetCell(6).SetCellValue(item.quantity);
+                row.GetCell(7).SetCellValue(item.price);
+                row.GetCell(8).SetCellValue(item.totalPrice);
+                for (int col = 6; col <= 8; col++) row.GetCell(col).CellStyle = numberStyle;
+                string warranty = "Không rõ";
+                if (!string.IsNullOrWhiteSpace(item.thangBaoHanh))
+                    warranty = item.thangBaoHanh + " tháng\nHạn ngày: " +
+                        (item.warrantyExpiry.HasValue ? item.warrantyExpiry.Value.ToString("dd/MM/yyyy") : "Không rõ") +
+                        (item.warrantyExpired ? "\nHết hạn bảo hành" : "");
+                row.GetCell(9).SetCellValue(warranty);
+                row.GetCell(10).SetCellValue(item.baogiaId.ToString());
+            }
+            sheet.CreateFreezePane(0, 1);
+            sheet.SetAutoFilter(new NPOI.SS.Util.CellRangeAddress(0, items.Count, 0, headers.Length - 1));
+            using (var stream = new System.IO.MemoryStream())
+            {
+                workbook.Write(stream);
+                byte[] data = stream.ToArray();
+                Response.Clear();
+                Response.ContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                Response.AddHeader("Content-Disposition", "attachment; filename=HangDaBan_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".xlsx");
+                Response.Cache.SetCacheability(HttpCacheability.NoCache);
+                Response.Cache.SetNoStore();
+                Response.BinaryWrite(data);
+                excelResponse = true;
+                Context.ApplicationInstance.CompleteRequest();
+            }
+        }
+        finally
+        {
+            workbook.Close();
+        }
+    }
     protected void txt_timkiem_TextChanged(object sender, EventArgs e)
     {
         ViewState["current_page"] = "1";
@@ -331,7 +474,7 @@ public partial class admin_theo_doi_hang_da_ban_Default : System.Web.UI.Page
     protected void btn_next_Click(object sender, EventArgs e)
     {
         int currentPage = int.Parse(ViewState["current_page"].ToString());
-        int totalPages = int.Parse(ViewState["total_page"]?.ToString() ?? "1");
+        int totalPages = int.Parse((ViewState["total_page"] != null ? ViewState["total_page"].ToString() : null) ?? "1");
         if (currentPage < totalPages)
         {
             ViewState["current_page"] = (currentPage + 1).ToString();
@@ -419,7 +562,7 @@ public partial class admin_theo_doi_hang_da_ban_Default : System.Web.UI.Page
                     // Populate Order Details
                     lbl_detail_mabg.Text = bg.id.ToString();
                     lbl_detail_ngayban.Text = bg.ngayban_kyhopdong.HasValue ? bg.ngayban_kyhopdong.Value.ToString("dd/MM/yyyy HH:mm") : "Không rõ";
-                    lbl_detail_soluong.Text = ct.soluong?.ToString("#,##0") ?? "0";
+                    lbl_detail_soluong.Text = (ct.soluong != null ? ct.soluong.Value.ToString("#,##0") : null) ?? "0";
 
                     // Proportional Calculations
                     long totalSauGiamAll = db.BaoGia_ChiTiet_tbs.Where(p => p.id_baogia == baogiaId).Sum(p => (long?)p.TongSauGiam) ?? 0;
@@ -517,8 +660,8 @@ lbl_detail_tongdonhang_saugiam.Text = totalSauGiamAll.ToString("#,##0");
                     // Populate Sales Revenue & Employee Info
                     var tk = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == bg.nguoibaogia);
                     lbl_detail_nguoiban.Text = tk != null ? tk.hoten : bg.nguoibaogia;
-                    lbl_detail_phantramdoanhso.Text = bg.phantram_doanhso_now?.ToString() ?? "0";
-                    lbl_detail_thuongdoanhso.Text = bg.thuongdoanhso?.ToString("#,##0") ?? "0";
+                    lbl_detail_phantramdoanhso.Text = (bg.phantram_doanhso_now != null ? bg.phantram_doanhso_now.ToString() : null) ?? "0";
+                    lbl_detail_thuongdoanhso.Text = (bg.thuongdoanhso != null ? bg.thuongdoanhso.Value.ToString("#,##0") : null) ?? "0";
 
                     // Show panel
                     pn_detail.Visible = true;

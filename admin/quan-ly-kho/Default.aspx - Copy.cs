@@ -248,10 +248,10 @@ public partial class admin_quan_ly_kho_Default_Copy : System.Web.UI.Page
                     TongTon = g.Sum(p => p.soluong_hientai ?? 0)
                 }).FirstOrDefault();
 
-                int _Tong_Record = stats?.Count ?? 0;
-                Int64 _tongbanle = stats?.TongBanLe ?? 0;
-                Int64 _tonggianhap = stats?.TongGiaNhap ?? 0;
-                Int64 _tong_ton = stats?.TongTon ?? 0;
+                int _Tong_Record = (stats != null ? (int?)stats.Count : null) ?? 0;
+                Int64 _tongbanle = (stats != null ? (long?)stats.TongBanLe : null) ?? 0;
+                Int64 _tonggianhap = (stats != null ? (long?)stats.TongGiaNhap : null) ?? 0;
+                Int64 _tong_ton = (stats != null ? (long?)stats.TongTon : null) ?? 0;
                 ViewState["tong_ton"] = _tong_ton.ToString("#,##0");
                 ViewState["tong_giale"] = _tongbanle.ToString("#,##0");
                 ViewState["tong_gianhap"] = _tonggianhap.ToString("#,##0");
@@ -813,7 +813,7 @@ public partial class admin_quan_ly_kho_Default_Copy : System.Web.UI.Page
             for (int i = 1; i <= int.Parse(ViewState["total_page"].ToString()); i++)
             {
                 // Tạo một ListItem mới với văn bản và giá trị là số thứ tự
-                ListItem item = new ListItem($"Trang {i}", i.ToString());
+                ListItem item = new ListItem(string.Format("Trang {0}", i), i.ToString());
 
                 // Thêm mục vào CheckBoxList
                 check_list_page.Items.Add(item);
@@ -1084,7 +1084,7 @@ public partial class admin_quan_ly_kho_Default_Copy : System.Web.UI.Page
                     // URL bạn muốn chuyển hướng đến
                     string url = filePath;
                     // Script để mở trang mới trong tab mới
-                    string script = $"window.open('{url}', '_blank');";
+                    string script = string.Format("window.open('{0}', '_blank');", url);
                     // Đăng ký script để thực thi sau khi UpdatePanel postback hoàn thành
                     ScriptManager.RegisterStartupScript(this, GetType(), "OpenNewTab", script, true);
 
