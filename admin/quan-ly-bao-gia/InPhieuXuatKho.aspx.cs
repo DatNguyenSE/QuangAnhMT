@@ -1,15 +1,14 @@
-﻿using System;
+using System;
 using System.Linq;
-using System.Text;
 using System.Web;
 using System.Web.UI;
 
 public partial class admin_quan_ly_bao_gia_InPhieuXuatKho : Page
 {
     protected string QuoteNumber = "", Customer = "", Phone = "", Address = "";
-    protected string QuoteDate = "", PrintedDate = "", PreparedBy = "", RowsHtml = "";
-    protected string TotalQuantity = "", ErrorMessage = "";
-    protected bool CanPrint;
+    protected string QuoteDate = "", PrintedDate = "", PreparedBy = "";
+    protected string ErrorMessage = "";
+    protected bool IsExcelDownload;
 
     protected void Page_Load(object sender, EventArgs e)
     {
@@ -49,12 +48,12 @@ public partial class admin_quan_ly_bao_gia_InPhieuXuatKho : Page
                          }).ToList();
             if (items.Count == 0)
             {
-                ShowError(200, "Báo giá chưa có mặt hàng. Vui lòng thêm và lưu mặt hàng trước khi in.");
+                ShowError(200, "Báo giá chưa có mặt hàng. Vui lòng thêm và lưu mặt hàng trước khi xuất Excel.");
                 return;
             }
             if (items.Any(p => p.Name == null))
             {
-                ShowError(200, "Có mặt hàng trong báo giá không còn tồn tại trong kho. Vui lòng kiểm tra báo giá trước khi in.");
+                ShowError(200, "Có mặt hàng trong báo giá không còn tồn tại trong kho. Vui lòng kiểm tra báo giá trước khi xuất Excel.");
                 return;
             }
             QuoteNumber = quoteId;
@@ -69,22 +68,24 @@ public partial class admin_quan_ly_bao_gia_InPhieuXuatKho : Page
                 account = mahoa_cl.giaima_Bcorn(account);
                 PreparedBy = db.taikhoan_tbs.Where(t => t.taikhoan == account).Select(t => t.hoten).FirstOrDefault() ?? account;
             }
-            var rows = new StringBuilder();
-            int index = 0;
-            foreach (var item in items)
-            {
-                rows.Append("<tr><td class='center'>").Append(++index)
-                    .Append("</td><td>").Append(HttpUtility.HtmlEncode(item.Name))
-                    .Append("</td><td>").Append(HttpUtility.HtmlEncode(item.Serial))
-                    .Append("</td><td class='center'>").Append(HttpUtility.HtmlEncode(item.Unit))
-                    .Append("</td><td class='number'>").Append(item.Quantity.ToString("N0"))
-                    .Append("</td><td></td></tr>");
-            }
-            RowsHtml = rows.ToString();
-            TotalQuantity = items.Sum(i => (long)i.Quantity).ToString("N0");
-            CanPrint = true;
-            Title = "Phiếu xuất kho - Báo giá " + QuoteNumber;
+            var excelItems = items.Select(item => new WarehouseSlipItem {
+                Name = item.Name, Serial = item.Serial, Unit = item.Unit, Quantity = item.Quantity
+            }).ToList();
+            byte[] file = WarehouseSlipExcel.Create(QuoteNumber, QuoteDate, PrintedDate,
+                Customer, Phone, Address, PreparedBy, excelItems);
+            Response.Clear();
+            Response.ContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+            Response.AddHeader("Content-Disposition", "attachment; filename=\"Phieu_xuat_kho_" + quoteId + ".xlsx\"");
+            Response.AddHeader("Content-Length", file.Length.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            IsExcelDownload = true;
+            Response.BinaryWrite(file);
+            Context.ApplicationInstance.CompleteRequest();
         }
+    }
+
+    protected override void Render(HtmlTextWriter writer)
+    {
+        if (!IsExcelDownload) base.Render(writer);
     }
 
     private void ShowError(int statusCode, string message)

@@ -113,6 +113,12 @@
                         <span class="caption">Đơn vị tính</span>
                     </a>
                 </li>
+                <li class="<%=a1_4 %>">
+                    <a href="/admin/quan-ly-he-thong/du-lieu-nguon/sao-luu-du-lieu.aspx">
+                        <span class="icon"><span class="mif-chevron-right"></span></span>
+                        <span class="caption">Sao lưu dữ liệu</span>
+                    </a>
+                </li>
             </ul>
         </li>
 

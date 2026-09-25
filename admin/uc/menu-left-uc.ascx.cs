@@ -7,7 +7,7 @@ using System.Web.UI.WebControls;
 
 public partial class admin_uc_menu_left_uc : System.Web.UI.UserControl
 {
-    public string a0, a1, a1_1, a1_2, a1_3, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, muon_hang;
+    public string a0, a1, a1_1, a1_2, a1_3, a1_4, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, muon_hang;
     protected void Page_Load(object sender, EventArgs e)
     {
         if (!IsPostBack)
@@ -31,6 +31,7 @@ public partial class admin_uc_menu_left_uc : System.Web.UI.UserControl
                     case ("/admin/quan-ly-he-thong/du-lieu-nguon/hang-san-pham.aspx"): a1 = "active"; a1_1 = "active"; Session["title"] = "Hãng sản phẩm"; break;
                     case ("/admin/quan-ly-he-thong/du-lieu-nguon/nhom-san-pham.aspx"): a1 = "active"; a1_2 = "active"; Session["title"] = "Nhóm sản phẩm"; break;
                     case ("/admin/quan-ly-he-thong/du-lieu-nguon/don-vi-tinh.aspx"): a1 = "active"; a1_3 = "active"; Session["title"] = "Đơn vị tính"; break;
+                    case ("/admin/quan-ly-he-thong/du-lieu-nguon/sao-luu-du-lieu.aspx"): a1 = "active"; a1_4 = "active"; Session["title"] = "Sao lưu dữ liệu"; break;
                     default: a0 = "active"; Session["title"] = "Trang chủ"; break;
                 }
 

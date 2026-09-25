@@ -364,16 +364,84 @@
                 </div>
             </asp:Panel>
 
+            <asp:Panel ID="pn_loc" runat="server" Visible="false" DefaultButton="but_loc">
+                <div style="position: fixed; width: 100%; height: 52px; background-color: none; top: 0; left: 0; z-index: 1041!important;">
+                    <div style='top: 0; left: 0px; margin: 0 auto; max-width: 900px; opacity: 1;'>
+                        <div style='position: absolute; right: 18px; top: 14px; z-index: 1040!important'>
+                            <a href='#' class='fg-white d-inline' runat="server" id="close_loc" onserverclick="but_show_form_loc_Click" title='Đóng'>
+                                <span class='mif mif-cross mif-2x fg-red fg-lightRed-hover'></span>
+                            </a>
+                        </div>
+                        <div class="bg-white pl-4 pl-8-md pr-8-md pr-4" style="height: 52px;">
+                            <div class="pt-4 text-upper text-bold">
+                                LỌC DỮ LIỆU
+                            </div>
+                            <hr />
+                        </div>
+                    </div>
+                </div>
+                <div style="position: fixed; width: 100%; height: 100%; top: 0; left: 0; overflow: auto; z-index: 1040!important; background-image: url('/uploads/images/bg1.png');">
+                    <div style='top: 0; left: 0; margin: 0 auto; max-width: 906px; opacity: 1;'>
+                        <div class="bg-white border bd-transparent pl-4 pl-8-md pr-8-md pr-4" style="padding-top: 52px">
+                            <div class="row">
+                                <div class="cell-lg-6 pr-4-lg">
+                                    <div class="fw-600 mt-3">Số lượng hiển thị mỗi trang</div>
+                                    <asp:TextBox ID="txt_show" Text="30" MaxLength="5" runat="server" data-role="input" data-clear-button="true"></asp:TextBox>
+                                    <div class="mt-3">
+                                        <div class="fw-600">Khách hàng</div>
+                                        <asp:DropDownList ID="ddl_customer" runat="server" data-role="select"></asp:DropDownList>
+                                    </div>
+                                </div>
+                                <div class="cell-lg-6 pl-4-lg">
+                                    <div class="mt-3">
+                                        <label class="fw-600 mt-3">Lọc theo thời gian</label>
+                                        <asp:DropDownList ID="ddl_thoigian" runat="server" data-role="select">
+                                            <asp:ListItem Text="Dựa vào ngày báo giá" Value="1"></asp:ListItem>
+                                            <asp:ListItem Text="Dựa vào ngày bán" Value="2" Selected="True"></asp:ListItem>
+                                        </asp:DropDownList>
+                                    </div>
+                                    <div class="mt-3">
+                                        <label class="fw-600 mt-3">Từ ngày</label>
+                                        <asp:TextBox ID="txt_tungay" runat="server" MaxLength="10" data-role="calendar-picker" data-outside="true" data-dialog-mode="true" data-week-start="1" data-locale="vi-VN" data-format="DD/MM/YYYY" data-input-format="DD/MM/YYYY" data-clear-button="true"></asp:TextBox>
+                                    </div>
+                                    <div class=" mt-3">
+                                        <label class="fw-600 mt-3">Đến ngày</label>
+                                        <asp:TextBox ID="txt_denngay" runat="server" MaxLength="10" data-role="calendar-picker" data-outside="true" data-dialog-mode="true" data-week-start="1" data-locale="vi-VN" data-format="DD/MM/YYYY" data-input-format="DD/MM/YYYY" data-clear-button="true"></asp:TextBox>
+                                    </div>
+                                    <div class="mt-1">
+                                        <asp:Button ID="but_homqua" runat="server" Text="Hôm qua" Width="92" OnClick="QuickDate_Click" CommandArgument="homqua" />
+                                        <asp:Button ID="but_homnay" runat="server" Text="Hôm nay" Width="92" OnClick="QuickDate_Click" CommandArgument="homnay" />
+                                        <asp:Button ID="but_tuantruoc" runat="server" Text="Tuần trước" Width="92" OnClick="QuickDate_Click" CommandArgument="tuantruoc" />
+                                        <asp:Button ID="but_tuannay" runat="server" Text="Tuần này" Width="92" OnClick="QuickDate_Click" CommandArgument="tuannay" />
+                                        <asp:Button ID="but_thangtruoc" runat="server" Text="Tháng trước" Width="92" OnClick="QuickDate_Click" CommandArgument="thangtruoc" />
+                                        <asp:Button ID="but_thangnay" runat="server" Text="Tháng này" Width="92" OnClick="QuickDate_Click" CommandArgument="thangnay" />
+                                        <asp:Button ID="but_quytruoc" runat="server" Text="Quý trước" Width="92" OnClick="QuickDate_Click" CommandArgument="quytruoc" />
+                                        <asp:Button ID="but_quynay" runat="server" Text="Quý này" Width="92" OnClick="QuickDate_Click" CommandArgument="quynay" />
+                                        <asp:Button ID="but_namtruoc" runat="server" Text="Năm trước" Width="92" OnClick="QuickDate_Click" CommandArgument="namtruoc" />
+                                        <asp:Button ID="but_namnay" runat="server" Text="Năm này" Width="92" OnClick="QuickDate_Click" CommandArgument="namnay" />
+                                    </div>
+
+                                </div>
+                            </div>
+                            <asp:Label ID="lb_filter_error" runat="server" CssClass="fg-red d-block mt-3" role="alert" /><div class="mt-6 mb-20">
+                                <div style="float: left">
+                                    <asp:Button ID="but_huy_loc" OnClick="but_huy_loc_Click" runat="server" Text="Đặt lại mặc định" CssClass="button warning small" />
+                                </div>
+                                <div style="float: right">
+                                    <asp:Button ID="but_loc" OnClick="but_loc_Click" runat="server" Text="THỰC HIỆN LỌC" CssClass="button success" />
+                                </div>
+                                <div style="clear: both"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </asp:Panel>
             <!-- Main Page Layout -->
             <div class="pos-relative pb-11">
                 <div id="menutop-tool-bc" style="position: fixed; top: 52px; width: 100%; z-index: 4">
                     <ul class="h-menu bg-white">
-                        <li style="display:none;">
-                            <div class="p-2 d-flex flex-align-center">
-                                <small class="pr-2">Hiển thị:</small>
-                                <asp:TextBox ID="txt_show" Width="50" MaxLength="5" runat="server" data-role="input" AutoPostBack="true" OnTextChanged="txt_show_TextChanged" Text="30" style="display:inline-block; height: 32px;"></asp:TextBox>
-                            </div>
-                        </li>
+<li><asp:LinkButton ID="but_show_filter" runat="server" OnClick="but_show_form_loc_Click" ToolTip="Lọc dữ liệu"><span class="mif-filter"></span> Lọc</asp:LinkButton></li>
+
                         <li class="bd-gray border bd-default mt-2" style="height: 24px; display:none;"></li>
                         <li>
                             <asp:LinkButton ID="btn_warranty" runat="server" CssClass="button success warranty-filter-button" OnClick="btn_warranty_Click">Hàng còn bảo hành</asp:LinkButton>

@@ -103,6 +103,15 @@ public partial class admin_theo_doi_hang_da_ban_Default : System.Web.UI.Page
             Session["url_back"] = HttpContext.Current.Request.Url.AbsoluteUri;
             check_login_cl.check_login_admin("41", "41"); // check view sold products tracking permission
             
+            using (var db = new dbDataContext())
+            {
+                var customers = db.BaoGia_tbs
+                    .Where(q => q.ngayban_kyhopdong != null && q.ten_khachhang != null && q.ten_khachhang != "")
+                    .Select(q => q.ten_khachhang).Distinct().OrderBy(name => name).ToList();
+                ddl_customer.DataSource = customers;
+                ddl_customer.DataBind();
+                ddl_customer.Items.Insert(0, new ListItem("Tất cả", ""));
+            }
             ViewState["current_page"] = "1";
             show_main();
         }
@@ -128,9 +137,25 @@ public partial class admin_theo_doi_hang_da_ban_Default : System.Web.UI.Page
                 db.ObjectTrackingEnabled = false;
                 db.DeferredLoadingEnabled = false;
 
+                var quotes = db.BaoGia_tbs.Where(q => q.ngayban_kyhopdong != null);
+                string customer = Convert.ToString(ViewState["filter_customer"]);
+                if (!string.IsNullOrEmpty(customer))
+                    quotes = quotes.Where(q => q.ten_khachhang == customer);
+                bool byQuoteDate = Convert.ToString(ViewState["filter_date_type"]) == "1";
+                if (ViewState["filter_from"] != null)
+                {
+                    DateTime from = (DateTime)ViewState["filter_from"];
+                    quotes = byQuoteDate ? quotes.Where(q => q.ngaybaogia >= from) : quotes.Where(q => q.ngayban_kyhopdong >= from);
+                }
+                if (ViewState["filter_to"] != null)
+                {
+                    DateTime until = ((DateTime)ViewState["filter_to"]).AddDays(1);
+                    quotes = byQuoteDate ? quotes.Where(q => q.ngaybaogia < until) : quotes.Where(q => q.ngayban_kyhopdong < until);
+                }
+
                 IQueryable<SoldItemRaw> rawQuery =
                     from ct in db.BaoGia_ChiTiet_tbs
-                    join bg in db.BaoGia_tbs on ct.id_baogia equals bg.id.ToString()
+                    join bg in quotes on ct.id_baogia equals bg.id.ToString()
                     join sp in db.KhoSanPham_tbs on ct.id_sanpham equals sp.id.ToString() into spGroup
                     from sp in spGroup.DefaultIfEmpty()
                     where bg.ngayban_kyhopdong != null
@@ -191,7 +216,7 @@ public partial class admin_theo_doi_hang_da_ban_Default : System.Web.UI.Page
                     }
                 }
 
-                int pageSize = Number_cl.Check_Int(txt_show.Text.Trim());
+                int pageSize = Number_cl.Check_Int(Convert.ToString(ViewState["filter_size"] ?? "30"));
                 if (pageSize <= 0) pageSize = 10;
 
                 int currentPage;
@@ -428,6 +453,92 @@ public partial class admin_theo_doi_hang_da_ban_Default : System.Web.UI.Page
         show_main();
     }
 
+    protected void but_show_form_loc_Click(object sender, EventArgs e)
+    {
+        check_login_cl.check_login_admin("41", "41");
+        pn_loc.Visible = !pn_loc.Visible;
+        lb_filter_error.Text = "";
+    }
+
+    protected void but_loc_Click(object sender, EventArgs e)
+    {
+        check_login_cl.check_login_admin("41", "41");
+        DateTime from, to;
+        bool hasFrom = !string.IsNullOrWhiteSpace(txt_tungay.Text), hasTo = !string.IsNullOrWhiteSpace(txt_denngay.Text);
+        bool fromValid = DateTime.TryParseExact(txt_tungay.Text.Trim(), "dd/MM/yyyy",
+            System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out from);
+        bool toValid = DateTime.TryParseExact(txt_denngay.Text.Trim(), "dd/MM/yyyy",
+            System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out to);
+        int size;
+        if (!int.TryParse(txt_show.Text.Trim(), out size) || size < 1 || size > 10000)
+        {
+            lb_filter_error.Text = "Số lượng mỗi trang phải từ 1 đến 10.000.";
+            return;
+        }
+        if ((hasFrom && !fromValid) || (hasTo && !toValid) ||
+            (hasFrom && hasTo && from > to) || (hasTo && to == DateTime.MaxValue.Date))
+        {
+            lb_filter_error.Text = "Vui lòng nhập ngày dạng dd/MM/yyyy, từ ngày không lớn hơn đến ngày.";
+            return;
+        }
+        ViewState["filter_customer"] = ddl_customer.SelectedValue;
+        ViewState["filter_date_type"] = ddl_thoigian.SelectedValue;
+        ViewState["filter_from"] = hasFrom ? (object)from : null;
+        ViewState["filter_to"] = hasTo ? (object)to : null;
+        ViewState["filter_size"] = size.ToString();
+        ViewState["current_page"] = "1";
+        pn_loc.Visible = false;
+        show_main();
+    }
+
+    protected void but_huy_loc_Click(object sender, EventArgs e)
+    {
+        check_login_cl.check_login_admin("41", "41");
+        foreach (string key in new[] { "filter_customer",
+            "filter_date_type", "filter_from", "filter_to", "filter_size", "warranty_filter" })
+            ViewState.Remove(key);
+        ddl_customer.SelectedIndex = 0;
+        ddl_thoigian.SelectedValue = "2";
+        txt_tungay.Text = txt_denngay.Text = txt_thangban.Text = "";
+        txt_show.Text = "30";
+        lb_filter_error.Text = "";
+        ViewState["current_page"] = "1";
+        pn_loc.Visible = false;
+        show_main();
+    }
+
+    protected void QuickDate_Click(object sender, EventArgs e)
+    {
+        DateTime today = DateTime.Today, from = today, to = today;
+        string period = ((Button)sender).CommandArgument;
+        if (period == "homqua") from = to = today.AddDays(-1);
+        else if (period.StartsWith("tuan"))
+        {
+            from = today.AddDays(-(((int)today.DayOfWeek + 6) % 7));
+            if (period == "tuantruoc") from = from.AddDays(-7);
+            to = from.AddDays(6);
+        }
+        else if (period.StartsWith("thang"))
+        {
+            from = new DateTime(today.Year, today.Month, 1);
+            if (period == "thangtruoc") from = from.AddMonths(-1);
+            to = from.AddMonths(1).AddDays(-1);
+        }
+        else if (period.StartsWith("quy"))
+        {
+            from = new DateTime(today.Year, ((today.Month - 1) / 3) * 3 + 1, 1);
+            if (period == "quytruoc") from = from.AddMonths(-3);
+            to = from.AddMonths(3).AddDays(-1);
+        }
+        else if (period.StartsWith("nam"))
+        {
+            from = new DateTime(today.Year - (period == "namtruoc" ? 1 : 0), 1, 1);
+            to = from.AddYears(1).AddDays(-1);
+        }
+        txt_tungay.Text = from.ToString("dd/MM/yyyy");
+        txt_denngay.Text = to.ToString("dd/MM/yyyy");
+        lb_filter_error.Text = "";
+    }
     protected void txt_show_TextChanged(object sender, EventArgs e)
     {
         ViewState["current_page"] = "1";

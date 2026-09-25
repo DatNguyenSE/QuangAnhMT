@@ -1,4 +1,4 @@
-﻿<%@ Page Title="Quản lý báo giá" Language="C#" MasterPageFile="~/admin/MasterPageAdmin.master" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="admin_quan_ly_bao_gia_Default" %>
+<%@ Page Title="Quản lý báo giá" Language="C#" MasterPageFile="~/admin/MasterPageAdmin.master" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="admin_quan_ly_bao_gia_Default" %>
 
 <%@ Register Assembly="AjaxControlToolkit" Namespace="AjaxControlToolkit" TagPrefix="ajaxToolkit" %>
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="Server">
@@ -482,7 +482,7 @@
                             </div>
                             <div class="mt-6 text-right">
 
-                                <asp:HyperLink ID="link_in_phieu_xuat" runat="server" Visible="false" Target="_blank" rel="noopener" CssClass="button info small" ToolTip="In các mặt hàng đã lưu trong báo giá. Không trừ tồn kho.">In phiếu xuất kho</asp:HyperLink>
+                                <asp:HyperLink ID="link_in_phieu_xuat" runat="server" Visible="false" Target="_blank" rel="noopener" CssClass="button info small" ToolTip="Tải file Excel các mặt hàng đã lưu trong báo giá. Không trừ tồn kho.">Xuất Excel phiếu xuất kho</asp:HyperLink>
                                 <asp:Button ID="but_add_edit" runat="server" Text="" CssClass="button success small" OnClick="but_add_edit_Click" />
                             </div>
                             <hr />
