@@ -484,3 +484,5 @@ web.config
 .vs/
 # Manual database exports contain private production data
 App_Data/DatabaseBackup/
+
+/Web.config
